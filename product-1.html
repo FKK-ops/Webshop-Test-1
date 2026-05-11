@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Half-Zip Knit — ROSE & RITUAL</title>
+  <meta name="description" content="Half-Zip Knit in Heather Grey. Premium oversized knit. Limited drop SS26." />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="product.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script>
+    window.PRODUCT_DATA = { id: 1, name: 'Half-Zip Knit', price: 119, sub: 'Heather Grey' };
+  </script>
+</head>
+<body>
+
+  <!-- Announcement Bar -->
+  <div class="announce">
+    <div class="announce__track">
+      <span>FREE SHIPPING WITHIN EU FROM €150</span>
+      <span>/</span>
+      <span>NEW DROP — SS26 LIVE</span>
+      <span>/</span>
+      <span>SHIPS FROM MÜNCHEN</span>
+      <span>/</span>
+      <span>FREE SHIPPING WITHIN EU FROM €150</span>
+      <span>/</span>
+      <span>NEW DROP — SS26 LIVE</span>
+      <span>/</span>
+      <span>SHIPS FROM MÜNCHEN</span>
+      <span>/</span>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <header class="nav" id="nav">
+    <a href="index.html" class="nav__logo">ROSE&amp;RITUAL</a>
+    <nav class="nav__links">
+      <a href="index.html#shop">Shop</a>
+      <a href="index.html#lookbook">Lookbook</a>
+      <a href="index.html#about">Studio</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+    <div class="nav__right">
+      <button class="nav__btn" aria-label="Search">Search</button>
+      <button class="nav__btn" id="cartToggle">Bag <span class="cart-num" id="cartCount">(0)</span></button>
+      <button class="nav__burger" id="menuToggle" aria-label="Menu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-menu__close" id="menuClose" aria-label="Close">Close</button>
+    <nav>
+      <a href="index.html#shop" class="menu-link">Shop</a>
+      <a href="index.html#lookbook" class="menu-link">Lookbook</a>
+      <a href="index.html#about" class="menu-link">Studio</a>
+      <a href="index.html#contact" class="menu-link">Contact</a>
+    </nav>
+    <div class="mobile-menu__footer">
+      <a href="#">Instagram</a>
+      <a href="#">TikTok</a>
+    </div>
+  </div>
+
+  <!-- Cart Drawer -->
+  <aside class="cart" id="cartDrawer">
+    <div class="cart__head">
+      <span>Bag</span>
+      <button id="cartClose" aria-label="Close cart">Close</button>
+    </div>
+    <div class="cart__items" id="cartItems">
+      <p class="cart__empty">Your bag is empty.</p>
+    </div>
+    <div class="cart__foot">
+      <div class="cart__row"><span>Subtotal</span><span id="cartTotal">€0</span></div>
+      <div class="cart__row cart__row--small"><span>Shipping</span><span>Calculated at checkout</span></div>
+      <button class="btn btn--block">Checkout</button>
+    </div>
+  </aside>
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Breadcrumb -->
+  <div class="pdp__breadcrumb">
+    <a href="index.html">Home</a>
+    <span>/</span>
+    <a href="index.html#shop">Shop</a>
+    <span>/</span>
+    <span>Half-Zip Knit</span>
+  </div>
+
+  <!-- PRODUCT DETAIL -->
+  <div class="pdp">
+    <div class="pdp__grid">
+
+      <!-- Gallery -->
+      <div class="pdp__gallery">
+        <div class="pdp__main-img">
+          <img id="pdpMainImg" src="images/product-angel-sweater.jpg" alt="Half-Zip Knit — Heather Grey"
+            onerror="this.style.display='none';document.getElementById('pdpMainPh').style.display='flex';" />
+          <div class="pdp__ph" id="pdpMainPh" style="display:none; background:#d8d6d2;">
+            01<br/>HALF-ZIP<br/>KNIT
+          </div>
+        </div>
+        <div class="pdp__thumbs">
+          <div class="pdp__thumb active" data-src="images/product-angel-sweater.jpg">
+            <img src="images/product-angel-sweater.jpg" alt="View 1"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+            <div class="pdp__thumb-ph" style="display:none; background:#d8d6d2;">01</div>
+          </div>
+          <div class="pdp__thumb" data-src="images/product-angel-sweater-2.jpg">
+            <img src="images/product-angel-sweater-2.jpg" alt="View 2"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+            <div class="pdp__thumb-ph" style="display:none; background:#ccc9c4;">BACK</div>
+          </div>
+          <div class="pdp__thumb" data-src="images/product-angel-sweater-3.jpg">
+            <img src="images/product-angel-sweater-3.jpg" alt="View 3"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+            <div class="pdp__thumb-ph" style="display:none; background:#c5c2bc;">DETAIL</div>
+          </div>
+          <div class="pdp__thumb" data-src="images/product-angel-sweater-4.jpg">
+            <img src="images/product-angel-sweater-4.jpg" alt="Worn"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+            <div class="pdp__thumb-ph" style="display:none; background:#bfbcb6;">WORN</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="pdp__info">
+        <p class="pdp__tag">[ SS26 / 01 ] — Limited Drop</p>
+        <h1 class="pdp__name">Half-Zip<br/>Knit</h1>
+        <p class="pdp__variant">Heather Grey / Unisex</p>
+
+        <div class="pdp__price-row">
+          <span class="pdp__price">€119</span>
+          <span class="pdp__price-tax">incl. MwSt.</span>
+        </div>
+
+        <!-- Size -->
+        <div class="pdp__label">
+          <span>Size</span>
+          <span class="pdp__size-link">Size Guide</span>
+        </div>
+        <div class="pdp__sizes">
+          <button class="pdp__size" data-size="XS">XS</button>
+          <button class="pdp__size" data-size="S">S</button>
+          <button class="pdp__size" data-size="M">M</button>
+          <button class="pdp__size" data-size="L">L</button>
+          <button class="pdp__size" data-size="XL">XL</button>
+          <button class="pdp__size oos" data-size="XXL">XXL</button>
+        </div>
+        <p class="pdp__size-notice" id="sizeNotice">Please select a size.</p>
+
+        <!-- CTA -->
+        <div class="pdp__actions">
+          <button class="pdp__add" id="pdpAddBtn">Add to Bag →</button>
+          <button class="pdp__wish" aria-label="Wishlist">♡</button>
+        </div>
+
+        <!-- Accordion -->
+        <div class="pdp__accordion">
+
+          <div class="pdp__acc-item">
+            <button class="pdp__acc-trigger">
+              <span>Description</span>
+              <span class="pdp__acc-icon">+</span>
+            </button>
+            <div class="pdp__acc-body">
+              <div class="pdp__acc-content">
+                <p>Der Half-Zip Knit ist das Kernstück der SS26 Kollektion. Oversized geschnitten, mit tiefgesetzten Schultern und einem markanten Rippenbund. Das Jacquard-Muster zeigt ein klassisch-spirituelles Motiv in dezenter Reliefarkeit — sichtbar, ohne zu schreien.</p>
+                <p style="margin-top:12px;">Produziert in Portugal in limitierter Auflage. Jedes Stück ist nummeriert.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pdp__acc-item">
+            <button class="pdp__acc-trigger">
+              <span>Material &amp; Zusammensetzung</span>
+              <span class="pdp__acc-icon">+</span>
+            </button>
+            <div class="pdp__acc-body">
+              <div class="pdp__acc-content">
+                <ul>
+                  <li>Obermaterial <span>70% Merino Wolle</span></li>
+                  <li>— <span>20% Recycled Polyester</span></li>
+                  <li>— <span>10% Nylon</span></li>
+                  <li>Futter <span>100% Baumwolle (Bündchen)</span></li>
+                  <li>Herkunft <span>Portugal</span></li>
+                  <li>Gewicht <span>ca. 380 g/m²</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="pdp__acc-item">
+            <button class="pdp__acc-trigger">
+              <span>Passform &amp; Schnitt</span>
+              <span class="pdp__acc-icon">+</span>
+            </button>
+            <div class="pdp__acc-body">
+              <div class="pdp__acc-content">
+                <ul>
+                  <li>Silhouette <span>Oversized</span></li>
+                  <li>Schultern <span>Dropped (tiefgesetzt)</span></li>
+                  <li>Länge <span>Hüftlang (+6 cm Normalgröße)</span></li>
+                  <li>Ärmel <span>Voll, leicht überlängert</span></li>
+                  <li>Kragen <span>Stehkragen mit Half-Zip</span></li>
+                  <li>Modell trägt <span>Größe M bei 185 cm</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="pdp__acc-item">
+            <button class="pdp__acc-trigger">
+              <span>Pflege</span>
+              <span class="pdp__acc-icon">+</span>
+            </button>
+            <div class="pdp__acc-body">
+              <div class="pdp__acc-content">
+                <ul>
+                  <li>Waschen <span>Schonwäsche 30°C, links</span></li>
+                  <li>Trocknen <span>Liegend trocknen</span></li>
+                  <li>Bügeln <span>Nicht bügeln</span></li>
+                  <li>Reinigung <span>Keine chemische Reinigung</span></li>
+                  <li>Tipp <span>Wollwaschmittel verwenden</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="pdp__acc-item">
+            <button class="pdp__acc-trigger">
+              <span>Versand &amp; Rückgabe</span>
+              <span class="pdp__acc-icon">+</span>
+            </button>
+            <div class="pdp__acc-body">
+              <div class="pdp__acc-content">
+                <ul>
+                  <li>Versand DE <span>2–3 Werktage · kostenlos ab €150</span></li>
+                  <li>Versand EU <span>3–5 Werktage · kostenlos ab €150</span></li>
+                  <li>Rückgabe <span>14 Tage, keine Fragen</span></li>
+                  <li>Versandt aus <span>München, DE</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="pdp__shipping">
+          <div class="pdp__shipping-row">
+            <span>Kostenloser Versand</span>
+            <strong>ab €150</strong>
+          </div>
+          <div class="pdp__shipping-row">
+            <span>Rückgabe</span>
+            <strong>14 Tage</strong>
+          </div>
+          <div class="pdp__shipping-row">
+            <span>Produktion</span>
+            <strong>Portugal / EU</strong>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- RELATED -->
+  <section class="related">
+    <div class="related__head">
+      <h2 class="related__title">You may also like</h2>
+      <a href="index.html#shop" class="related__link">View all →</a>
+    </div>
+    <div class="related__grid">
+
+      <article class="card" data-id="2" data-cat="tops">
+        <a href="product-2.html" class="card__img-link">
+          <div class="card__img">
+            <img src="images/product-rose-ls-pink.jpg" alt="Contrast Longsleeve Rose" loading="lazy"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/>
+            <div class="card__ph" style="background:#e9d6d4;">
+              <span class="card__ph-text">02<br/>LONGSLEEVE — ROSE</span>
+            </div>
+          </div>
+        </a>
+        <div class="card__meta">
+          <div class="card__line">
+            <h3 class="card__name">Contrast Longsleeve</h3>
+            <span class="card__price">€79</span>
+          </div>
+          <div class="card__line card__line--sub">
+            <span class="card__sub">White / Rose · Unisex</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card" data-id="3" data-cat="tops">
+        <a href="product-3.html" class="card__img-link">
+          <div class="card__img">
+            <img src="images/product-rose-ls-blue.jpg" alt="Contrast Longsleeve Cobalt" loading="lazy"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/>
+            <div class="card__ph" style="background:#d4dbe8;">
+              <span class="card__ph-text">03<br/>LONGSLEEVE — COBALT</span>
+            </div>
+          </div>
+        </a>
+        <div class="card__meta">
+          <div class="card__line">
+            <h3 class="card__name">Contrast Longsleeve</h3>
+            <span class="card__price">€79</span>
+          </div>
+          <div class="card__line card__line--sub">
+            <span class="card__sub">White / Cobalt · Unisex</span>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="foot">
+    <div class="foot__top">
+      <div class="foot__col foot__col--brand">
+        <h3 class="foot__logo">ROSE&amp;RITUAL</h3>
+        <p>Independent fashion studio.<br/>München, DE.</p>
+      </div>
+      <div class="foot__col">
+        <h5>Shop</h5>
+        <a href="index.html#shop">New Arrivals</a>
+        <a href="index.html#shop">Knit</a>
+        <a href="index.html#shop">Tops</a>
+        <a href="index.html#shop">Archive</a>
+      </div>
+      <div class="foot__col">
+        <h5>Info</h5>
+        <a href="#">Studio</a>
+        <a href="#">Shipping &amp; Returns</a>
+        <a href="#">Size Guide</a>
+        <a href="#">Care</a>
+      </div>
+      <div class="foot__col">
+        <h5>Social</h5>
+        <a href="#">Instagram</a>
+        <a href="#">TikTok</a>
+        <a href="#">Pinterest</a>
+      </div>
+    </div>
+    <div class="foot__big" aria-hidden="true">ROSE&amp;RITUAL</div>
+    <div class="foot__bot">
+      <span>© 2026 Rose &amp; Ritual GmbH</span>
+      <div class="foot__legal">
+        <a href="#">Imprint</a>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="pdp__toast" id="pdpToast"></div>
+
+  <script src="product.js"></script>
+</body>
+</html>
