@@ -2381,7 +2381,7 @@ function Hero() {
   return (
     <header className="hero" id="top" data-screen-label="01 Hero">
       <div className="hero-media">
-        <image-slot id="hero-main" placeholder="Cineastisches Hero — langsame Kamerafahrt durch den Speisesaal bei Abendlicht"></image-slot>
+        <image-slot id="hero-main" src="https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/hf_20260513_155810_eac2b9f5-fad3-4e18-999c-6f270efcc3c4.png" placeholder="Cineastisches Hero — langsame Kamerafahrt durch den Speisesaal bei Abendlicht"></image-slot>
       </div>
       <div className="hero-content">
         <div className="hero-meta" style={{ marginBottom: "auto", paddingTop: "120px" }}>
@@ -2433,9 +2433,9 @@ function About() {
         <div className="about-layout">
           <Reveal>
             <div className="about-img">
-              <image-slot id="about-1" placeholder="Chef beim Anrichten — natürliches Seitenlicht"></image-slot>
+              <image-slot id="about-1" src="https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/hf_20260513_155812_6478df1f-5ed9-468e-b2e6-a86ecfce290d.png" placeholder="Chef beim Anrichten — natürliches Seitenlicht"></image-slot>
               <div className="about-img-secondary">
-                <image-slot id="about-2" placeholder="Detail — Hände, Pasta, Mehl"></image-slot>
+                <image-slot id="about-2" src="https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/hf_20260513_155815_872a85fa-a0f6-4321-85da-8ec2cf0b70c0.png" placeholder="Detail — Hände, Pasta, Mehl"></image-slot>
               </div>
             </div>
           </Reveal>
@@ -2486,6 +2486,7 @@ function Cuisine() {
       name: <>Carpaccio <em>di Tonno</em></>,
       desc: "Sizilianischer Roter Thun, Blutorange, wilde Kapern, Taggiasca-Öl.",
       slot: "dish-1",
+      src: "https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/hf_20260513_155818_6aff3a1f-50c5-4565-898b-0b8c65985eec.png",
       ph: "Carpaccio — von oben, weicher Kontrast",
       cls: "col-1",
       img: "dish-img--tall",
@@ -2495,6 +2496,7 @@ function Cuisine() {
       name: <>Tagliolini <em>al Tartufo</em></>,
       desc: "Handgerollte Tagliolini, Alpenbutter, weißer Trüffel aus Alba.",
       slot: "dish-2",
+      src: "https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/hf_20260513_155820_5f4465a2-63fe-42b5-8437-16f601a4d835.png",
       ph: "Pasta — Dampf, Kerzenlicht",
       cls: "col-2",
       img: "",
@@ -2504,6 +2506,7 @@ function Cuisine() {
       name: <>Branzino <em>in Crosta</em></>,
       desc: "Adriatischer Wolfsbarsch in Salzkruste, Fenchel, ligurischer Olivenjus.",
       slot: "dish-3",
+      src: "https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/hf_20260513_155823_914febbb-db69-48bd-a415-68aed5be475c.png",
       ph: "Ganzer Fisch auf Stein, Salzkruste geöffnet",
       cls: "col-3",
       img: "dish-img--tall",
@@ -2513,6 +2516,7 @@ function Cuisine() {
       name: <>Tortino <em>al Cioccolato</em></>,
       desc: "Warme Bitterschokolade, Marsala, gesalzenes Haselnuss-Praliné.",
       slot: "dish-4",
+      src: "https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/hf_20260513_155826_154d403e-82d0-4a73-bf72-a68b1aa6c3e7.png",
       ph: "Dessert — dunkel, intim",
       cls: "col-4",
       img: "dish-img--wide",
@@ -2543,7 +2547,7 @@ function Cuisine() {
           {dishes.map((d, i) => (
             <Reveal key={i} delay={i * 80} className={`dish ${d.cls}`}>
               <div className={`dish-img ${d.img}`}>
-                <image-slot id={d.slot} placeholder={d.ph}></image-slot>
+                <image-slot id={d.slot} src={d.src} placeholder={d.ph}></image-slot>
               </div>
               <div className="dish-meta">
                 <div>
@@ -2699,7 +2703,7 @@ function Reservation() {
     <section className="reserve-section" id="reserve" data-screen-label="05 Reserve">
       <div className="reserve-layout">
         <div className="reserve-media">
-          <image-slot id="reserve-media" placeholder="Warmer Speisesaal — Kerzenlicht, gedeckte Tische"></image-slot>
+          <image-slot id="reserve-media" src="https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/hf_20260513_155829_bd0d4937-6914-4c32-b790-54a0d7d6fc34.png" placeholder="Warmer Speisesaal — Kerzenlicht, gedeckte Tische"></image-slot>
           <div className="reserve-media-caption">
             <span className="eyebrow with-rule" style={{ color: "rgba(255,255,255,0.85)" }}>
               Der Raum
@@ -2792,15 +2796,15 @@ function Reservation() {
 /* ----- Atmosphere / Gallery ----- */
 function Atmosphere() {
   const slots = [
-    { id: "g1", cls: "g1", ph: "Gedeckter Tisch, gedämpftes Licht" },
-    { id: "g2", cls: "g2", ph: "Hände beim Anrichten" },
-    { id: "g3", cls: "g3", ph: "Wein wird eingeschenkt" },
-    { id: "g4", cls: "g4", ph: "Pasta — Detail" },
-    { id: "g5", cls: "g5", ph: "Olivenöl beim Eingießen" },
-    { id: "g6", cls: "g6", ph: "Leinen, Silber, Kerzenlicht" },
-    { id: "g7", cls: "g7", ph: "Speisesaal — weite Aufnahme" },
-    { id: "g8", cls: "g8", ph: "Küchenpass, Koch bei der Arbeit" },
-    { id: "g9", cls: "g9", ph: "Dessert — von oben" },
+    { id: "g1", cls: "g1", src: "https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/hf_20260513_155839_35bb04c6-9069-49e9-84f7-4b1db9465089.png", ph: "Gedeckter Tisch, gedämpftes Licht" },
+    { id: "g2", cls: "g2", src: "https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/hf_20260513_155841_11afa6c6-3663-48fe-bcc8-288e94389143.png", ph: "Hände beim Anrichten" },
+    { id: "g3", cls: "g3", src: "https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/hf_20260513_155844_8a6a529d-d063-49b9-8832-1929128de2bc.png", ph: "Wein wird eingeschenkt" },
+    { id: "g4", cls: "g4", src: "https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/hf_20260513_155847_10a3db57-5b4f-4736-940b-7f6dd1dd1bd8.png", ph: "Pasta — Detail" },
+    { id: "g5", cls: "g5", src: "https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/hf_20260513_155849_792d2ef5-692c-4417-bfe8-b4ddf5a086e1.png", ph: "Olivenöl beim Eingießen" },
+    { id: "g6", cls: "g6", src: "https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/hf_20260513_155852_c9f3531e-8374-4daa-be7e-c603b2bf6c75.png", ph: "Leinen, Silber, Kerzenlicht" },
+    { id: "g7", cls: "g7", src: "https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/hf_20260513_155855_0ae057f6-7316-4501-861b-ef959096d4ac.png", ph: "Speisesaal — weite Aufnahme" },
+    { id: "g8", cls: "g8", src: "https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/hf_20260513_155858_42b21faf-2113-4480-b691-8fe6550cffcc.png", ph: "Küchenpass, Koch bei der Arbeit" },
+    { id: "g9", cls: "g9", src: "https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/hf_20260513_155901_14cbba0c-15a6-4436-8b1b-5f941c795043.png", ph: "Dessert — von oben" },
   ];
 
   return (
@@ -2830,7 +2834,7 @@ function Atmosphere() {
         <div className="gallery">
           {slots.map((s, i) => (
             <Reveal key={s.id} delay={i * 60} className={s.cls}>
-              <image-slot id={s.id} placeholder={s.ph}></image-slot>
+              <image-slot id={s.id} src={s.src} placeholder={s.ph}></image-slot>
             </Reveal>
           ))}
         </div>
