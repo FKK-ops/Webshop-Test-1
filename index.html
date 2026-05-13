@@ -948,6 +948,56 @@ image-slot[data-filled="true"]::after { display: none; }
   color: var(--ink-soft);
 }
 
+/* ---------- Location ---------- */
+.location-section { background: var(--paper); }
+
+.location-layout {
+  display: grid;
+  grid-template-columns: 4fr 6fr;
+  gap: clamp(40px, 6vw, 96px);
+  align-items: stretch;
+}
+
+.location-text {
+  display: flex;
+  flex-direction: column;
+}
+.location-text h2 {
+  font-size: clamp(36px, 4.2vw, 64px);
+  max-width: 14ch;
+  margin: 16px 0 28px;
+}
+
+.location-address {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 300;
+  line-height: 1.55;
+  color: var(--ink);
+  margin: 8px 0 24px;
+  padding: 22px 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.location-address p { margin: 0; }
+
+.location-map {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 5 / 4;
+  overflow: hidden;
+  background: var(--bg-2);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.10);
+}
+.location-map iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  filter: saturate(0.85) contrast(0.98);
+}
+
 /* ---------- Footer ---------- */
 .footer {
   background: var(--paper);
@@ -1030,7 +1080,9 @@ image-slot[data-filled="true"]::after { display: none; }
   .reserve-layout,
   .menu-panel,
   .atmo-head,
+  .location-layout,
   .footer-grid { grid-template-columns: 1fr; }
+  .location-map { aspect-ratio: 4 / 3; }
 
   .reserve-form { grid-template-columns: 1fr; }
   .field:nth-child(odd) { border-right: none; padding-right: 0; }
@@ -2369,6 +2421,7 @@ function Nav() {
         <a href="#cuisine">Küche</a>
         <a href="#menu">Karte</a>
         <a href="#atmosphere">Atmosphäre</a>
+        <a href="#location">Anfahrt</a>
         <a href="#contact">Kontakt</a>
       </div>
       <a href="#reserve" className="nav-cta">Reservieren</a>
@@ -2851,6 +2904,56 @@ function Atmosphere() {
   );
 }
 
+/* ----- Location ----- */
+function Location() {
+  return (
+    <section className="section location-section" id="location" data-screen-label="07 Location">
+      <div className="container">
+        <Reveal className="section-meta">
+          <span className="eyebrow">№ 07 — Anfahrt</span>
+          <span className="rule"></span>
+          <span className="eyebrow" style={{ opacity: 0.6 }}>Sendling-Westpark</span>
+        </Reveal>
+
+        <div className="location-layout">
+          <Reveal className="location-text">
+            <span className="eyebrow with-rule">Finden Sie uns</span>
+            <h2 className="display">
+              In einer stillen<br/><em>Münchner Straße.</em>
+            </h2>
+            <p className="lede" style={{ maxWidth: "32ch", marginBottom: "28px" }}>
+              Eine kurze Tramfahrt vom Zentrum, mitten in Sendling-Westpark — wenige Schritte von der Tegernseer Landstraße.
+            </p>
+            <div className="location-address">
+              <p>Ruffino Restaurant</p>
+              <p>Johann-Clanze-Straße 79</p>
+              <p>81369 München</p>
+            </div>
+            <a
+              href="https://www.google.com/maps/place/Ruffino+Restaurant/@48.1168177,11.4981670,15z"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="qlink"
+            >
+              In Google Maps öffnen →
+            </a>
+          </Reveal>
+
+          <Reveal delay={120} className="location-map">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d42618.54052279497!2d11.498167032927766!3d48.11681765765913!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x479dd9001529e837%3A0x71a3b045b468b59b!2sRuffino%20Restaurant!5e0!3m2!1sen!2sde!4v1778688599532!5m2!1sen!2sde"
+              allowFullScreen={true}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Ruffino Restaurant — Standort in München"
+            ></iframe>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ----- Footer ----- */
 function Footer() {
   return (
@@ -2908,7 +3011,7 @@ function Footer() {
 }
 
 Object.assign(window, {
-  Nav, Hero, About, Cuisine, Menu, Reservation, Atmosphere, Footer, Reveal,
+  Nav, Hero, About, Cuisine, Menu, Reservation, Atmosphere, Location, Footer, Reveal,
 });
 
   </script>
@@ -2950,6 +3053,7 @@ function App() {
       <Menu />
       <Reservation />
       <Atmosphere />
+      <Location />
       <Footer />
 
       <TweaksPanel title="Tweaks · Ruffino">
