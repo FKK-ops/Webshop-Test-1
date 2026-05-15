@@ -511,9 +511,11 @@ section{ padding: clamp(64px, 9vw, 120px) 0; }
   display: block;
 }
 .career .career-figure{
-  aspect-ratio: 4/5;
+  aspect-ratio: 930 / 430;
+  width: 100%;
   border-radius: 20px; overflow: hidden;
   border: 1px solid var(--line); position: relative;
+  background: #fff;
 }
 .check-list{ list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
 .check-list li{ display: flex; gap: 12px; align-items: flex-start; color: var(--ink-2); }
@@ -686,9 +688,9 @@ section{ padding: clamp(64px, 9vw, 120px) 0; }
   backdrop-filter: blur(18px) saturate(115%);
   -webkit-backdrop-filter: blur(18px) saturate(115%);
   border: 1px solid color-mix(in oklab, var(--line) 85%, transparent);
-  display: grid; grid-template-columns: 1.2fr .8fr; gap: 36px; align-items: center;
+  display: grid; grid-template-columns: 1fr; gap: 36px; align-items: stretch;
 }
-@media (max-width: 880px){ .career{ grid-template-columns: 1fr; } }
+@media (max-width: 880px){ .career{ padding: clamp(28px, 5vw, 44px); gap: 24px; } }
 .career .badge{
   display: inline-flex; align-items: center; gap: 8px;
   padding: 6px 12px; border-radius: 999px;
@@ -758,11 +760,21 @@ section{ padding: clamp(64px, 9vw, 120px) 0; }
 
 /* ============ ALT SECTION (background tints) ============ */
 .section-tint{
-  background: rgba(255,255,255,0.55);
-  backdrop-filter: blur(22px) saturate(115%);
-  -webkit-backdrop-filter: blur(22px) saturate(115%);
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg,
+    transparent 0,
+    rgba(255,255,255,0.45) 110px,
+    rgba(255,255,255,0.45) calc(100% - 110px),
+    transparent 100%);
+  border: 0;
+}
+@media (max-width: 760px){
+  .section-tint{
+    background: linear-gradient(180deg,
+      transparent 0,
+      rgba(255,255,255,0.45) 60px,
+      rgba(255,255,255,0.45) calc(100% - 60px),
+      transparent 100%);
+  }
 }
 .section-pt-0{ padding-top: 0; }
 
