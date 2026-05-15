@@ -60,6 +60,28 @@
     el.textContent = `${days[d.getDay()]} · ${d.getDate()}. ${months[d.getMonth()]} ${d.getFullYear()}`;
   })();
 
+  // ===== Spline 3D hero scene (lazy)
+  (function loadSpline() {
+    const host = document.querySelector('.hero-3d');
+    if (!host) return;
+    const url = host.dataset.splineUrl;
+    if (!url) return; // no URL set → keep existing CSS arcs only
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const loader = document.createElement('script');
+    loader.type = 'module';
+    loader.src = 'https://unpkg.com/@splinetool/viewer@1.9.35/build/spline-viewer.js';
+    loader.onload = () => {
+      const viewer = document.createElement('spline-viewer');
+      viewer.setAttribute('url', url);
+      viewer.setAttribute('loading-anim-type', 'none');
+      viewer.setAttribute('events-target', 'global');
+      host.appendChild(viewer);
+      host.classList.add('is-loaded');
+    };
+    document.head.appendChild(loader);
+  })();
+
   // ===== Reveal on scroll (IntersectionObserver)
   if ('IntersectionObserver' in window) {
     const io = new IntersectionObserver(

@@ -60,6 +60,14 @@
       <div class="arc"></div>
       <div class="arc-2"></div>
       <div class="grain"></div>
+      <!--
+        3D HERO SCENE
+        Paste your Spline scene URL into data-spline-url below to enable it.
+        Get one at spline.design → Export → Code → Public URL
+        Example: https://prod.spline.design/abc123XYZ/scene.splinecode
+      -->
+      <div class="hero-3d" data-spline-url=""></div>
+      <div class="hero-fade"></div>
     </div>
     <div class="wrap hero-inner">
       <span class="hero-badge reveal"><span class="dot"></span> Hausarztpraxis München-Laim</span>
@@ -544,6 +552,30 @@
     </div>
   </section>
 
+  <!-- ============ CTA · 3D GLOBE ============ -->
+  <section id="cta-globe" class="cta-globe-section">
+    <div class="wrap">
+      <div class="cta-globe-card reveal">
+        <div class="cta-globe-text">
+          <p class="eyebrow"><span class="dot"></span> Termin vereinbaren</p>
+          <h2>Vertrauensvolle Hausarztmedizin — <span class="serif" style="font-style: italic; color: var(--blue-ink);">nur einen Anruf</span> entfernt.</h2>
+          <p class="lede">
+            Ob akute Beschwerden, Vorsorge oder ein Erstgespräch — wir nehmen uns Zeit für Sie. Vereinbaren Sie
+            Ihren Termin telefonisch innerhalb unserer Sprechzeiten oder per E-Mail.
+          </p>
+          <div class="cta-globe-ctas">
+            <a href="tel:+4989566067" class="btn btn-primary btn-lg">Praxis anrufen · 089 566067 <span class="arrow" aria-hidden="true">→</span></a>
+            <a href="mailto:info@dr-schratzlseer.de?subject=Terminwunsch" class="btn btn-ghost btn-lg">Terminwunsch per E-Mail</a>
+          </div>
+        </div>
+        <div class="cta-globe-stage" aria-hidden="true">
+          <canvas id="globeCanvas"></canvas>
+          <div class="cta-globe-glow"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ CAREER / MFA ============ -->
   <section>
     <div class="wrap">
@@ -628,5 +660,6 @@
   </footer>
 
   <script src="script.js" defer></script>
+  <script type="module" src="globe.js"></script>
 </body>
 </html>
