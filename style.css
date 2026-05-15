@@ -135,19 +135,22 @@ p{ margin: 0; color: var(--ink-2); }
   display: inline-flex; align-items: center; gap: 10px;
   font-weight: 700; letter-spacing: -0.02em;
 }
-.brand-mark{
-  width: 30px; height: 30px; border-radius: 9px;
-  background: linear-gradient(135deg, var(--blue) 0%, var(--sage) 100%);
-  position: relative; box-shadow: inset 0 0 0 1px rgba(255,255,255,.4);
-  flex-shrink: 0;
+.brand-logo{
+  height: 28px; width: auto; display: block;
+  /* logo is the white variant; render as ink on light backgrounds */
+  filter: brightness(0) saturate(100%);
+  opacity: 0.92;
+  transition: opacity var(--t-fast);
 }
-.brand-mark::before, .brand-mark::after{
-  content:""; position:absolute; background: #fff; border-radius: 2px;
+.brand:hover .brand-logo{ opacity: 1; }
+.foot .brand-logo{ height: 34px; }
+.contact-logo{
+  display: block;
+  height: 38px; width: auto;
+  /* keep white variant on the dark contact-info card */
+  opacity: 0.95;
+  margin-bottom: 14px;
 }
-.brand-mark::before{ inset: 13px 8px; }
-.brand-mark::after{ inset: 8px 13px; }
-.brand-name{ font-size: 15px; }
-.brand-name .sub{ display: block; font-size: 11px; color: var(--ink-3); font-weight: 500; letter-spacing: 0; margin-top: -2px;}
 .nav-links{ display: flex; align-items: center; gap: 6px; }
 .nav-links a{
   padding: 8px 14px; border-radius: 999px;
