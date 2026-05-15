@@ -503,6 +503,18 @@ section{ padding: clamp(64px, 9vw, 120px) 0; }
   border-radius: var(--radius-lg); overflow: hidden;
   border: 1px solid var(--line); position: relative;
 }
+.alt-grid .figure img,
+.person .photo img,
+.career .figure img{
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+  display: block;
+}
+.career .career-figure{
+  aspect-ratio: 4/5;
+  border-radius: 20px; overflow: hidden;
+  border: 1px solid var(--line); position: relative;
+}
 .check-list{ list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
 .check-list li{ display: flex; gap: 12px; align-items: flex-start; color: var(--ink-2); }
 .check-list li b{ color: var(--ink); font-weight: 600; }
@@ -541,12 +553,21 @@ section{ padding: clamp(64px, 9vw, 120px) 0; }
   position: relative; border-radius: var(--radius-xl);
   overflow: hidden; border: 1px solid var(--line);
   aspect-ratio: 16/9; box-shadow: var(--shadow-lg);
+  background: #0E1411;
+}
+.video-wrap video{
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
 }
 .video-wrap .play{
   position: absolute; inset: 0; display: grid; place-items: center;
   background: linear-gradient(180deg, rgba(14,20,17,0.0) 30%, rgba(14,20,17,.35) 100%);
   color: #fff;
+  cursor: pointer;
+  transition: opacity 300ms ease;
 }
+.video-wrap.is-playing .play{ opacity: 0; pointer-events: none; }
+.video-wrap.is-playing .caption{ opacity: 0; }
 .video-wrap .play button{
   width: 88px; height: 88px; border-radius: 50%; border: 1px solid rgba(255,255,255,.5);
   background: rgba(255,255,255,.15); backdrop-filter: blur(8px);

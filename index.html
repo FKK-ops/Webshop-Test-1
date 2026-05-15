@@ -213,9 +213,8 @@
   <section class="section-pt-0">
     <div class="wrap">
       <div class="alt-grid">
-        <div class="figure ph reveal" data-tint="sage" aria-hidden="true">
-          <span class="ph-corner">16/9</span>
-          <span class="ph-label">[ praxisraum_warmes_licht.jpg ]</span>
+        <div class="figure reveal">
+          <img src="assets/images/praxisraum.jpg" alt="Behandlungsraum der Hausarztpraxis Dr. Schratzlseer in warmem Licht" loading="lazy" width="1600" height="1280" />
         </div>
         <div class="text reveal" data-delay="1">
           <p class="eyebrow"><span class="dot"></span> Unsere Praxis</p>
@@ -239,9 +238,8 @@
   <section id="vorsorge" class="section-tint">
     <div class="wrap">
       <div class="alt-grid reverse">
-        <div class="figure ph reveal" data-tint="blue" aria-hidden="true">
-          <span class="ph-corner">5/4</span>
-          <span class="ph-label">[ vorsorge_konsultation.jpg ]</span>
+        <div class="figure reveal">
+          <img src="assets/images/vorsorge.jpg" alt="Ärztin im Gespräch mit Patient während einer Vorsorgeuntersuchung" loading="lazy" width="1500" height="1200" />
         </div>
         <div class="text reveal" data-delay="1">
           <p class="eyebrow"><span class="dot"></span> Vorsorge &amp; Früherkennung</p>
@@ -281,9 +279,8 @@
 
       <div class="team-grid">
         <article class="person reveal">
-          <div class="photo ph" data-tint="blue" aria-hidden="true">
-            <span class="ph-corner">1:1</span>
-            <span class="ph-label">[ dr_schratzlseer.jpg ]</span>
+          <div class="photo">
+            <img src="assets/images/dr-schratzlseer.jpg" alt="Porträt von Dr. med. Georg Schratzlseer, Facharzt für Innere Medizin" loading="lazy" width="800" height="800" />
           </div>
           <div>
             <h3>Dr. med. Georg Schratzlseer</h3>
@@ -296,9 +293,8 @@
         </article>
 
         <article class="person reveal" data-delay="1">
-          <div class="photo ph" data-tint="sage" aria-hidden="true">
-            <span class="ph-corner">1:1</span>
-            <span class="ph-label">[ dr_deyhle-oeben.jpg ]</span>
+          <div class="photo">
+            <img src="assets/images/dr-deyhle-oeben.jpg" alt="Porträt von Dr. med. Barbara Deyhle-Oeben, Fachärztin für Allgemeinmedizin" loading="lazy" width="800" height="800" />
           </div>
           <div>
             <h3>Dr. med. Barbara Deyhle-Oeben</h3>
@@ -327,11 +323,19 @@
         </p>
       </div>
 
-      <div class="video-wrap ph reveal" data-tint="blue" aria-label="Praxis-Video Platzhalter">
-        <span class="ph-corner">16:9</span>
-        <span class="ph-label">[ praxis_rundgang.mp4 — 1:48 ]</span>
-        <div class="play">
-          <button type="button" aria-label="Video abspielen">
+      <div class="video-wrap reveal">
+        <video
+          id="praxisVideo"
+          poster="assets/images/praxis-rundgang-poster.jpg"
+          preload="metadata"
+          playsinline
+          controls
+        >
+          <source src="assets/videos/praxis-rundgang.mp4" type="video/mp4" />
+          Ihr Browser unterstützt das Video-Element nicht.
+        </video>
+        <div class="play" id="videoPlayOverlay">
+          <button type="button" aria-label="Video abspielen" aria-controls="praxisVideo">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
           </button>
         </div>
@@ -601,9 +605,8 @@
             <a href="tel:+4989566067" class="btn btn-ghost btn-lg">Fragen? 089 566067</a>
           </div>
         </div>
-        <div class="figure ph" data-tint="sage" aria-hidden="true">
-          <span class="ph-corner">4:5</span>
-          <span class="ph-label">[ team_arbeitsalltag.jpg ]</span>
+        <div class="figure career-figure">
+          <img src="assets/images/team-arbeitsalltag.jpg" alt="Medizinische Fachangestellte und Ärzte im freundlichen Praxisalltag" loading="lazy" width="1200" height="1500" />
         </div>
       </div>
     </div>

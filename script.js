@@ -82,6 +82,22 @@
     document.head.appendChild(loader);
   })();
 
+  // ===== Praxis video — wire custom play overlay
+  (function videoPlay() {
+    const wrap = document.querySelector('.video-wrap');
+    const video = document.getElementById('praxisVideo');
+    const overlay = document.getElementById('videoPlayOverlay');
+    if (!wrap || !video || !overlay) return;
+    const start = () => {
+      wrap.classList.add('is-playing');
+      video.play().catch(() => {});
+    };
+    overlay.addEventListener('click', start);
+    video.addEventListener('play', () => wrap.classList.add('is-playing'));
+    video.addEventListener('pause', () => wrap.classList.remove('is-playing'));
+    video.addEventListener('ended', () => wrap.classList.remove('is-playing'));
+  })();
+
   // ===== Reveal on scroll (IntersectionObserver)
   if ('IntersectionObserver' in window) {
     const io = new IntersectionObserver(
