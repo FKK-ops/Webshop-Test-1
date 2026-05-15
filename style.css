@@ -516,6 +516,8 @@ section{ padding: clamp(64px, 9vw, 120px) 0; }
 .career .career-figure{
   aspect-ratio: 930 / 430;
   width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
   border-radius: 20px; overflow: hidden;
   border: 1px solid var(--line); position: relative;
   background: #fff;
