@@ -390,7 +390,7 @@
   <section class="page hero active" data-screen-label="01 Hero" data-bg="dark">
     <div class="bg imgholder">
       <div class="ph dark"><span class="ph-inner">Amara Fofana · Hero</span></div>
-      <img id="heroImg" src="img/hero.jpg" alt="Amara Fofana" data-fallback />
+      <img id="heroImg" alt="Amara Fofana" data-fallback />
     </div>
     <div class="corner tl">
       <a class="brand" href="#" data-page="0">SETCARD</a>
@@ -565,21 +565,24 @@
 
 <script>
   // ============== DATA ==============
+  // Each image is referenced by a base NAME only (e.g. "p01"). The loader
+  // automatically resolves it to whatever file actually exists — any of
+  // .jpg/.jpeg/.png/.webp, located either in img/ or in the repo root.
   const portfolio = [
-    { id:'01', label:'Photo 01', src:'img/p01.jpg', pos:'center 30%' },
-    { id:'02', label:'Photo 02', src:'img/p02.jpg', pos:'center 25%' },
-    { id:'03', label:'Photo 03', src:'img/p03.jpg', pos:'center 30%' },
-    { id:'04', label:'Photo 04', src:'img/p04.jpg', pos:'center 30%' },
-    { id:'05', label:'Photo 05', src:'img/p05.jpg', pos:'center 25%' },
-    { id:'06', label:'Photo 06', src:'img/p06.jpg', pos:'center 30%' },
-    { id:'07', label:'Photo 07', src:'img/p07.jpg', pos:'center 25%' },
-    { id:'08', label:'Photo 08', src:'img/p08.jpg', pos:'center 30%' },
+    { id:'01', label:'Photo 01', name:'p01', pos:'center 30%' },
+    { id:'02', label:'Photo 02', name:'p02', pos:'center 25%' },
+    { id:'03', label:'Photo 03', name:'p03', pos:'center 30%' },
+    { id:'04', label:'Photo 04', name:'p04', pos:'center 30%' },
+    { id:'05', label:'Photo 05', name:'p05', pos:'center 25%' },
+    { id:'06', label:'Photo 06', name:'p06', pos:'center 30%' },
+    { id:'07', label:'Photo 07', name:'p07', pos:'center 25%' },
+    { id:'08', label:'Photo 08', name:'p08', pos:'center 30%' },
   ];
   const digitals = [
-    { label:'FRONT',    src:'img/p02.jpg', pos:'center 18%' },
-    { label:'PORTRAIT', src:'img/hero.jpg', pos:'center 30%' },
-    { label:'PROFILE',  src:'img/p05.jpg', pos:'center 20%' },
-    { label:'FULL',     src:'img/p06.jpg', pos:'center 30%' },
+    { label:'FRONT',    name:'p02',  pos:'center 18%' },
+    { label:'PORTRAIT', name:'hero', pos:'center 30%' },
+    { label:'PROFILE',  name:'p05',  pos:'center 20%' },
+    { label:'FULL',     name:'p06',  pos:'center 30%' },
   ];
 
   const $  = (s, r=document) => r.querySelector(s);
@@ -587,21 +590,45 @@
   const pad2 = n => String(n).padStart(2,'0');
 
   // ============== GRACEFUL IMAGE LOADING ==============
-  // Any <img data-fallback> fades out and reveals its sibling .ph placeholder
-  // if the source is missing/broken. Also handles images set later via setSrc().
+  // An <img data-fallback> fades out and reveals its sibling .ph placeholder
+  // while no real file is available. loadInto() resolves a base name to the
+  // first file that actually exists (any common extension, img/ or root) and
+  // shows it; if none load, the elegant placeholder stays visible.
+  const EXTS = ['jpg','jpeg','png','webp','JPG','JPEG','PNG'];
+  const DIRS = ['img/',''];
+  const resolved = Object.create(null);   // name -> working url, or null if none
+
   function markFailed(img){ img.classList.add('failed'); }
   function markOk(img){ img.classList.remove('failed'); }
   function bindFallback(img){
     img.addEventListener('error', ()=> markFailed(img));
     img.addEventListener('load',  ()=> { if (img.naturalWidth>0) markOk(img); });
   }
-  // Set src + object-position with placeholder-safe handling.
-  function setSrc(img, src, pos){
-    markFailed(img);               // assume placeholder until proven loaded
+  function candidates(name){
+    const list = [];
+    DIRS.forEach(d => EXTS.forEach(e => list.push(d + name + '.' + e)));
+    return list;
+  }
+  function applyUrl(img, name, url){
+    if (img.dataset.req !== name) return;  // image was reassigned meanwhile
+    if (url){ img.src = url; markOk(img); }
+    else { img.removeAttribute('src'); markFailed(img); }
+  }
+  // Resolve `name` to a real file and display it in `img` (placeholder-safe).
+  function loadInto(img, name, pos){
     if (pos) img.style.objectPosition = pos;
-    if (!src){ img.removeAttribute('src'); return; }
-    img.src = src;
-    if (img.complete && img.naturalWidth>0) markOk(img);
+    img.dataset.req = name;
+    markFailed(img);
+    if (name in resolved){ applyUrl(img, name, resolved[name]); return; }
+    const cands = candidates(name);
+    let i = 0;
+    const probe = new Image();
+    probe.onload  = ()=>{ resolved[name] = cands[i]; applyUrl(img, name, cands[i]); };
+    probe.onerror = ()=>{
+      if (++i < cands.length){ probe.src = cands[i]; }
+      else { resolved[name] = null; applyUrl(img, name, null); }
+    };
+    probe.src = cands[i];
   }
 
   // ============== BUILD GRID + DIGITALS ==============
@@ -616,7 +643,7 @@
       `<div class="num">${p.id}/${pad2(total)}</div>`;
     const img = c.querySelector('img');
     bindFallback(img);
-    setSrc(img, p.src, p.pos);
+    loadInto(img, p.name, p.pos);
     c.addEventListener('click', ()=> openLb(i));
     gridWrap.appendChild(c);
   });
@@ -631,9 +658,9 @@
       `<div class="lbl">${d.label}</div>`;
     const img = c.querySelector('img');
     bindFallback(img);
-    setSrc(img, d.src, d.pos);
+    loadInto(img, d.name, d.pos);
     // map digital -> portfolio index for lightbox (fallback to its own index)
-    const pIdx = portfolio.findIndex(p => p.src === d.src);
+    const pIdx = portfolio.findIndex(p => p.name === d.name);
     c.addEventListener('click', ()=> openLb(pIdx >= 0 ? pIdx : 0));
     digStrip.appendChild(c);
   });
@@ -642,7 +669,7 @@
   $$('#pages img[data-fallback]').forEach(bindFallback);
   bindFallback($('#lbImg'));
   // hero starts with its initial source (stage is set below via setIdx)
-  setSrc($('#heroImg'), 'img/hero.jpg', 'center 30%');
+  loadInto($('#heroImg'), 'hero', 'center 30%');
 
   // ============== PAGE NAV ==============
   const pages = $$('.page');
@@ -762,7 +789,7 @@
     stageImg.style.opacity = 0.15;
     setTimeout(()=>{
       stageImg.alt = portfolio[idx].label;
-      setSrc(stageImg, portfolio[idx].src, portfolio[idx].pos);
+      loadInto(stageImg, portfolio[idx].name, portfolio[idx].pos);
       stageImg.style.opacity = '';   // back to CSS-controlled opacity
     }, 180);
   }
@@ -820,7 +847,7 @@
     const p = portfolio[lbIdx];
     lbImg.alt = p.label;
     $('#lbPh').textContent = p.label;
-    setSrc(lbImg, p.src, p.pos);
+    loadInto(lbImg, p.name, p.pos);
     $('#lbCounter').textContent = `${lbIdx+1} / ${total}`;
   }
   $('#lbClose').addEventListener('click', e=>{ e.stopPropagation(); closeLb(); });
