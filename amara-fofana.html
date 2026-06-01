@@ -390,7 +390,7 @@
   <section class="page hero active" data-screen-label="01 Hero" data-bg="dark">
     <div class="bg imgholder">
       <div class="ph dark"><span class="ph-inner">Amara Fofana · Hero</span></div>
-      <img id="heroImg" src="img/hero.png" alt="Amara Fofana" data-fallback />
+      <img id="heroImg" src="img/hero.jpg" alt="Amara Fofana" data-fallback />
     </div>
     <div class="corner tl">
       <a class="brand" href="#" data-page="0">SETCARD</a>
@@ -429,7 +429,7 @@
         <button class="arrow right" id="nextBtn" aria-label="Next photo">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 6 15 12 9 18"/></svg>
         </button>
-        <div class="counter"><span id="cIdx">1</span>/<span id="cTot">6</span></div>
+        <div class="counter"><span id="cIdx">1</span>/<span id="cTot">8</span></div>
       </div>
 
       <div class="stats-bar" id="statsBar">
@@ -555,7 +555,7 @@
     <img id="lbImg" alt="Photo" data-fallback />
   </div>
   <div class="bot">
-    <span id="lbCounter">1 / 6</span>
+    <span id="lbCounter">1 / 8</span>
     <div class="nav">
       <button id="lbPrev">← Prev</button>
       <button id="lbNext">Next →</button>
@@ -566,18 +566,20 @@
 <script>
   // ============== DATA ==============
   const portfolio = [
-    { id:'01', label:'Photo 01', src:'img/p01.png',  pos:'center 30%' },
-    { id:'02', label:'Photo 02', src:'img/p02.jpeg', pos:'center 25%' },
-    { id:'03', label:'Photo 03', src:'img/p03.jpeg', pos:'center 30%' },
-    { id:'04', label:'Photo 04', src:'img/p04.jpeg', pos:'center 30%' },
-    { id:'05', label:'Photo 05', src:'img/p05.jpeg', pos:'center 25%' },
-    { id:'06', label:'Photo 06', src:'img/p06.jpeg', pos:'center 30%' },
+    { id:'01', label:'Photo 01', src:'img/p01.jpg', pos:'center 30%' },
+    { id:'02', label:'Photo 02', src:'img/p02.jpg', pos:'center 25%' },
+    { id:'03', label:'Photo 03', src:'img/p03.jpg', pos:'center 30%' },
+    { id:'04', label:'Photo 04', src:'img/p04.jpg', pos:'center 30%' },
+    { id:'05', label:'Photo 05', src:'img/p05.jpg', pos:'center 25%' },
+    { id:'06', label:'Photo 06', src:'img/p06.jpg', pos:'center 30%' },
+    { id:'07', label:'Photo 07', src:'img/p07.jpg', pos:'center 25%' },
+    { id:'08', label:'Photo 08', src:'img/p08.jpg', pos:'center 30%' },
   ];
   const digitals = [
-    { label:'FRONT',    src:'img/p02.jpeg', pos:'center 18%' },
-    { label:'PORTRAIT', src:'img/hero.png', pos:'center 30%' },
-    { label:'PROFILE',  src:'img/p05.jpeg', pos:'center 20%' },
-    { label:'FULL',     src:'img/p06.jpeg', pos:'center 30%' },
+    { label:'FRONT',    src:'img/p02.jpg', pos:'center 18%' },
+    { label:'PORTRAIT', src:'img/hero.jpg', pos:'center 30%' },
+    { label:'PROFILE',  src:'img/p05.jpg', pos:'center 20%' },
+    { label:'FULL',     src:'img/p06.jpg', pos:'center 30%' },
   ];
 
   const $  = (s, r=document) => r.querySelector(s);
@@ -640,7 +642,7 @@
   $$('#pages img[data-fallback]').forEach(bindFallback);
   bindFallback($('#lbImg'));
   // hero starts with its initial source (stage is set below via setIdx)
-  setSrc($('#heroImg'), 'img/hero.png', 'center 30%');
+  setSrc($('#heroImg'), 'img/hero.jpg', 'center 30%');
 
   // ============== PAGE NAV ==============
   const pages = $$('.page');
