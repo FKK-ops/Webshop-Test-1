@@ -5,6 +5,7 @@ import streamlit as st
 from dotenv import load_dotenv
 
 from src.feedback_store import (
+    FEEDBACK_CATEGORIES,
     add_feedback,
     format_feedback_for_prompt,
     load_feedback,
@@ -18,8 +19,8 @@ st.set_page_config(page_title="HR-Recruiting-Assistent", layout="wide")
 
 DISCLAIMER = (
     "Hinweis: Dieses Tool extrahiert ausschließlich objektive Informationen "
-    "aus Lebensläufen. Es liefert **kein Ranking, keinen Score und keine "
-    "Empfehlung**. Die finale Entscheidung trifft immer ein Mensch."
+    "aus Lebensläufen. Es liefert **kein Ranking, keinen Score, keine Top-5 "
+    "und keine Empfehlung**. Die finale Entscheidung trifft immer ein Mensch."
 )
 
 
@@ -117,28 +118,36 @@ with st.sidebar:
 
     if st.button("Extraktion starten", type="primary", disabled=not uploaded):
         feedback_block = format_feedback_for_prompt(load_feedback())
-        progress = st.progress(0.0)
-        new_files = [f for f in uploaded if f.name not in st.session_state.processed_files]
+        new_files = [
+            f for f in uploaded if f.name not in st.session_state.processed_files
+        ]
 
         if not new_files:
             st.warning("Alle ausgewählten Dateien wurden bereits verarbeitet.")
         else:
+            progress = st.progress(0.0)
+            ok_count = 0
             for i, f in enumerate(new_files, start=1):
                 with st.spinner(f"Verarbeite {f.name} ..."):
                     try:
                         text = extract_text_from_pdf(f.read())
                         if not text:
-                            st.warning(f"{f.name}: kein Text extrahierbar.")
+                            st.warning(
+                                f"{f.name}: kein Text extrahierbar "
+                                "(evtl. gescanntes PDF ohne OCR)."
+                            )
                             continue
                         data = extract_cv(text, feedback_block)
                         st.session_state.candidates.append(
                             {"filename": f.name, "data": data}
                         )
                         st.session_state.processed_files.add(f.name)
-                    except Exception as e:
+                        ok_count += 1
+                    except Exception as e:  # noqa: BLE001 - in UI verständlich anzeigen
                         st.error(f"Fehler bei {f.name}: {e}")
                 progress.progress(i / len(new_files))
-            st.success(f"{len(new_files)} Lebensläufe extrahiert.")
+            if ok_count:
+                st.success(f"{ok_count} Lebensläufe extrahiert.")
 
     if st.session_state.candidates:
         if st.button("Alle Kandidaten löschen"):
@@ -167,40 +176,54 @@ filtered = _filter_candidates(
     st.session_state.candidates, skill_q, language_q, cert_q, experience_q
 )
 
-st.subheader(f"Kandidaten ({len(filtered)} von {len(st.session_state.candidates)})")
+st.subheader(f"Bewerber ({len(filtered)} von {len(st.session_state.candidates)})")
 df = _candidates_to_dataframe(filtered)
 st.dataframe(df, use_container_width=True, hide_index=True)
 
 # ---------- Details + Feedback ----------
 
 st.subheader("Details & Feedback")
-options = [f"{c['data'].get('name') or '(ohne Name)'} – {c['filename']}" for c in filtered]
+options = [
+    f"{c['data'].get('name') or '(ohne Name)'} – {c['filename']}" for c in filtered
+]
 if not options:
-    st.write("Keine Kandidaten entsprechen den Filtern.")
+    st.write("Keine Bewerber entsprechen den Filtern.")
 else:
     idx = st.selectbox(
-        "Kandidat auswählen", range(len(options)), format_func=lambda i: options[i]
+        "Bewerber auswählen", range(len(options)), format_func=lambda i: options[i]
     )
     selected = filtered[idx]
     st.json(selected["data"])
 
     with st.form("feedback_form", clear_on_submit=True):
         st.markdown(
-            "**Korrektur/Feedback eintragen** (z. B. _„SQL wurde übersehen“_). "
-            "Das Feedback wird in `data/feedback.json` gespeichert und beim "
-            "nächsten Extraktionslauf in den Prompt einbezogen."
+            "**Korrektur/Feedback eintragen.** Das Feedback wird in "
+            "`data/feedback.json` gespeichert und beim nächsten "
+            "Extraktionslauf in den Prompt einbezogen."
         )
-        note = st.text_area("Anmerkung", placeholder="Was wurde übersehen oder falsch extrahiert?")
+        category = st.selectbox("Art der Korrektur", FEEDBACK_CATEGORIES)
+        note = st.text_area(
+            "Anmerkung",
+            placeholder="z. B. „SQL wurde übersehen“ oder „Sprache Französisch falsch erkannt“",
+        )
         submitted = st.form_submit_button("Feedback speichern")
         if submitted:
-            add_feedback(selected["data"].get("name", ""), note)
-            st.success("Feedback gespeichert. Es wird beim nächsten Extraktionslauf berücksichtigt.")
+            if not note.strip():
+                st.warning("Bitte eine Anmerkung eingeben.")
+            else:
+                add_feedback(selected["data"].get("name", ""), note, category)
+                st.success(
+                    "Feedback gespeichert. Es wird beim nächsten "
+                    "Extraktionslauf berücksichtigt."
+                )
 
 with st.expander("Bisheriges Feedback"):
     entries = load_feedback()
     if not entries:
         st.write("Noch kein Feedback vorhanden.")
     else:
-        st.dataframe(pd.DataFrame(entries), use_container_width=True, hide_index=True)
+        st.dataframe(
+            pd.DataFrame(entries), use_container_width=True, hide_index=True
+        )
 
 st.caption(DISCLAIMER)

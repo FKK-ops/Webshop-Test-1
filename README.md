@@ -1,22 +1,32 @@
 # HR-Recruiting-Assistent (Streamlit-Prototyp)
 
 Einfacher Prototyp, der PDF-Lebensläufe einliest, **ausschließlich objektive
-Informationen** per LLM extrahiert und als filterbare Tabelle anzeigt.
+Informationen** über die **Claude API** extrahiert und als neutrale,
+filterbare Tabelle anzeigt.
 
-> Das Tool liefert bewusst **kein Ranking, keinen Score, keine Top-5 und keine
-> Empfehlung**. Die finale Entscheidung trifft immer ein Mensch.
+> Der Assistent hat **keine Entscheidungskompetenz**. Er bewertet Bewerber
+> nicht, priorisiert nicht und gibt keine Empfehlungen.
+> **Kein Ranking, kein Score, keine Top-5, keine Empfehlung** — die finale
+> Entscheidung trifft immer ein Mensch.
 
 ## Features
 
 - Mehrere PDF-Lebensläufe gleichzeitig hochladen
 - Textextraktion via `pdfplumber`
-- LLM-Extraktion (OpenAI, JSON-Schema-validiert) von:
+- Extraktion über die **Claude API** (`anthropic`, strukturierte Ausgabe per
+  Pydantic-Schema) von:
   - Name, Skills, Berufserfahrung, Ausbildung, Zertifikate, Sprachkenntnisse
-- Tabellarische Darstellung
+- Neutrale tabellarische Darstellung aller Bewerber
 - Filter nach Skills, Sprachen, Zertifikaten, Berufserfahrung
-- Feedback/Korrekturen pro Kandidat (z. B. „SQL wurde übersehen“)
+- Feedback/Korrekturen pro Bewerber mit Kategorie:
+  - „Skill wurde übersehen“
+  - „Zertifikat wurde übersehen“
+  - „Sprache falsch erkannt“
+  - „Sonstiges“
 - Feedback wird in `data/feedback.json` gespeichert und beim **nächsten**
-  Extraktionsprompt automatisch berücksichtigt
+  Extraktionsprompt automatisch als Kontext berücksichtigt
+- Verständliche Fehlermeldungen bei API-Problemen (fehlender Key, Rate-Limit,
+  Netzwerk, API-Fehler)
 
 ## Ordnerstruktur
 
@@ -28,8 +38,8 @@ Informationen** per LLM extrahiert und als filterbare Tabelle anzeigt.
 ├── data/
 │   └── feedback.json      # wird zur Laufzeit erzeugt
 └── src/
-    ├── pdf_utils.py       # PDF -> Text
-    ├── llm_client.py      # OpenAI-Aufruf mit JSON-Schema
+    ├── pdf_utils.py       # PDF -> Text via pdfplumber
+    ├── llm_client.py      # Claude-API-Aufruf (messages.parse + Pydantic-Schema)
     ├── prompts.py         # System- und Extraktionsprompt
     └── feedback_store.py  # Persistenz der Feedback-Notizen
 ```
@@ -50,10 +60,12 @@ Informationen** per LLM extrahiert und als filterbare Tabelle anzeigt.
 
    ```bash
    cp .env.example .env
-   # OPENAI_API_KEY eintragen, optional OPENAI_MODEL anpassen
+   # ANTHROPIC_API_KEY eintragen, optional ANTHROPIC_MODEL anpassen
    ```
 
-   Standardmodell: `gpt-4o-mini`. Für höhere Genauigkeit z. B. `gpt-4o`.
+   Standardmodell: `claude-opus-4-8`. Für schnellere/günstigere Läufe kann
+   `ANTHROPIC_MODEL` z. B. auf `claude-haiku-4-5` oder `claude-sonnet-4-6`
+   gesetzt werden.
 
 ## Starten
 
@@ -67,14 +79,15 @@ Die App ist dann unter <http://localhost:8501> erreichbar.
 
 1. Links PDFs hochladen → **Extraktion starten**.
 2. Ergebnisse in der Tabelle ansehen, oben filtern.
-3. Einzelnen Kandidaten auswählen → JSON-Details prüfen.
-4. Bei Bedarf Korrektur eintragen (z. B. *„SQL wurde übersehen“*).
-5. Beim nächsten Klick auf **Extraktion starten** fließt das Feedback in
-   den Prompt ein.
+3. Einzelnen Bewerber auswählen → JSON-Details prüfen.
+4. Bei Bedarf Korrektur mit Kategorie eintragen
+   (z. B. *„SQL wurde übersehen“*).
+5. Beim nächsten Klick auf **Extraktion starten** fließt das gespeicherte
+   Feedback in den Prompt ein.
 
 ## Hinweise
 
 - Es findet **kein Ranking** und **keine Eignungsbewertung** statt.
-- Das LLM ist angewiesen, ausschließlich Informationen zu extrahieren,
+- Das Modell ist angewiesen, ausschließlich Informationen zu extrahieren,
   die wörtlich oder eindeutig im Lebenslauf stehen.
 - Die finale Auswahlentscheidung bleibt vollständig beim Menschen.
