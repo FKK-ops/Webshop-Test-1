@@ -99,6 +99,33 @@ Lebenslauf:
   Das ist keine Bewertung des Bewerbers, sondern ein Datenqualitäts-Hinweis.
 """
 
+QUALITY_INSTRUCTIONS = """Du führst eine Datenqualitäts-Prüfung der
+Bewerbungsunterlage durch. Du bewertest NICHT die Eignung des Bewerbers,
+du gibst keine Empfehlung, du priorisierst nicht und du vergibst keinen
+Score.
+
+Du prüfst ausschließlich, ob die Unterlage vollständig und eindeutig ist:
+
+- missing_information: Felder oder Angaben, die im Lebenslauf gar nicht
+  vorkommen. Beispiele:
+    "Sprachkenntnisse nicht angegeben"
+    "Zertifikate nicht angegeben"
+    "Berufserfahrung enthält keine Zeiträume"
+- unclear_information: Angaben, die zwar vorhanden, aber unklar,
+  unvollständig oder mehrdeutig sind. Beispiele:
+    "Dauer der Berufserfahrung unklar"
+    "Sprachlevel nicht eindeutig angegeben"
+    "Zertifikat erwähnt, aber Name fehlt"
+    "PDF möglicherweise unvollständig ausgelesen"
+- suggested_questions: konkrete Rückfragen an den Bewerber, die helfen
+  würden, fehlende oder unklare Informationen zu klären. Beispiele:
+    "Bitte nennen Sie den genauen Zeitraum Ihrer Tätigkeit bei XY."
+    "Welches Sprachniveau (z. B. nach GER) haben Sie in Englisch?"
+
+Wenn alles klar und vollständig ist, lasse die jeweiligen Arrays leer.
+Keine Bewertung des Bewerbers. Keine Empfehlung. Kein Ranking.
+"""
+
 JOB_PROFILE_INSTRUCTIONS = """Strukturiere das folgende Stellenprofil.
 Du bewertest nichts und gewichtest nichts — du strukturierst nur, was im
 Text steht.
@@ -161,6 +188,12 @@ class JobProfile(BaseModel):
     desired_languages: list[str]
     desired_certificates: list[str]
     desired_experience: list[str]
+
+
+class QualityCheck(BaseModel):
+    missing_information: list[str]
+    unclear_information: list[str]
+    suggested_questions: list[str]
 
 
 # ---------------------------------------------------------------------------
@@ -404,6 +437,34 @@ def extract_job_profile(job_text: str) -> dict:
     return parsed.model_dump()
 
 
+def analyze_data_quality(cv_text: str, cv_data: dict) -> dict:
+    """Vollständigkeits- und Klarheitsprüfung der Bewerbungsunterlage.
+
+    Liefert {"missing_information", "unclear_information",
+    "suggested_questions"}. Keine Eignungsbewertung — nur Datenqualität.
+    """
+    user_prompt = (
+        f"{QUALITY_INSTRUCTIONS}\n"
+        "STRUKTURIERTE CV-DATEN (aus der Extraktion):\n"
+        "--------------------------------------------\n"
+        f"{json.dumps(cv_data, ensure_ascii=False, indent=2)}\n"
+        "--------------------------------------------\n\n"
+        "ORIGINAL-LEBENSLAUF-TEXT:\n"
+        "-------------------------\n"
+        f"{cv_text}\n"
+        "-------------------------\n"
+        "Gib jetzt die strukturierte Datenqualitäts-Prüfung zurück."
+    )
+
+    response = _call_parse(user_prompt, QualityCheck)
+    parsed = response.parsed_output
+    if parsed is None:
+        raise RuntimeError(
+            "Die Datenqualitäts-Prüfung konnte nicht geparst werden."
+        )
+    return parsed.model_dump()
+
+
 # ---------------------------------------------------------------------------
 # Hilfsfunktionen für die UI
 # ---------------------------------------------------------------------------
@@ -484,31 +545,68 @@ def _searchable_text(cv_data: dict) -> str:
     return " | ".join(parts)
 
 
-def check_criterion(criterion: str, cv_data: dict) -> dict:
-    """Prüft neutral, ob ein Kriterium im CV vorkommt, und liefert ggf. Beleg.
+def _evidence_for(query: str, cv_data: dict) -> str | None:
+    """Sucht in der evidence-Liste nach einem passenden Beleg."""
+    q = query.lower()
+    for ev in cv_data.get("evidence", []):
+        item = (ev.get("item") or "").lower()
+        if not item:
+            continue
+        if q in item or item in q:
+            return ev.get("excerpt") or None
+    return None
 
-    Liefert {"present": bool, "evidence": str | None}.
-    Keine Bewertung, keine Gewichtung — nur Vorhanden / Nicht-Gefunden plus
-    Textausschnitt aus dem Lebenslauf.
+
+def check_criterion(criterion: str, cv_data: dict) -> dict:
+    """Prüft neutral, ob ein Kriterium im CV vorkommt.
+
+    Liefert {"status": "vorhanden" | "unklar" | "nicht_gefunden",
+             "evidence": str | None, "note": str | None}.
+
+    Keine Bewertung, keine Gewichtung, keine Prozentwerte — nur drei
+    sachliche Status mit optionalem Beleg und optionalem Hinweis.
     """
     crit = criterion.strip()
     if not crit:
-        return {"present": False, "evidence": None}
+        return {"status": "nicht_gefunden", "evidence": None, "note": None}
 
     haystack = _searchable_text(cv_data).lower()
-    present = crit.lower() in haystack
+    crit_low = crit.lower()
 
-    evidence: str | None = None
-    if present:
-        crit_low = crit.lower()
-        for ev in cv_data.get("evidence", []):
-            item = (ev.get("item") or "").lower()
-            if not item:
-                continue
-            if crit_low in item or item in crit_low:
-                evidence = ev.get("excerpt") or None
-                break
-    return {"present": present, "evidence": evidence}
+    # Voller Treffer → vorhanden
+    if crit_low in haystack:
+        return {
+            "status": "vorhanden",
+            "evidence": _evidence_for(crit_low, cv_data),
+            "note": None,
+        }
+
+    # Token-basierter Teil-Match → unklar
+    tokens = [t for t in crit_low.split() if len(t) >= 2]
+    matched_tokens = [t for t in tokens if t in haystack]
+    if tokens and matched_tokens and len(matched_tokens) < len(tokens):
+        missing = [t for t in tokens if t not in matched_tokens]
+        note = (
+            f"Teiltreffer gefunden ({', '.join(matched_tokens)}); "
+            f"nicht eindeutig erkennbar: {', '.join(missing)}."
+        )
+        return {
+            "status": "unklar",
+            "evidence": _evidence_for(matched_tokens[0], cv_data),
+            "note": note,
+        }
+
+    # Datenqualitäts-Hinweis erwähnt das Kriterium → unklar
+    issues_blob = " ".join(cv_data.get("data_quality_issues", [])).lower()
+    for token in tokens or [crit_low]:
+        if token and token in issues_blob:
+            return {
+                "status": "unklar",
+                "evidence": None,
+                "note": "Datenqualitäts-Hinweis betrifft dieses Kriterium.",
+            }
+
+    return {"status": "nicht_gefunden", "evidence": None, "note": None}
 
 
 def render_checklist(job: dict, cv_data: dict) -> None:
@@ -531,10 +629,20 @@ def render_checklist(job: dict, cv_data: dict) -> None:
         any_rendered = True
         st.markdown(f"**{title}**")
         for c in items:
-            result = check_criterion(c, cv_data)
-            if result["present"]:
-                evidence = result["evidence"] or "Kein eindeutiger Beleg gefunden"
-                st.markdown(f"- **{c}** — vorhanden  \n  *Beleg:* „{evidence}“")
+            res = check_criterion(c, cv_data)
+            status = res["status"]
+            if status == "vorhanden":
+                evidence = res["evidence"] or "Kein eindeutiger Beleg gefunden"
+                st.markdown(
+                    f"- **{c}** — vorhanden  \n  *Beleg:* „{evidence}“"
+                )
+            elif status == "unklar":
+                lines = [f"- **{c}** — unklar"]
+                if res.get("note"):
+                    lines.append(f"  *Hinweis:* {res['note']}")
+                if res.get("evidence"):
+                    lines.append(f"  *Teilbeleg:* „{res['evidence']}“")
+                st.markdown("  \n".join(lines))
             else:
                 st.markdown(f"- **{c}** — nicht gefunden")
     if not any_rendered:
@@ -650,16 +758,39 @@ with st.sidebar:
                             result_type=f"{len(text)} Zeichen",
                         )
                         data = extract_cv(text, prior_feedback)
-                        st.session_state.candidates.append(
-                            {"filename": f.name, "data": data}
-                        )
-                        st.session_state.processed_files.add(f.name)
-                        ok += 1
                         log_audit(
                             action="CV-Daten extrahiert",
                             target=f.name,
                             result_type="strukturierte Felder + Belege",
                         )
+                        try:
+                            quality = analyze_data_quality(text, data)
+                            log_audit(
+                                action="Datenqualität geprüft",
+                                target=data.get("name", "") or f.name,
+                                result_type=(
+                                    f"{len(quality['missing_information'])} fehlend, "
+                                    f"{len(quality['unclear_information'])} unklar, "
+                                    f"{len(quality['suggested_questions'])} Rückfragen"
+                                ),
+                            )
+                        except Exception as qe:  # noqa: BLE001
+                            quality = {
+                                "missing_information": [],
+                                "unclear_information": [],
+                                "suggested_questions": [],
+                                "_error": str(qe),
+                            }
+                            log_audit(
+                                action="Datenqualität geprüft",
+                                target=f.name,
+                                result_type=f"Fehler: {qe}",
+                            )
+                        st.session_state.candidates.append(
+                            {"filename": f.name, "data": data, "quality": quality}
+                        )
+                        st.session_state.processed_files.add(f.name)
+                        ok += 1
                     except Exception as e:  # noqa: BLE001
                         st.error(f"Fehler bei {f.name}: {e}")
                         log_audit(
@@ -727,16 +858,20 @@ if st.session_state.candidates:
         selected = filtered[idx]
         cv_data = selected["data"]
 
-        tab_overview, tab_checklist, tab_evidence, tab_quality, tab_feedback = (
-            st.tabs(
-                [
-                    "Strukturierte Daten",
-                    "Kriterien-Checkliste",
-                    "Textbelege",
-                    "Unklarheiten",
-                    "Feedback",
-                ]
-            )
+        (
+            tab_overview,
+            tab_checklist,
+            tab_evidence,
+            tab_quality,
+            tab_feedback,
+        ) = st.tabs(
+            [
+                "Strukturierte Daten",
+                "Kriterien-Checkliste",
+                "Textbelege",
+                "Datenqualität",
+                "Feedback",
+            ]
         )
 
         with tab_overview:
@@ -745,7 +880,8 @@ if st.session_state.candidates:
         with tab_checklist:
             if st.session_state.job_profile:
                 st.caption(
-                    "Neutrale Gegenüberstellung: Vorhanden / Nicht gefunden. "
+                    "Neutrale Gegenüberstellung mit drei Status: "
+                    "vorhanden / unklar / nicht gefunden. "
                     "Keine Prozentzahl, kein Score, kein Ranking."
                 )
                 render_checklist(st.session_state.job_profile, cv_data)
@@ -756,6 +892,10 @@ if st.session_state.candidates:
                 )
 
         with tab_evidence:
+            st.caption(
+                "Quellenangaben aus dem Lebenslauf — kurze Textausschnitte "
+                "als Beleg pro erkannter Qualifikation."
+            )
             ev_list = cv_data.get("evidence", [])
             if ev_list:
                 for ev in ev_list:
@@ -766,15 +906,49 @@ if st.session_state.candidates:
                 st.write("Keine separaten Textbelege erfasst.")
 
         with tab_quality:
-            issues = cv_data.get("data_quality_issues", [])
             st.caption(
-                "Datenqualitäts-Hinweise — keine Bewertung des Bewerbers."
+                "Vollständigkeits- und Klarheitsprüfung der Unterlagen — "
+                "keine Bewertung des Bewerbers, keine Empfehlung, keine "
+                "Priorisierung."
             )
-            if issues:
-                for issue in issues:
-                    st.markdown(f"- {issue}")
+            quality = selected.get("quality") or {}
+            if quality.get("_error"):
+                st.error(
+                    "Die Datenqualitäts-Prüfung konnte nicht durchgeführt "
+                    f"werden: {quality['_error']}"
+                )
+
+            st.markdown("### Fehlende Informationen")
+            missing = quality.get("missing_information", [])
+            if missing:
+                for item in missing:
+                    st.markdown(f"- {item}")
             else:
-                st.write("Keine Unklarheiten erkannt.")
+                st.write("Keine fehlenden Informationen erkannt.")
+
+            st.markdown("### Unklare Informationen")
+            unclear = quality.get("unclear_information", [])
+            if unclear:
+                for item in unclear:
+                    st.markdown(f"- {item}")
+            else:
+                st.write("Keine unklaren Informationen erkannt.")
+
+            st.markdown("### Vorgeschlagene Rückfragen")
+            questions = quality.get("suggested_questions", [])
+            if questions:
+                for q in questions:
+                    st.markdown(f"- {q}")
+            else:
+                st.write("Keine offenen Rückfragen.")
+
+            extra_issues = cv_data.get("data_quality_issues", [])
+            if extra_issues:
+                with st.expander(
+                    "Zusätzliche Hinweise aus der CV-Extraktion"
+                ):
+                    for issue in extra_issues:
+                        st.markdown(f"- {issue}")
 
         with tab_feedback:
             st.markdown(
