@@ -653,21 +653,340 @@ def render_checklist(job: dict, cv_data: dict) -> None:
 # Streamlit-UI
 # ---------------------------------------------------------------------------
 
-st.set_page_config(page_title="HR-Recruiting-Assistent", layout="wide")
-
-st.title("HR-Recruiting-Assistent für KMU")
-st.write(
-    "Lade PDF-Lebensläufe hoch und füge optional ein Stellenprofil ein. "
-    "Der Agent extrahiert objektive Informationen aus den Lebensläufen, "
-    "strukturiert das Stellenprofil und zeigt pro Bewerber eine neutrale "
-    "Kriterien-Checkliste. "
-    "**Der Agent trifft keine Personalentscheidung und erstellt keine "
-    "Empfehlung.** Die finale Bewertung trifft immer der Geschäftsführer."
+st.set_page_config(
+    page_title="KMU Recruiting Agent",
+    page_icon="👥",
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
-st.info(DISCLAIMER)
-st.caption(f"Autonomie-Stufe für alle Analysen: {AUTONOMY_LEVEL}")
 
+# ---------------------------------------------------------------------------
+# Custom CSS — Dark Dashboard Theme
+# ---------------------------------------------------------------------------
+
+st.markdown(
+    """
+    <style>
+    [data-testid="stAppViewContainer"], [data-testid="stMain"] {
+        background: #07172A;
+    }
+    [data-testid="stHeader"] { background: transparent; }
+    .stApp { color: #F8FAFC; }
+    [data-testid="stSidebar"] {
+        background: #0B1220 !important;
+        border-right: 1px solid #1E3A5F;
+    }
+    [data-testid="stSidebar"] * { color: #F8FAFC; }
+    [data-testid="stSidebar"] .stTextInput input,
+    [data-testid="stSidebar"] .stTextArea textarea,
+    .stTextInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] {
+        background: #10233A !important;
+        color: #F8FAFC !important;
+        border: 1px solid #1E3A5F !important;
+    }
+    [data-testid="stFileUploaderDropzone"] {
+        background: #10233A !important;
+        border: 1px dashed #1E3A5F !important;
+        color: #94A3B8 !important;
+    }
+    h1, h2, h3, h4, h5, h6 { color: #F8FAFC !important; }
+    [data-testid="stCaptionContainer"] { color: #94A3B8 !important; }
+    .stButton > button, .stDownloadButton > button,
+    [data-testid="stFormSubmitButton"] > button {
+        background: #14B8A6 !important;
+        color: #07172A !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        padding: 8px 18px !important;
+    }
+    .stButton > button:hover { background: #0F9181 !important; }
+    .stButton > button:disabled {
+        background: #1E3A5F !important;
+        color: #94A3B8 !important;
+    }
+    [data-testid="stTabs"] [role="tablist"] {
+        background: #0F1F35;
+        border: 1px solid #1E3A5F;
+        border-radius: 10px;
+        padding: 6px;
+        gap: 4px;
+    }
+    [data-testid="stTabs"] [role="tab"] {
+        color: #94A3B8 !important;
+        background: transparent !important;
+        border-radius: 6px !important;
+        padding: 8px 14px !important;
+        font-weight: 500 !important;
+    }
+    [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
+        background: #0F9181 !important;
+        color: #F8FAFC !important;
+    }
+    [data-testid="stExpander"] {
+        background: #0F1F35;
+        border: 1px solid #1E3A5F;
+        border-radius: 10px;
+    }
+    [data-testid="stExpander"] summary { color: #F8FAFC !important; }
+    [data-testid="stDataFrame"] {
+        background: #0F1F35;
+        border: 1px solid #1E3A5F;
+        border-radius: 10px;
+        padding: 8px;
+    }
+    /* === Custom Dashboard Components === */
+    .kmu-card {
+        background: #0F1F35;
+        border: 1px solid #1E3A5F;
+        border-radius: 14px;
+        padding: 22px 24px;
+        margin-bottom: 18px;
+    }
+    .kmu-card-title {
+        color: #F8FAFC;
+        font-weight: 600;
+        font-size: 17px;
+        margin-bottom: 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .kmu-card-title small { color: #94A3B8; font-weight: 400; font-size: 13px; }
+    .kpi-card {
+        background: #0F1F35;
+        border: 1px solid #1E3A5F;
+        border-radius: 14px;
+        padding: 22px 24px;
+        position: relative;
+        overflow: hidden;
+        min-height: 150px;
+    }
+    .kpi-card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 4px;
+    }
+    .kpi-card.red::before { background: #EF4444; }
+    .kpi-card.orange::before { background: #F59E0B; }
+    .kpi-card.teal::before { background: #14B8A6; }
+    .kpi-value {
+        font-size: 38px;
+        font-weight: 700;
+        line-height: 1.2;
+        margin-top: 6px;
+    }
+    .kpi-value.red { color: #EF4444; }
+    .kpi-value.orange { color: #F59E0B; }
+    .kpi-value.teal { color: #14B8A6; }
+    .kpi-label {
+        color: #94A3B8;
+        font-size: 13px;
+        margin-top: 12px;
+        line-height: 1.4;
+    }
+    .kmu-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #0F1F35;
+        border: 1px solid #1E3A5F;
+        border-radius: 12px;
+        padding: 12px 22px;
+        margin-bottom: 22px;
+    }
+    .kmu-topbar-left { font-size: 22px; color: #94A3B8; }
+    .kmu-topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        color: #94A3B8;
+    }
+    .kmu-topbar-icon {
+        position: relative;
+        font-size: 18px;
+        cursor: default;
+    }
+    .kmu-topbar-icon .badge {
+        position: absolute;
+        top: -8px; right: -8px;
+        background: #EF4444;
+        color: white;
+        border-radius: 50%;
+        width: 16px; height: 16px;
+        font-size: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700;
+    }
+    .kmu-avatar {
+        background: #14B8A6;
+        color: #07172A;
+        width: 32px; height: 32px;
+        border-radius: 50%;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+    }
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 20px;
+    }
+    .dashboard-header h1 {
+        font-size: 30px !important;
+        margin: 0 !important;
+        font-weight: 700;
+    }
+    .dashboard-header .subtitle {
+        color: #94A3B8;
+        font-size: 14px;
+        margin-top: 4px;
+    }
+    .kmu-quote {
+        background: #0F1F35;
+        border: 1px solid #1E3A5F;
+        border-radius: 14px;
+        padding: 24px 28px;
+        margin-bottom: 22px;
+        display: flex;
+        gap: 18px;
+        align-items: flex-start;
+    }
+    .kmu-quote-mark {
+        color: #14B8A6;
+        font-size: 44px;
+        line-height: 0.8;
+        font-family: Georgia, serif;
+    }
+    .kmu-quote-body { flex: 1; }
+    .kmu-quote-text {
+        font-style: italic;
+        color: #F8FAFC;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+    .kmu-quote-source {
+        color: #14B8A6;
+        font-size: 13px;
+        margin-top: 14px;
+    }
+    .kmu-disclaimer {
+        background: rgba(20, 184, 166, 0.08);
+        border: 1px solid #14B8A6;
+        border-left: 4px solid #14B8A6;
+        border-radius: 8px;
+        padding: 12px 18px;
+        color: #94A3B8;
+        font-size: 13px;
+        margin-bottom: 20px;
+        line-height: 1.5;
+    }
+    .kmu-disclaimer strong { color: #F8FAFC; }
+    .kmu-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    .kmu-badge-ok { background: rgba(16, 185, 129, 0.16); color: #10B981; }
+    .kmu-badge-warn { background: rgba(245, 158, 11, 0.16); color: #F59E0B; }
+    .kmu-badge-err { background: rgba(239, 68, 68, 0.16); color: #EF4444; }
+    .kmu-list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #1E3A5F;
+        gap: 12px;
+    }
+    .kmu-list-item:last-child { border-bottom: none; }
+    .kmu-list-avatar {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        background: #0F9181;
+        color: #07172A;
+        display: inline-flex;
+        align-items: center; justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
+    .kmu-list-name { font-weight: 600; color: #F8FAFC; font-size: 14px; }
+    .kmu-list-file { color: #94A3B8; font-size: 12px; margin-top: 2px; }
+    .kmu-logo {
+        font-size: 17px;
+        font-weight: 700;
+        color: #14B8A6;
+        padding: 4px 8px 18px 8px;
+    }
+    .kmu-nav-section {
+        color: #94A3B8;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin: 16px 8px 6px 8px;
+    }
+    .kmu-nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+        border-radius: 8px;
+        color: #94A3B8;
+        font-size: 14px;
+        margin: 2px 4px;
+    }
+    .kmu-nav-item.active {
+        background: #0F9181;
+        color: #F8FAFC;
+        font-weight: 600;
+    }
+    .kmu-nav-item .badge-num {
+        margin-left: auto;
+        background: #14B8A6;
+        color: #07172A;
+        padding: 1px 7px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+    .donut-wrap {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+    }
+    .donut-legend { font-size: 13px; flex: 1; }
+    .donut-legend-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        color: #F8FAFC;
+    }
+    .donut-dot {
+        width: 12px; height: 12px;
+        border-radius: 3px;
+        flex-shrink: 0;
+    }
+    .donut-count {
+        margin-left: auto;
+        color: #94A3B8;
+        font-weight: 600;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+# ---------------------------------------------------------------------------
 # Session State
+# ---------------------------------------------------------------------------
+
 if "candidates" not in st.session_state:
     st.session_state.candidates = []
 if "processed_files" not in st.session_state:
@@ -677,14 +996,128 @@ if "job_profile" not in st.session_state:
 if "job_profile_source" not in st.session_state:
     st.session_state.job_profile_source = ""
 
-# ---- Sidebar: Stellenprofil + Upload ----
+
+# ---------------------------------------------------------------------------
+# Dashboard-Hilfsfunktionen (rein optisch — keine Bewertung der Bewerber)
+# ---------------------------------------------------------------------------
+
+
+def quality_bucket(quality: dict | None) -> str:
+    """Klassifiziert die DATENQUALITÄT (nicht den Bewerber) in drei Buckets.
+
+    Bewertet ausschließlich, wie vollständig die Unterlage ist:
+    vollständig / informationslücken / unvollständig.
+    """
+    if not quality or quality.get("_error"):
+        return "unvollständig"
+    missing_n = len(quality.get("missing_information", []))
+    unclear_n = len(quality.get("unclear_information", []))
+    if missing_n == 0 and unclear_n == 0:
+        return "vollständig"
+    if missing_n >= 3:
+        return "unvollständig"
+    return "informationslücken"
+
+
+def render_donut(buckets: dict[str, int]) -> str:
+    total = sum(buckets.values()) or 1
+    colors = {
+        "vollständig": "#10B981",
+        "informationslücken": "#F59E0B",
+        "unvollständig": "#EF4444",
+    }
+    cx, cy, r = 70, 70, 52
+    circumference = 2 * 3.14159 * r
+    offset = 0
+    arcs: list[str] = []
+    for k in ("vollständig", "informationslücken", "unvollständig"):
+        v = buckets.get(k, 0)
+        if v == 0:
+            continue
+        frac = v / total
+        arc_len = circumference * frac
+        arcs.append(
+            f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="transparent" '
+            f'stroke="{colors[k]}" stroke-width="18" '
+            f'stroke-dasharray="{arc_len:.2f} {circumference:.2f}" '
+            f'stroke-dashoffset="{-offset:.2f}" '
+            f'transform="rotate(-90 {cx} {cy})"/>'
+        )
+        offset += arc_len
+    if not arcs:
+        arcs.append(
+            f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="transparent" '
+            f'stroke="#1E3A5F" stroke-width="18"/>'
+        )
+    return (
+        '<svg width="140" height="140" viewBox="0 0 140 140">'
+        + "".join(arcs)
+        + f'<text x="70" y="70" text-anchor="middle" dominant-baseline="middle" '
+        f'fill="#F8FAFC" font-size="22" font-weight="700">{sum(buckets.values())}</text>'
+        + f'<text x="70" y="92" text-anchor="middle" '
+        f'fill="#94A3B8" font-size="11">Gesamt</text>'
+        + "</svg>"
+    )
+
+
+def initials_for(name: str) -> str:
+    parts = [p for p in (name or "").strip().split() if p]
+    if not parts:
+        return "?"
+    if len(parts) == 1:
+        return parts[0][:2].upper()
+    return (parts[0][0] + parts[-1][0]).upper()
+
+
+# ---------------------------------------------------------------------------
+# Sidebar — Logo, Navigation, Eingaben, Hilfe
+# ---------------------------------------------------------------------------
+
+candidate_count = len(st.session_state.candidates)
 
 with st.sidebar:
-    st.header("Stellenprofil")
+    st.markdown(
+        '<div class="kmu-logo">👥 KMU Recruiting Agent</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        f"""
+        <div class="kmu-nav-section">Übersicht</div>
+        <div class="kmu-nav-item active">📊 Dashboard</div>
+        <div class="kmu-nav-section">Stellenprofil</div>
+        <div class="kmu-nav-item">📝 Stellenprofil</div>
+        <div class="kmu-nav-item">✅ Anforderungen</div>
+        <div class="kmu-nav-section">Bewerbungen</div>
+        <div class="kmu-nav-item">📂 Bewerbungen
+            <span class="badge-num">{candidate_count}</span>
+        </div>
+        <div class="kmu-nav-item">👤 Kandidaten</div>
+        <div class="kmu-nav-section">Analyse</div>
+        <div class="kmu-nav-item">📈 Bewerbungsqualität</div>
+        <div class="kmu-nav-item">❓ Rückfragen</div>
+        <div class="kmu-nav-section">Kommunikation</div>
+        <div class="kmu-nav-item">📄 Vorlagen</div>
+        <div class="kmu-nav-item">✉️ E-Mails</div>
+        <div class="kmu-nav-section">Einstellungen</div>
+        <div class="kmu-nav-item">⚙️ Einstellungen</div>
+        <div class="kmu-nav-item">📋 Audit Log</div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.divider()
+    st.markdown(
+        '<div class="kmu-nav-section">Stellenprofil eingeben</div>',
+        unsafe_allow_html=True,
+    )
     job_text = st.text_area(
-        "Stellenprofil einfügen oder eingeben",
-        height=180,
-        placeholder="z. B. Wir suchen einen Python-Entwickler mit SQL und Deutsch C1 …",
+        "Stellenprofil",
+        height=160,
+        placeholder=(
+            "z. B. Wir suchen einen Python-Entwickler mit SQL und Deutsch C1 …"
+        ),
+        label_visibility="collapsed",
     )
 
     if st.button(
@@ -715,11 +1148,15 @@ with st.sidebar:
         st.rerun()
 
     st.divider()
-    st.header("Lebensläufe hochladen")
+    st.markdown(
+        '<div class="kmu-nav-section">Lebensläufe hochladen</div>',
+        unsafe_allow_html=True,
+    )
     uploaded = st.file_uploader(
-        "PDF-Dateien auswählen",
+        "PDF-Dateien",
         type=["pdf"],
         accept_multiple_files=True,
+        label_visibility="collapsed",
     )
 
     if st.button("Extraktion starten", type="primary", disabled=not uploaded):
@@ -807,198 +1244,559 @@ with st.sidebar:
         st.session_state.processed_files = set()
         st.rerun()
 
-# ---- Stellenprofil-Anzeige ----
+    st.divider()
+    st.button("❔ Hilfe & Support", use_container_width=True)
 
-if st.session_state.job_profile:
-    with st.expander(
-        "Strukturiertes Stellenprofil (nur Struktur, keine Bewertung)",
-        expanded=False,
-    ):
-        st.json(st.session_state.job_profile)
 
-# ---- Hauptbereich: Bewerber-Tabelle, Filter, Details ----
+# ---------------------------------------------------------------------------
+# Topbar + Dashboard-Header
+# ---------------------------------------------------------------------------
 
+st.markdown(
+    """
+    <div class="kmu-topbar">
+        <div class="kmu-topbar-left">☰</div>
+        <div class="kmu-topbar-right">
+            <div class="kmu-topbar-icon">🔔<span class="badge">3</span></div>
+            <div class="kmu-topbar-icon">❔</div>
+            <span class="kmu-avatar">GF</span>
+            <span>Geschäftsführer ▾</span>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+header_left, header_right = st.columns([4, 1])
+with header_left:
+    st.markdown(
+        """
+        <div class="dashboard-header">
+            <div>
+                <h1>Dashboard</h1>
+                <div class="subtitle">Übersicht Ihrer Bewerbungen und Analysen</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+with header_right:
+    st.markdown("<div style='height: 18px'></div>", unsafe_allow_html=True)
+    st.button(
+        "⬆ Bewerbungen hochladen",
+        use_container_width=True,
+        help="Lebensläufe lädst du in der Sidebar links hoch.",
+    )
+
+st.markdown(
+    """
+    <div class="kmu-disclaimer">
+        <strong>Hinweis:</strong> Der Agent trifft keine Personalentscheidung.
+        Er erstellt kein Ranking, keinen Score und keine Empfehlung.
+        Er extrahiert ausschließlich objektive Informationen und bereitet sie
+        für den Geschäftsführer auf. Autonomie-Stufe:
+        <em>Rot — Mensch entscheidet, Agent liefert nur Daten.</em>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ---- KPI-Karten (Marktkontext, keine Bewerberbewertung) ----
+
+kpi1, kpi2, kpi3 = st.columns(3)
+with kpi1:
+    st.markdown(
+        """
+        <div class="kpi-card red">
+            <div class="kpi-value red">~50 %</div>
+            <div class="kpi-label">der Bewerbungen passen nicht von Anfang an</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+with kpi2:
+    st.markdown(
+        """
+        <div class="kpi-card orange">
+            <div class="kpi-value orange">Std./Woche</div>
+            <div class="kpi-label">manuelle Sichtung pro offene Stelle</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+with kpi3:
+    st.markdown(
+        """
+        <div class="kpi-card teal">
+            <div class="kpi-value teal">40.000 €</div>
+            <div class="kpi-label">kostet eine einzige Fehlbesetzung im KMU</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+# ---- Zitat-Card ----
+
+st.markdown(
+    """
+    <div class="kmu-quote">
+        <div class="kmu-quote-mark">&ldquo;</div>
+        <div class="kmu-quote-body">
+            <div class="kmu-quote-text">
+                Etwa die Hälfte oder mehr der Bewerbungen passt nicht.
+                Und trotzdem müssen wir jede einzelne ansehen.
+            </div>
+            <div class="kmu-quote-source">
+                — Ali Metaj, GF GFL Garten- und Forstbau GmbH ·
+                Interview 27.05.2026 · 40 Mitarbeiter, kein HR-Team
+            </div>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ---- Dashboard-Grid: Letzte Bewerbungen | Qualität + Rückfragen ----
+
+# Datenaggregation aus echten Daten (oder Platzhalter)
+recent_html_rows: list[str] = []
 if st.session_state.candidates:
-    st.subheader("Filter")
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        skills_q = st.text_input("Skills (Komma-getrennt)", "")
-    with col2:
-        languages_q = st.text_input("Sprachen", "")
-    with col3:
-        certs_q = st.text_input("Zertifikate", "")
-
-    filtered = filter_candidates(
-        st.session_state.candidates, skills_q, languages_q, certs_q
-    )
-
-    st.subheader(
-        f"Bewerber ({len(filtered)} von {len(st.session_state.candidates)})"
-    )
-    st.caption(
-        "Alle Bewerber bleiben sichtbar. Keine Reihenfolge ist eine "
-        "Bewertung — die Sortierung folgt der Upload-Reihenfolge."
-    )
-    df = candidates_to_dataframe(filtered)
-    st.dataframe(df, use_container_width=True, hide_index=True)
-
-    st.subheader("Details pro Bewerber")
-    options = [
-        f"{c['data'].get('name') or '(ohne Name)'} – {c['filename']}"
-        for c in filtered
-    ]
-    if not options:
-        st.write("Keine Bewerber entsprechen den Filtern.")
-    else:
-        idx = st.selectbox(
-            "Bewerber auswählen",
-            range(len(options)),
-            format_func=lambda i: options[i],
+    for c in st.session_state.candidates[-5:][::-1]:
+        cv = c["data"]
+        q = c.get("quality") or {}
+        has_gaps = bool(
+            q.get("missing_information") or q.get("unclear_information")
         )
-        selected = filtered[idx]
-        cv_data = selected["data"]
-
-        (
-            tab_overview,
-            tab_checklist,
-            tab_evidence,
-            tab_quality,
-            tab_feedback,
-        ) = st.tabs(
-            [
-                "Strukturierte Daten",
-                "Kriterien-Checkliste",
-                "Textbelege",
-                "Datenqualität",
-                "Feedback",
-            ]
+        badge_class = "kmu-badge-warn" if has_gaps else "kmu-badge-ok"
+        badge_label = (
+            "Informationslücken" if has_gaps else "Analyse abgeschlossen"
         )
-
-        with tab_overview:
-            st.json(cv_data)
-
-        with tab_checklist:
-            if st.session_state.job_profile:
-                st.caption(
-                    "Neutrale Gegenüberstellung mit drei Status: "
-                    "vorhanden / unklar / nicht gefunden. "
-                    "Keine Prozentzahl, kein Score, kein Ranking."
-                )
-                render_checklist(st.session_state.job_profile, cv_data)
-            else:
-                st.info(
-                    "Kein Stellenprofil hinterlegt. Füge in der Sidebar ein "
-                    "Stellenprofil ein, um eine Checkliste zu sehen."
-                )
-
-        with tab_evidence:
-            st.caption(
-                "Quellenangaben aus dem Lebenslauf — kurze Textausschnitte "
-                "als Beleg pro erkannter Qualifikation."
-            )
-            ev_list = cv_data.get("evidence", [])
-            if ev_list:
-                for ev in ev_list:
-                    st.markdown(
-                        f"- **{ev.get('item', '')}**: „{ev.get('excerpt', '')}“"
-                    )
-            else:
-                st.write("Keine separaten Textbelege erfasst.")
-
-        with tab_quality:
-            st.caption(
-                "Vollständigkeits- und Klarheitsprüfung der Unterlagen — "
-                "keine Bewertung des Bewerbers, keine Empfehlung, keine "
-                "Priorisierung."
-            )
-            quality = selected.get("quality") or {}
-            if quality.get("_error"):
-                st.error(
-                    "Die Datenqualitäts-Prüfung konnte nicht durchgeführt "
-                    f"werden: {quality['_error']}"
-                )
-
-            st.markdown("### Fehlende Informationen")
-            missing = quality.get("missing_information", [])
-            if missing:
-                for item in missing:
-                    st.markdown(f"- {item}")
-            else:
-                st.write("Keine fehlenden Informationen erkannt.")
-
-            st.markdown("### Unklare Informationen")
-            unclear = quality.get("unclear_information", [])
-            if unclear:
-                for item in unclear:
-                    st.markdown(f"- {item}")
-            else:
-                st.write("Keine unklaren Informationen erkannt.")
-
-            st.markdown("### Vorgeschlagene Rückfragen")
-            questions = quality.get("suggested_questions", [])
-            if questions:
-                for q in questions:
-                    st.markdown(f"- {q}")
-            else:
-                st.write("Keine offenen Rückfragen.")
-
-            extra_issues = cv_data.get("data_quality_issues", [])
-            if extra_issues:
-                with st.expander(
-                    "Zusätzliche Hinweise aus der CV-Extraktion"
-                ):
-                    for issue in extra_issues:
-                        st.markdown(f"- {issue}")
-
-        with tab_feedback:
-            st.markdown(
-                "Feedback verbessert nur die **Extraktion und Darstellung**, "
-                "nicht die Bewerberauswahl. Es wird in `feedback.json` "
-                "gespeichert und beim nächsten Extraktionslauf im Prompt "
-                "berücksichtigt."
-            )
-            with st.form("feedback_form", clear_on_submit=True):
-                category = st.selectbox(
-                    "Art der Korrektur", FEEDBACK_CATEGORIES
-                )
-                note = st.text_area(
-                    "Anmerkung",
-                    placeholder=(
-                        "z. B. „SQL wurde übersehen“ oder "
-                        "„Sprache Französisch falsch erkannt“"
-                    ),
-                )
-                submitted = st.form_submit_button("Feedback speichern")
-                if submitted:
-                    if not note.strip():
-                        st.warning("Bitte eine Anmerkung eingeben.")
-                    else:
-                        add_feedback(
-                            cv_data.get("name", ""), category, note
-                        )
-                        log_audit(
-                            action="Feedback gespeichert",
-                            target=cv_data.get("name", "") or selected["filename"],
-                            result_type=category,
-                        )
-                        st.success("Feedback gespeichert.")
+        name = cv.get("name") or "(ohne Name)"
+        initials = initials_for(name)
+        first_role = ""
+        if cv.get("experience"):
+            first_role = cv["experience"][0].get("role", "")
+        recent_html_rows.append(
+            f"""
+            <div class="kmu-list-item">
+                <div class="kmu-list-avatar">{initials}</div>
+                <div style="flex:1">
+                    <div class="kmu-list-name">{name}</div>
+                    <div class="kmu-list-file">{first_role or c['filename']}</div>
+                </div>
+                <span class="kmu-badge {badge_class}">● {badge_label}</span>
+            </div>
+            """
+        )
 else:
-    st.write("Lade links Lebensläufe hoch, um zu starten.")
+    placeholders = [
+        ("Max Mustermann", "Data Analyst", "kmu-badge-ok", "Analyse abgeschlossen"),
+        ("Lisa Schneider", "Marketing Managerin", "kmu-badge-warn", "Informationslücken"),
+        ("Tom Tischler", "Projektmanager", "kmu-badge-ok", "Analyse abgeschlossen"),
+        ("Julia Sommer", "Buchhalterin", "kmu-badge-warn", "Informationslücken"),
+        ("Anton Keller", "Vertriebsmitarbeiter", "kmu-badge-ok", "Analyse abgeschlossen"),
+    ]
+    for name, role, badge_class, label in placeholders:
+        recent_html_rows.append(
+            f"""
+            <div class="kmu-list-item">
+                <div class="kmu-list-avatar">{initials_for(name)}</div>
+                <div style="flex:1">
+                    <div class="kmu-list-name">{name}</div>
+                    <div class="kmu-list-file">{role}</div>
+                </div>
+                <span class="kmu-badge {badge_class}">● {label}</span>
+            </div>
+            """
+        )
 
-# ---- Bisheriges Feedback ----
+# Bewerbungsqualitäts-Verteilung (Datenqualität, NICHT Eignung)
+buckets = {"vollständig": 0, "informationslücken": 0, "unvollständig": 0}
+if st.session_state.candidates:
+    for c in st.session_state.candidates:
+        buckets[quality_bucket(c.get("quality"))] += 1
+else:
+    buckets = {"vollständig": 14, "informationslücken": 18, "unvollständig": 8}
+total_buckets = sum(buckets.values()) or 1
+donut_svg = render_donut(buckets)
 
-with st.expander("Bisheriges Feedback"):
+# Offene Rückfragen
+total_questions = sum(
+    len((c.get("quality") or {}).get("suggested_questions") or [])
+    for c in st.session_state.candidates
+)
+if not st.session_state.candidates:
+    total_questions = 12
+
+left_col, right_col = st.columns([1.4, 1])
+
+with left_col:
+    st.markdown(
+        f"""
+        <div class="kmu-card">
+            <div class="kmu-card-title">
+                Letzte Bewerbungen
+                <small>{'Echtdaten' if st.session_state.candidates else 'Beispieldaten'}</small>
+            </div>
+            {''.join(recent_html_rows)}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+with right_col:
+    st.markdown(
+        f"""
+        <div class="kmu-card">
+            <div class="kmu-card-title">Bewerbungsqualität <small>(Datenqualität, keine Eignung)</small></div>
+            <div class="donut-wrap">
+                {donut_svg}
+                <div class="donut-legend">
+                    <div class="donut-legend-row">
+                        <span class="donut-dot" style="background:#10B981"></span>
+                        Vollständig
+                        <span class="donut-count">{buckets['vollständig']} ({buckets['vollständig'] * 100 // total_buckets}%)</span>
+                    </div>
+                    <div class="donut-legend-row">
+                        <span class="donut-dot" style="background:#F59E0B"></span>
+                        Informationslücken
+                        <span class="donut-count">{buckets['informationslücken']} ({buckets['informationslücken'] * 100 // total_buckets}%)</span>
+                    </div>
+                    <div class="donut-legend-row">
+                        <span class="donut-dot" style="background:#EF4444"></span>
+                        Unvollständig
+                        <span class="donut-count">{buckets['unvollständig']} ({buckets['unvollständig'] * 100 // total_buckets}%)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="kmu-card">
+            <div class="kmu-card-title">Offene Rückfragen</div>
+            <div style="display:flex; align-items:center; gap:14px;">
+                <div style="font-size:38px; font-weight:700; color:#14B8A6;">{total_questions}</div>
+                <div style="color:#94A3B8; font-size:13px;">
+                    Rückfragen vorbereitet —<br/>
+                    warten auf Ihre Prüfung und Freigabe.<br/>
+                    <em style="color:#94A3B8">Es wird keine E-Mail automatisch versendet.</em>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Funktionsbereiche als Tabs unterhalb des Dashboards
+# ---------------------------------------------------------------------------
+
+st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+
+(
+    main_tab_apps,
+    main_tab_profile,
+    main_tab_candidates,
+    main_tab_quality,
+    main_tab_questions,
+    main_tab_audit,
+    main_tab_tests,
+) = st.tabs(
+    [
+        "Bewerbungen analysieren",
+        "Stellenprofil",
+        "Kandidatenübersicht",
+        "Bewerbungsqualität",
+        "Rückfragen",
+        "Audit Log",
+        "Test-Center",
+    ]
+)
+
+# ---- Tab: Bewerbungen analysieren ----
+
+with main_tab_apps:
+    st.markdown(
+        '<div class="kmu-card-title">Bewerbungen analysieren</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "Lade in der Sidebar links PDF-Lebensläufe hoch und klicke auf "
+        "**Extraktion starten**. Der Agent extrahiert objektive Informationen, "
+        "schlägt Rückfragen vor und protokolliert jede Aktion im Audit-Log. "
+        "Es findet keine Bewertung des Bewerbers statt."
+    )
+    if st.session_state.candidates:
+        st.success(
+            f"{len(st.session_state.candidates)} Bewerbungen analysiert. "
+            "Details siehst du im Tab „Kandidatenübersicht“."
+        )
+    else:
+        st.info("Noch keine Bewerbungen analysiert.")
+    st.markdown("**Bisheriges Feedback (fließt in den nächsten Lauf ein)**")
     entries = load_feedback()
     if entries:
         st.dataframe(
             pd.DataFrame(entries), use_container_width=True, hide_index=True
         )
     else:
-        st.write("Noch kein Feedback vorhanden.")
+        st.caption("Noch kein Feedback vorhanden.")
 
-# ---- Audit-Log ----
+# ---- Tab: Stellenprofil ----
 
-with st.expander("Audit-Log (alle Aktionen)"):
+with main_tab_profile:
+    st.markdown(
+        '<div class="kmu-card-title">Strukturiertes Stellenprofil</div>',
+        unsafe_allow_html=True,
+    )
+    st.caption(
+        "Stellenprofil-Text in der Sidebar einfügen und auf "
+        "„Stellenprofil analysieren“ klicken. Die KI strukturiert nur — "
+        "sie bewertet nichts und gewichtet nichts."
+    )
+    if st.session_state.job_profile:
+        st.json(st.session_state.job_profile)
+    else:
+        st.info("Noch kein Stellenprofil hinterlegt.")
+
+# ---- Tab: Kandidatenübersicht ----
+
+with main_tab_candidates:
+    st.markdown(
+        '<div class="kmu-card-title">Kandidatenübersicht</div>',
+        unsafe_allow_html=True,
+    )
+    if not st.session_state.candidates:
+        st.info(
+            "Noch keine Kandidaten — bitte zuerst Bewerbungen analysieren."
+        )
+    else:
+        st.caption(
+            "Alle Kandidaten bleiben sichtbar. Keine Reihenfolge ist eine "
+            "Bewertung — die Sortierung folgt der Upload-Reihenfolge."
+        )
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            skills_q = st.text_input("Filter: Skills (Komma-getrennt)", "")
+        with col2:
+            languages_q = st.text_input("Filter: Sprachen", "")
+        with col3:
+            certs_q = st.text_input("Filter: Zertifikate", "")
+
+        filtered = filter_candidates(
+            st.session_state.candidates, skills_q, languages_q, certs_q
+        )
+        st.markdown(
+            f"**{len(filtered)} von {len(st.session_state.candidates)} Kandidaten**"
+        )
+        df = candidates_to_dataframe(filtered)
+        st.dataframe(df, use_container_width=True, hide_index=True)
+
+        options = [
+            f"{c['data'].get('name') or '(ohne Name)'} – {c['filename']}"
+            for c in filtered
+        ]
+        if options:
+            idx = st.selectbox(
+                "Details ansehen",
+                range(len(options)),
+                format_func=lambda i: options[i],
+            )
+            selected = filtered[idx]
+            cv_data = selected["data"]
+
+            (
+                tab_overview,
+                tab_checklist,
+                tab_evidence,
+                tab_quality,
+                tab_feedback,
+            ) = st.tabs(
+                [
+                    "Strukturierte Daten",
+                    "Kriterien-Checkliste",
+                    "Textbelege",
+                    "Datenqualität",
+                    "Feedback",
+                ]
+            )
+
+            with tab_overview:
+                st.json(cv_data)
+
+            with tab_checklist:
+                if st.session_state.job_profile:
+                    st.caption(
+                        "Neutrale Gegenüberstellung mit drei Status: "
+                        "vorhanden / unklar / nicht gefunden. "
+                        "Keine Prozentzahl, kein Score, kein Ranking."
+                    )
+                    render_checklist(st.session_state.job_profile, cv_data)
+                else:
+                    st.info(
+                        "Kein Stellenprofil hinterlegt. Füge in der Sidebar "
+                        "ein Stellenprofil ein, um eine Checkliste zu sehen."
+                    )
+
+            with tab_evidence:
+                st.caption(
+                    "Quellenangaben aus dem Lebenslauf — kurze Textausschnitte "
+                    "als Beleg pro erkannter Qualifikation."
+                )
+                ev_list = cv_data.get("evidence", [])
+                if ev_list:
+                    for ev in ev_list:
+                        st.markdown(
+                            f"- **{ev.get('item', '')}**: „{ev.get('excerpt', '')}“"
+                        )
+                else:
+                    st.write("Keine separaten Textbelege erfasst.")
+
+            with tab_quality:
+                st.caption(
+                    "Vollständigkeits- und Klarheitsprüfung der Unterlagen — "
+                    "keine Bewertung des Bewerbers, keine Empfehlung, keine "
+                    "Priorisierung."
+                )
+                quality = selected.get("quality") or {}
+                if quality.get("_error"):
+                    st.error(
+                        "Die Datenqualitäts-Prüfung konnte nicht durchgeführt "
+                        f"werden: {quality['_error']}"
+                    )
+
+                st.markdown("### Fehlende Informationen")
+                missing = quality.get("missing_information", [])
+                if missing:
+                    for item in missing:
+                        st.markdown(f"- {item}")
+                else:
+                    st.write("Keine fehlenden Informationen erkannt.")
+
+                st.markdown("### Unklare Informationen")
+                unclear = quality.get("unclear_information", [])
+                if unclear:
+                    for item in unclear:
+                        st.markdown(f"- {item}")
+                else:
+                    st.write("Keine unklaren Informationen erkannt.")
+
+                st.markdown("### Vorgeschlagene Rückfragen")
+                questions = quality.get("suggested_questions", [])
+                if questions:
+                    for q in questions:
+                        st.markdown(f"- {q}")
+                else:
+                    st.write("Keine offenen Rückfragen.")
+
+                extra_issues = cv_data.get("data_quality_issues", [])
+                if extra_issues:
+                    with st.expander(
+                        "Zusätzliche Hinweise aus der CV-Extraktion"
+                    ):
+                        for issue in extra_issues:
+                            st.markdown(f"- {issue}")
+
+            with tab_feedback:
+                st.markdown(
+                    "Feedback verbessert nur die **Extraktion und "
+                    "Darstellung**, nicht die Bewerberauswahl. Es wird in "
+                    "`feedback.json` gespeichert und beim nächsten "
+                    "Extraktionslauf im Prompt berücksichtigt."
+                )
+                with st.form("feedback_form", clear_on_submit=True):
+                    category = st.selectbox(
+                        "Art der Korrektur", FEEDBACK_CATEGORIES
+                    )
+                    note = st.text_area(
+                        "Anmerkung",
+                        placeholder=(
+                            "z. B. „SQL wurde übersehen“ oder "
+                            "„Sprache Französisch falsch erkannt“"
+                        ),
+                    )
+                    submitted = st.form_submit_button("Feedback speichern")
+                    if submitted:
+                        if not note.strip():
+                            st.warning("Bitte eine Anmerkung eingeben.")
+                        else:
+                            add_feedback(
+                                cv_data.get("name", ""), category, note
+                            )
+                            log_audit(
+                                action="Feedback gespeichert",
+                                target=cv_data.get("name", "")
+                                or selected["filename"],
+                                result_type=category,
+                            )
+                            st.success("Feedback gespeichert.")
+        else:
+            st.write("Keine Bewerber entsprechen den Filtern.")
+
+# ---- Tab: Bewerbungsqualität (Aggregation) ----
+
+with main_tab_quality:
+    st.markdown(
+        '<div class="kmu-card-title">Bewerbungsqualität (Aggregation)</div>',
+        unsafe_allow_html=True,
+    )
+    st.caption(
+        "Aggregierte Datenqualitäts-Sicht über alle bislang analysierten "
+        "Bewerbungen — keine Eignungsbewertung."
+    )
+    if not st.session_state.candidates:
+        st.info("Noch keine Bewerbungen analysiert.")
+    else:
+        rows = []
+        for c in st.session_state.candidates:
+            q = c.get("quality") or {}
+            rows.append(
+                {
+                    "Datei": c["filename"],
+                    "Name": c["data"].get("name", ""),
+                    "Bucket": quality_bucket(q),
+                    "Fehlend": len(q.get("missing_information", [])),
+                    "Unklar": len(q.get("unclear_information", [])),
+                    "Rückfragen": len(q.get("suggested_questions", [])),
+                }
+            )
+        st.dataframe(
+            pd.DataFrame(rows), use_container_width=True, hide_index=True
+        )
+
+# ---- Tab: Rückfragen (konsolidiert) ----
+
+with main_tab_questions:
+    st.markdown(
+        '<div class="kmu-card-title">Vorgeschlagene Rückfragen</div>',
+        unsafe_allow_html=True,
+    )
+    st.caption(
+        "Rückfragevorschläge pro Bewerbung. **Es wird keine E-Mail "
+        "automatisch versendet** — alle Rückfragen warten auf Ihre Prüfung "
+        "und Freigabe."
+    )
+    any_questions = False
+    for c in st.session_state.candidates:
+        questions = (c.get("quality") or {}).get("suggested_questions") or []
+        if not questions:
+            continue
+        any_questions = True
+        with st.expander(
+            f"{c['data'].get('name') or '(ohne Name)'} — "
+            f"{len(questions)} Rückfrage(n)"
+        ):
+            for q in questions:
+                st.markdown(f"- {q}")
+    if not any_questions:
+        st.info("Keine offenen Rückfragen.")
+
+# ---- Tab: Audit Log ----
+
+with main_tab_audit:
+    st.markdown(
+        '<div class="kmu-card-title">Audit-Log</div>',
+        unsafe_allow_html=True,
+    )
     st.caption(
         "Jeder Eintrag enthält die Autonomie-Stufe. "
         f"Standardstufe für Recruiting-Analysen: {AUTONOMY_LEVEL}"
@@ -1011,43 +1809,53 @@ with st.expander("Audit-Log (alle Aktionen)"):
             hide_index=True,
         )
     else:
-        st.write("Audit-Log ist leer.")
+        st.info("Audit-Log ist leer.")
 
-# ---- Test-Center ----
+# ---- Tab: Test-Center ----
 
-st.subheader("Test-Center")
-st.write(
-    "Manuelle Tests des Extraktions-Workflows. "
-    "Hier werden **keine Bewerber bewertet** — nur der Agent selbst wird "
-    "anhand drei Testtypen geprüft."
-)
-for tc in TEST_CASES:
-    with st.expander(f"{tc['name']} — {tc['description']}"):
-        with st.form(f"test_form_{tc['id']}", clear_on_submit=True):
-            outcome = st.selectbox(
-                "Ergebnis",
-                TEST_OUTCOMES,
-                key=f"outcome_{tc['id']}",
-            )
-            note = st.text_input(
-                "Notiz (optional)", key=f"note_{tc['id']}"
-            )
-            if st.form_submit_button("Ergebnis speichern"):
-                save_test_result(tc["id"], outcome, note)
-                log_audit(
-                    action="Testergebnis gespeichert",
-                    target=tc["name"],
-                    result_type=outcome,
+with main_tab_tests:
+    st.markdown(
+        '<div class="kmu-card-title">Test-Center</div>',
+        unsafe_allow_html=True,
+    )
+    st.write(
+        "Manuelle Tests des Extraktions-Workflows. "
+        "Hier werden **keine Bewerber bewertet** — nur der Agent selbst wird "
+        "anhand drei Testtypen geprüft."
+    )
+    for tc in TEST_CASES:
+        with st.expander(f"{tc['name']} — {tc['description']}"):
+            with st.form(f"test_form_{tc['id']}", clear_on_submit=True):
+                outcome = st.selectbox(
+                    "Ergebnis",
+                    TEST_OUTCOMES,
+                    key=f"outcome_{tc['id']}",
                 )
-                st.success(f"Testergebnis für „{tc['name']}“ gespeichert.")
+                note = st.text_input(
+                    "Notiz (optional)", key=f"note_{tc['id']}"
+                )
+                if st.form_submit_button("Ergebnis speichern"):
+                    save_test_result(tc["id"], outcome, note)
+                    log_audit(
+                        action="Testergebnis gespeichert",
+                        target=tc["name"],
+                        result_type=outcome,
+                    )
+                    st.success(
+                        f"Testergebnis für „{tc['name']}“ gespeichert."
+                    )
 
-with st.expander("Bisherige Testergebnisse"):
-    tr = load_test_results()
-    if tr:
-        st.dataframe(
-            pd.DataFrame(tr), use_container_width=True, hide_index=True
-        )
-    else:
-        st.write("Noch keine Testergebnisse vorhanden.")
+    with st.expander("Bisherige Testergebnisse"):
+        tr = load_test_results()
+        if tr:
+            st.dataframe(
+                pd.DataFrame(tr), use_container_width=True, hide_index=True
+            )
+        else:
+            st.write("Noch keine Testergebnisse vorhanden.")
 
-st.caption(DISCLAIMER)
+st.caption(
+    "Der Agent trifft keine Personalentscheidung. Er extrahiert objektive "
+    "Informationen und macht Bewerbungen vergleichbar. Die finale Bewertung "
+    "trifft immer der Geschäftsführer."
+)
