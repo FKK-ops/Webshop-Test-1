@@ -565,38 +565,61 @@ def _or_missing(value, marker: str = NICHT_GEFUNDEN) -> str:
     return value
 
 
+def _short_experience(d: dict) -> str:
+    """Kurze, kompakte Erfahrungs-Zusammenfassung (max. 1 Eintrag)."""
+    exp = d.get("experience") or []
+    if not exp:
+        return "—"
+    e = exp[0]
+    role = e.get("role", "") or "?"
+    company = e.get("company", "") or "?"
+    period = e.get("period", "") or ""
+    rest = f" (+{len(exp) - 1})" if len(exp) > 1 else ""
+    suffix = f" · {period}" if period else ""
+    return f"{role} @ {company}{suffix}{rest}"
+
+
+def _short_languages(d: dict) -> str:
+    langs = d.get("languages") or []
+    if not langs:
+        return "—"
+    parts = []
+    for l in langs[:3]:
+        name = l.get("language", "")
+        lvl = l.get("level", "")
+        parts.append(f"{name} {lvl}".strip())
+    rest = f" +{len(langs) - 3}" if len(langs) > 3 else ""
+    return ", ".join(parts) + rest
+
+
 def candidates_to_dataframe(
     candidates: list[dict], job_profile: dict | None = None
 ) -> pd.DataFrame:
+    """Kompakte Übersichtstabelle — kurze Stichpunkte, keine Fließtexte."""
     rows = []
     for c in candidates:
         d = c["data"]
+        q = c.get("quality") or {}
+        fups = (c.get("followups") or {}).get("questions") or []
+        skills = d.get("skills") or []
+        top_skills = ", ".join(skills[:4]) + (
+            f" +{len(skills) - 4}" if len(skills) > 4 else ""
+        )
         row = {
-            "Datei": c["filename"],
             "Name": d.get("name") or NICHT_GEFUNDEN,
-            "Skills": ", ".join(d.get("skills", [])) or NICHT_GEFUNDEN,
-            "Berufserfahrung": " | ".join(
-                f"{e.get('role', '')} @ {e.get('company', '')} "
-                f"({e.get('period', '')})".strip()
-                for e in d.get("experience", [])
-            ) or NICHT_GEFUNDEN,
-            "Ausbildung": " | ".join(
-                f"{e.get('degree', '')}, {e.get('institution', '')} "
-                f"({e.get('period', '')})".strip()
-                for e in d.get("education", [])
-            ) or NICHT_GEFUNDEN,
-            "Zertifikate": ", ".join(d.get("certificates", [])) or NICHT_GEFUNDEN,
-            "Sprachen": ", ".join(
-                f"{l.get('language', '')} ({l.get('level', '')})".strip()
-                for l in d.get("languages", [])
-            ) or NICHT_GEFUNDEN,
+            "Skills (Top)": top_skills or "—",
+            "Sprachen": _short_languages(d),
+            "Erfahrung": _short_experience(d),
+            "Lücken": len(q.get("missing_information") or [])
+            + len(q.get("unclear_information") or []),
+            "Rückfragen": len(fups),
         }
-        # Zusätzliche, neutrale Spalte "Übereinstimmung" (Abdeckungsgrad).
-        # Keine Sortierung, kein Ranking — nur transparente Orientierung.
+        # Neutrale Spalte "Übereinstimmung" (Abdeckungsgrad).
+        # Keine Sortierung, keine Bewertung — nur transparente Orientierung.
         if job_profile is not None:
             cov = calculate_requirement_coverage(job_profile, d)
             row["Übereinstimmung"] = (
-                f"{cov['percent']} %" if cov["computed"] else "Nicht berechnet"
+                f"{cov['percent']} %" if cov["computed"] else "—"
             )
         rows.append(row)
     return pd.DataFrame(rows)
@@ -660,14 +683,60 @@ def _evidence_for(query: str, cv_data: dict) -> str | None:
     return None
 
 
+# Synonym-Tabelle für eine nutzerfreundliche Übereinstimmungs-Prüfung.
+# Bidirektional: jeder Eintrag matcht in beide Richtungen.
+SYNONYMS: dict[str, list[str]] = {
+    "excel": ["tabellenkalkulation", "ms excel", "microsoft excel", "spreadsheet"],
+    "ms office": ["microsoft office", "office", "office-paket", "office paket"],
+    "office": ["ms office", "microsoft office", "office-paket"],
+    "deutsch": ["deutschkenntnisse", "german", "muttersprache deutsch"],
+    "englisch": ["englischkenntnisse", "english", "business english"],
+    "französisch": ["französischkenntnisse", "french"],
+    "spanisch": ["spanischkenntnisse", "spanish"],
+    "sql": ["datenbanken", "relationale datenbanken", "mysql", "postgresql", "postgres", "mariadb", "oracle db", "sqlite"],
+    "python": ["python3", "py"],
+    "javascript": ["js", "ecmascript"],
+    "typescript": ["ts"],
+    "powerpoint": ["präsentationen", "ms powerpoint", "präsentation"],
+    "word": ["ms word", "textverarbeitung"],
+    "projektmanagement": ["pm", "project management"],
+    "agil": ["agile", "scrum", "kanban"],
+    "scrum": ["agil", "agile"],
+    "buchhaltung": ["accounting", "rechnungswesen"],
+    "marketing": ["online-marketing", "digital marketing"],
+    "seo": ["search engine optimization", "suchmaschinenoptimierung"],
+    "sea": ["search engine advertising", "google ads", "google adwords"],
+    "google analytics": ["ga4", "web analytics"],
+    "crm": ["customer relationship management", "salesforce", "hubspot"],
+    "erp": ["sap", "navision", "dynamics"],
+    "kommunikation": ["kommunikationsstärke", "kommunikationsfähigkeit"],
+    "teamarbeit": ["teamfähigkeit", "teamplayer"],
+}
+
+
+def _synonyms_of(term: str) -> set[str]:
+    """Gibt alle bekannten Synonyme eines Begriffs zurück (bidirektional)."""
+    t = term.strip().lower()
+    syns: set[str] = set()
+    if t in SYNONYMS:
+        syns.update(s.lower() for s in SYNONYMS[t])
+    for key, vals in SYNONYMS.items():
+        if t in (v.lower() for v in vals):
+            syns.add(key.lower())
+            syns.update(v.lower() for v in vals if v.lower() != t)
+    syns.discard(t)
+    return syns
+
+
 def check_criterion(criterion: str, cv_data: dict) -> dict:
-    """Prüft neutral, ob ein Kriterium im CV vorkommt.
+    """Prüft nutzerfreundlich, ob ein Kriterium im CV vorkommt.
 
-    Liefert {"status": "vorhanden" | "unklar" | "nicht_gefunden",
-             "evidence": str | None, "note": str | None}.
+    Liefert {"status": "vorhanden" | "teilweise_vorhanden" | "unklar" |
+             "nicht_gefunden", "evidence": str | None, "note": str | None}.
 
-    Keine Bewertung, keine Gewichtung, keine Prozentwerte — nur drei
-    sachliche Status mit optionalem Beleg und optionalem Hinweis.
+    Die Prüfung ist großzügig: direkte Treffer zählen voll, Synonym-Treffer
+    und Teiltreffer als "teilweise vorhanden". Keine Bewertung der Person,
+    keine Eignungsaussage, keine Gewichtung der Person.
     """
     crit = criterion.strip()
     if not crit:
@@ -676,6 +745,7 @@ def check_criterion(criterion: str, cv_data: dict) -> dict:
     haystack = _searchable_text(cv_data).lower()
     crit_low = crit.lower()
 
+    # 1) Direkter Volltreffer → vorhanden
     if crit_low in haystack:
         return {
             "status": "vorhanden",
@@ -683,20 +753,43 @@ def check_criterion(criterion: str, cv_data: dict) -> dict:
             "note": None,
         }
 
+    # 2) Synonym-Treffer für den vollen Begriff → teilweise vorhanden
+    for syn in _synonyms_of(crit_low):
+        if syn and syn in haystack:
+            return {
+                "status": "teilweise_vorhanden",
+                "evidence": _evidence_for(syn, cv_data),
+                "note": f"Sinngemäß über „{syn}“ erkannt.",
+            }
+
+    # 3) Token-basierter Teil-Match (auch mit Synonymen je Token)
     tokens = [t for t in crit_low.split() if len(t) >= 2]
-    matched_tokens = [t for t in tokens if t in haystack]
-    if tokens and matched_tokens and len(matched_tokens) < len(tokens):
+    matched_tokens: list[str] = []
+    for t in tokens:
+        if t in haystack:
+            matched_tokens.append(t)
+            continue
+        if any(s in haystack for s in _synonyms_of(t) if s):
+            matched_tokens.append(t)
+    if tokens and matched_tokens:
+        if len(matched_tokens) == len(tokens):
+            # alle Tokens (per Wort oder Synonym) gefunden
+            return {
+                "status": "teilweise_vorhanden",
+                "evidence": _evidence_for(matched_tokens[0], cv_data),
+                "note": "Sinngemäß erkannt (Synonym/Teiltreffer).",
+            }
         missing = [t for t in tokens if t not in matched_tokens]
-        note = (
-            f"Teiltreffer gefunden ({', '.join(matched_tokens)}); "
-            f"nicht eindeutig erkennbar: {', '.join(missing)}."
-        )
         return {
-            "status": "unklar",
+            "status": "teilweise_vorhanden",
             "evidence": _evidence_for(matched_tokens[0], cv_data),
-            "note": note,
+            "note": (
+                f"Teiltreffer ({', '.join(matched_tokens)}); "
+                f"nicht eindeutig: {', '.join(missing)}."
+            ),
         }
 
+    # 4) Datenqualitäts-Hinweis betrifft das Kriterium → unklar
     issues_blob = " ".join(cv_data.get("data_quality_issues", [])).lower()
     for token in tokens or [crit_low]:
         if token and token in issues_blob:
@@ -709,10 +802,24 @@ def check_criterion(criterion: str, cv_data: dict) -> dict:
     return {"status": "nicht_gefunden", "evidence": None, "note": None}
 
 
+STATUS_BADGE = {
+    "vorhanden": ("kmu-badge-ok", "vorhanden"),
+    "teilweise_vorhanden": ("kmu-badge-warn", "teilweise vorhanden"),
+    "unklar": ("kmu-badge-info", "unklar"),
+    "nicht_gefunden": ("kmu-badge-err", "nicht gefunden"),
+}
+
+
+def _status_badge_html(status: str) -> str:
+    cls, label = STATUS_BADGE.get(status, ("kmu-badge-err", "nicht gefunden"))
+    return f'<span class="kmu-badge {cls}">{label}</span>'
+
+
 def render_checklist(job: dict, cv_data: dict) -> None:
     """Zeigt eine neutrale Kriterien-Checkliste pro Bewerber.
 
-    Keine Prozentzahl, kein Score, kein Ranking, keine Priorisierung.
+    Keine Bewertung der Person — nur 4 sachliche Status:
+    vorhanden / teilweise vorhanden / unklar / nicht gefunden.
     """
     groups = [
         ("Muss-Kriterien", job.get("must_criteria", [])),
@@ -730,21 +837,11 @@ def render_checklist(job: dict, cv_data: dict) -> None:
         st.markdown(f"**{title}**")
         for c in items:
             res = check_criterion(c, cv_data)
-            status = res["status"]
-            if status == "vorhanden":
-                evidence = res["evidence"] or "Kein eindeutiger Beleg gefunden"
-                st.markdown(
-                    f"- **{c}** — vorhanden  \n  *Beleg:* „{evidence}“"
-                )
-            elif status == "unklar":
-                lines = [f"- **{c}** — unklar"]
-                if res.get("note"):
-                    lines.append(f"  *Hinweis:* {res['note']}")
-                if res.get("evidence"):
-                    lines.append(f"  *Teilbeleg:* „{res['evidence']}“")
-                st.markdown("  \n".join(lines))
-            else:
-                st.markdown(f"- **{c}** — nicht gefunden")
+            badge = _status_badge_html(res["status"])
+            st.markdown(
+                f'<div style="margin:4px 0">• {c} &nbsp; {badge}</div>',
+                unsafe_allow_html=True,
+            )
     if not any_rendered:
         st.write("Stellenprofil enthält keine prüfbaren Kriterien.")
 
@@ -804,13 +901,19 @@ def calculate_requirement_coverage(
     if not items:
         return empty
 
-    fulfilled = 0
+    fulfilled = 0.0
     details: list[dict] = []
     unclear: list[str] = []
+    partial: list[str] = []
     for c in items:
         status = check_criterion(c, candidate_data)["status"]
+        # Großzügige Wertung: vorhanden zählt voll, teilweise zählt 0.75,
+        # unklar/nicht_gefunden zählen nicht.
         if status == "vorhanden":
-            fulfilled += 1
+            fulfilled += 1.0
+        elif status == "teilweise_vorhanden":
+            fulfilled += 0.75
+            partial.append(c)
         elif status == "unklar":
             unclear.append(c)
         details.append({"criterion": c, "status": status})
@@ -819,10 +922,11 @@ def calculate_requirement_coverage(
     return {
         "computed": True,
         "percent": percent,
-        "fulfilled": fulfilled,
+        "fulfilled": round(fulfilled, 2),
         "total": len(items),
         "details": details,
         "unclear": unclear,
+        "partial": partial,
     }
 
 
@@ -1410,126 +1514,44 @@ with kpi4:
         unsafe_allow_html=True,
     )
 
-# ---- Dashboard-Grid: Letzte Bewerbungen | Datenqualität + Rückfragen ----
+# ---- Letzte Bewerbungen (kompakte Liste, echte Daten oder Platzhalter-Hinweis) ----
 
-recent_html_rows: list[str] = []
 if st.session_state.candidates:
-    for c in st.session_state.candidates[-5:][::-1]:
-        cv = c["data"]
-        q = c.get("quality") or {}
-        has_gaps = bool(
-            q.get("missing_information") or q.get("unclear_information")
+    with st.container(border=True):
+        st.markdown(
+            '<div class="kmu-card-title">Letzte Bewerbungen</div>',
+            unsafe_allow_html=True,
         )
-        badge_class = "kmu-badge-warn" if has_gaps else "kmu-badge-ok"
-        badge_label = (
-            "Informationslücken" if has_gaps else "Analyse abgeschlossen"
-        )
-        name = cv.get("name") or "(ohne Name)"
-        initials = initials_for(name)
-        first_role = ""
-        if cv.get("experience"):
-            first_role = cv["experience"][0].get("role", "")
-        recent_html_rows.append(
-            f"""
-            <div class="kmu-list-item">
-                <div class="kmu-list-avatar">{initials}</div>
-                <div style="flex:1">
-                    <div class="kmu-list-name">{name}</div>
-                    <div class="kmu-list-file">{first_role or c['filename']}</div>
+        for c in st.session_state.candidates[-5:][::-1]:
+            cv = c["data"]
+            q = c.get("quality") or {}
+            has_gaps = bool(
+                q.get("missing_information") or q.get("unclear_information")
+            )
+            badge_cls = "kmu-badge-warn" if has_gaps else "kmu-badge-ok"
+            badge_lbl = (
+                "Informationslücken" if has_gaps else "Analyse abgeschlossen"
+            )
+            name = cv.get("name") or "(ohne Name)"
+            first_role = ""
+            if cv.get("experience"):
+                first_role = cv["experience"][0].get("role", "")
+            st.markdown(
+                f"""
+                <div class="kmu-list-item">
+                    <div class="kmu-list-avatar">{initials_for(name)}</div>
+                    <div style="flex:1">
+                        <div class="kmu-list-name">{name}</div>
+                        <div class="kmu-list-file">{first_role or c['filename']}</div>
+                    </div>
+                    <span class="kmu-badge {badge_cls}">● {badge_lbl}</span>
                 </div>
-                <span class="kmu-badge {badge_class}">● {badge_label}</span>
-            </div>
-            """
-        )
+                """,
+                unsafe_allow_html=True,
+            )
 else:
-    placeholders = [
-        ("Max Mustermann", "Data Analyst", "kmu-badge-ok", "Analyse abgeschlossen"),
-        ("Lisa Schneider", "Marketing Managerin", "kmu-badge-warn", "Informationslücken"),
-        ("Tom Tischler", "Projektmanager", "kmu-badge-ok", "Analyse abgeschlossen"),
-        ("Julia Sommer", "Buchhalterin", "kmu-badge-warn", "Informationslücken"),
-        ("Anton Keller", "Vertriebsmitarbeiter", "kmu-badge-ok", "Analyse abgeschlossen"),
-    ]
-    for name, role, badge_class, label in placeholders:
-        recent_html_rows.append(
-            f"""
-            <div class="kmu-list-item">
-                <div class="kmu-list-avatar">{initials_for(name)}</div>
-                <div style="flex:1">
-                    <div class="kmu-list-name">{name}</div>
-                    <div class="kmu-list-file">{role}</div>
-                </div>
-                <span class="kmu-badge {badge_class}">● {label}</span>
-            </div>
-            """
-        )
-
-donut_buckets = (
-    buckets
-    if st.session_state.candidates
-    else {"vollständig": 14, "informationslücken": 18, "unvollständig": 8}
-)
-total_buckets = sum(donut_buckets.values()) or 1
-donut_svg = render_donut(donut_buckets)
-
-display_questions = total_questions or (
-    12 if not st.session_state.candidates else 0
-)
-
-left_col, right_col = st.columns([1.4, 1])
-
-with left_col:
-    st.markdown(
-        f"""
-        <div class="kmu-card">
-            <div class="kmu-card-title">
-                Letzte Bewerbungen
-                <small>{'Echtdaten' if st.session_state.candidates else 'Beispieldaten'}</small>
-            </div>
-            {''.join(recent_html_rows)}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-with right_col:
-    st.markdown(
-        f"""
-        <div class="kmu-card">
-            <div class="kmu-card-title">Datenqualität <small>(keine Eignungsbewertung)</small></div>
-            <div class="donut-wrap">
-                {donut_svg}
-                <div class="donut-legend">
-                    <div class="donut-legend-row">
-                        <span class="donut-dot" style="background:#10B981"></span>
-                        Vollständig
-                        <span class="donut-count">{donut_buckets['vollständig']} ({donut_buckets['vollständig'] * 100 // total_buckets}%)</span>
-                    </div>
-                    <div class="donut-legend-row">
-                        <span class="donut-dot" style="background:#F59E0B"></span>
-                        Informationslücken
-                        <span class="donut-count">{donut_buckets['informationslücken']} ({donut_buckets['informationslücken'] * 100 // total_buckets}%)</span>
-                    </div>
-                    <div class="donut-legend-row">
-                        <span class="donut-dot" style="background:#EF4444"></span>
-                        Unvollständig
-                        <span class="donut-count">{donut_buckets['unvollständig']} ({donut_buckets['unvollständig'] * 100 // total_buckets}%)</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="kmu-card">
-            <div class="kmu-card-title">Offene Rückfragen</div>
-            <div style="display:flex; align-items:center; gap:14px;">
-                <div style="font-size:38px; font-weight:700; color:#14B8A6;">{display_questions}</div>
-                <div style="color:#94A3B8; font-size:13px;">
-                    Rückfragevorschläge —<br/>
-                    warten auf Ihre Prüfung und Freigabe.<br/>
-                    <em style="color:#94A3B8">Es wird keine E-Mail automatisch versendet.</em>
-                </div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    st.caption(
+        "Noch keine Bewerbungen analysiert. Lade oben Lebensläufe hoch."
     )
 
 
@@ -1756,7 +1778,6 @@ st.markdown(
 
 (
     main_tab_profile,
-    main_tab_apps,
     main_tab_candidates,
     main_tab_gaps,
     main_tab_questions,
@@ -1765,7 +1786,6 @@ st.markdown(
 ) = st.tabs(
     [
         "Stellenprofil",
-        "Bewerbungen analysieren",
         "Kandidatenübersicht",
         "Informationslücken",
         "Rückfragen",
@@ -1781,12 +1801,7 @@ with main_tab_profile:
         '<div class="kmu-card-title">Strukturiertes Stellenprofil</div>',
         unsafe_allow_html=True,
     )
-    st.caption(
-        "Stellenprofil-Text oben im Bereich „Stellenprofil & Bewerbungen“ "
-        "einfügen und auf „Stellenprofil analysieren“ klicken. Der "
-        "Stellenprofil-Agent strukturiert nur Anforderungen — er bewertet "
-        "keine Bewerber."
-    )
+    st.caption("Strukturierte Anforderungen — keine Bewerber-Bewertung.")
     if st.session_state.job_profile:
         jp = st.session_state.job_profile
         st.markdown(f"**Rolle:** {jp.get('role') or NICHT_GEFUNDEN}")
@@ -1834,41 +1849,6 @@ with main_tab_profile:
     else:
         st.info("Noch kein Stellenprofil hinterlegt.")
 
-# ---- Tab: Bewerbungen analysieren ----
-
-with main_tab_apps:
-    st.markdown(
-        '<div class="kmu-card-title">Bewerbungen analysieren</div>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        "Lade oben im Bereich „Stellenprofil & Bewerbungen“ PDF-Lebensläufe "
-        "hoch und klicke auf **Extraktion starten**. Pipeline:"
-    )
-    st.markdown(
-        "1. **CV-Agent** strukturiert objektive Daten aus dem PDF.  \n"
-        "2. **Informationslücken-Agent** prüft Datenqualität.  \n"
-        "3. **Rückfragen-Agent** formuliert höfliche Rückfragen.  \n"
-        "_Es wird keine Bewertung des Bewerbers vorgenommen._"
-    )
-    if st.session_state.candidates:
-        st.success(
-            f"{len(st.session_state.candidates)} Bewerbungen analysiert. "
-            "Details siehst du im Tab „Kandidatenübersicht“."
-        )
-    else:
-        st.info("Noch keine Bewerbungen analysiert.")
-
-    st.markdown(
-        "**Bisheriges Feedback** (fließt in den nächsten Lauf des CV-Agenten ein)"
-    )
-    entries = load_feedback()
-    if entries:
-        st.dataframe(
-            pd.DataFrame(entries), use_container_width=True, hide_index=True
-        )
-    else:
-        st.caption("Noch kein Feedback vorhanden.")
 
 # ---- Tab: Kandidatenübersicht ----
 
@@ -1883,8 +1863,8 @@ with main_tab_candidates:
         )
     else:
         st.caption(
-            "Alle Kandidaten bleiben sichtbar. Keine Reihenfolge ist eine "
-            "Bewertung — die Sortierung folgt der Upload-Reihenfolge."
+            "Alle Kandidaten in Upload-Reihenfolge. Keine Bewertung, "
+            "keine Sortierung nach %."
         )
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -1912,10 +1892,8 @@ with main_tab_candidates:
         st.dataframe(df, use_container_width=True, hide_index=True)
         if job_profile_state:
             st.caption(
-                "Die Spalte „Übereinstimmung“ zeigt nur den Abdeckungsgrad "
-                "objektiv gefundener Anforderungen. Sie ist keine Bewertung, "
-                "kein Ranking und keine Empfehlung. Die Reihenfolge folgt der "
-                "Upload-Reihenfolge und wird nicht nach Prozentwert sortiert."
+                "„Übereinstimmung“ = Abdeckungsgrad objektiv gefundener "
+                "Anforderungen. Keine Bewertung, keine Sortierung."
             )
 
         options = [
@@ -1924,151 +1902,211 @@ with main_tab_candidates:
         ]
         if options:
             idx = st.selectbox(
-                "Details ansehen",
+                "Kandidat öffnen",
                 range(len(options)),
                 format_func=lambda i: options[i],
             )
             selected = filtered[idx]
             cv_data = selected["data"]
+            quality = selected.get("quality") or {}
+            followups_q = (selected.get("followups") or {}).get(
+                "questions"
+            ) or []
+            coverage = calculate_requirement_coverage(
+                st.session_state.job_profile, cv_data
+            )
 
+            # ---- Detailfenster (Card, kompakt, mit Badges) ----
+            with st.container(border=True):
+                head_l, head_r = st.columns([3, 1])
+                with head_l:
+                    st.markdown(
+                        f"### {cv_data.get('name') or NICHT_GEFUNDEN}"
+                    )
+                    if cv_data.get("experience"):
+                        first = cv_data["experience"][0]
+                        sub = (
+                            f"{first.get('role', '')} @ "
+                            f"{first.get('company', '')}"
+                        ).strip(" @")
+                        if sub:
+                            st.caption(sub)
+                with head_r:
+                    if coverage["computed"]:
+                        st.markdown(
+                            f"""
+                            <div class="coverage-box">
+                                <div class="coverage-value">{coverage['percent']} %</div>
+                                <div class="coverage-label">
+                                    Übereinstimmung mit Stellenprofil
+                                </div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
+                    else:
+                        st.caption("Übereinstimmung: nicht berechnet")
+
+                # Kurze Badge-Reihen
+                skills = cv_data.get("skills") or []
+                if skills:
+                    badges = " ".join(
+                        f'<span class="kmu-badge kmu-badge-info">{s}</span>'
+                        for s in skills[:12]
+                    )
+                    more = (
+                        f' <span class="kmu-badge kmu-badge-info">+{len(skills) - 12}</span>'
+                        if len(skills) > 12
+                        else ""
+                    )
+                    st.markdown(
+                        f"**Skills** {badges}{more}",
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    st.markdown(f"**Skills:** {NICHT_GEFUNDEN}")
+
+                lang_text = _short_languages(cv_data)
+                st.markdown(f"**Sprachen:** {lang_text}")
+
+                certs = cv_data.get("certificates") or []
+                st.markdown(
+                    f"**Zertifikate:** {', '.join(certs) if certs else NICHT_GEFUNDEN}"
+                )
+
+                # Berufserfahrung + Ausbildung als kurze Stichpunkte
+                exp = cv_data.get("experience") or []
+                if exp:
+                    st.markdown("**Berufserfahrung**")
+                    for e in exp[:5]:
+                        line = (
+                            f"- {e.get('role') or '?'} @ "
+                            f"{e.get('company') or '?'}"
+                        )
+                        if e.get("period"):
+                            line += f" · {e['period']}"
+                        st.markdown(line)
+                edu = cv_data.get("education") or []
+                if edu:
+                    st.markdown("**Ausbildung**")
+                    for e in edu[:3]:
+                        st.markdown(
+                            f"- {e.get('degree') or '?'}, "
+                            f"{e.get('institution') or '?'}"
+                            + (f" · {e['period']}" if e.get('period') else "")
+                        )
+
+                # Qualifikations-Status (4 Status, neutral)
+                if coverage["computed"]:
+                    by_status: dict[str, list[str]] = {
+                        "vorhanden": [],
+                        "teilweise_vorhanden": [],
+                        "nicht_gefunden": [],
+                        "unklar": [],
+                    }
+                    for d in coverage["details"]:
+                        by_status.setdefault(d["status"], []).append(
+                            d["criterion"]
+                        )
+                    cols = st.columns(4)
+                    for col, key, title in (
+                        (cols[0], "vorhanden", "Vorhanden"),
+                        (cols[1], "teilweise_vorhanden", "Teilweise vorhanden"),
+                        (cols[2], "nicht_gefunden", "Nicht gefunden"),
+                        (cols[3], "unklar", "Unklar"),
+                    ):
+                        with col:
+                            st.markdown(f"**{title}**")
+                            items = by_status.get(key) or []
+                            if items:
+                                for x in items[:8]:
+                                    st.markdown(f"- {x}")
+                                if len(items) > 8:
+                                    st.caption(f"+{len(items) - 8} weitere")
+                            else:
+                                st.caption("—")
+
+                # Unklare Infos (aus dem Informationslücken-Agent)
+                unclear_info = quality.get("unclear_information") or []
+                if unclear_info:
+                    with st.expander(
+                        f"Unklare Informationen ({len(unclear_info)})"
+                    ):
+                        for u in unclear_info:
+                            st.markdown(f"- {u}")
+
+                # Rückfragevorschläge
+                if followups_q:
+                    with st.expander(
+                        f"Rückfragevorschläge ({len(followups_q)})"
+                    ):
+                        for q in followups_q:
+                            st.markdown(f"- {q}")
+                        st.caption(
+                            "Es wird keine E-Mail automatisch versendet."
+                        )
+
+                # Optionale Roh-Daten
+                with st.expander("Technische Details (JSON)"):
+                    st.json(cv_data)
+
+            # ---- Sub-Tabs: Checkliste · Datenqualität · Feedback ----
             (
-                tab_summary,
-                tab_overview,
                 tab_checklist,
-                tab_evidence,
                 tab_quality,
                 tab_feedback,
             ) = st.tabs(
                 [
-                    "Übersicht",
-                    "Rohdaten (JSON)",
                     "Kriterien-Checkliste",
-                    "Textbelege",
                     "Datenqualität",
                     "Feedback",
                 ]
             )
 
-            with tab_summary:
-                st.caption(
-                    "Menschenlesbare Zusammenfassung. Felder ohne Wert werden "
-                    "als „nicht gefunden“ markiert."
-                )
-                render_cv_summary(cv_data)
-
-                # Abdeckungsgrad der Anforderungen (neutral, keine Bewertung)
-                coverage = calculate_requirement_coverage(
-                    st.session_state.job_profile, cv_data
-                )
-                if coverage["computed"]:
-                    st.markdown(
-                        f"""
-                        <div class="coverage-box">
-                            <div class="coverage-value">
-                                Übereinstimmung mit Stellenprofil: {coverage['percent']} %
-                            </div>
-                            <div class="coverage-label">
-                                {coverage['fulfilled']} von {coverage['total']}
-                                objektiv prüfbaren Anforderungen im Lebenslauf gefunden.
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-                    st.caption(
-                        "Die Prozentzahl zeigt nur den Abdeckungsgrad objektiv "
-                        "gefundener Anforderungen. Sie ist keine Bewertung und "
-                        "keine Empfehlung."
-                    )
-                    if coverage["unclear"]:
-                        st.markdown(
-                            "**Unklar (nicht als erfüllt gezählt — als "
-                            "Informationslücke aufgeführt):**"
-                        )
-                        for u in coverage["unclear"]:
-                            st.markdown(f"- {u}")
-                else:
-                    st.info(
-                        "Übereinstimmung mit Stellenprofil: Nicht berechnet "
-                        "(kein Stellenprofil mit prüfbaren Anforderungen "
-                        "hinterlegt)."
-                    )
-
-            with tab_overview:
-                st.json(cv_data)
-
             with tab_checklist:
                 if st.session_state.job_profile:
                     st.caption(
-                        "Neutrale Gegenüberstellung mit drei Status: "
-                        "vorhanden / unklar / nicht gefunden. "
-                        "Keine Prozentzahl, kein Score."
+                        "Vier Status: vorhanden · teilweise vorhanden · "
+                        "unklar · nicht gefunden. Keine Bewertung."
                     )
                     render_checklist(st.session_state.job_profile, cv_data)
                 else:
-                    st.info(
-                        "Kein Stellenprofil hinterlegt. Füge oben im Bereich "
-                        "„Stellenprofil & Bewerbungen“ ein Stellenprofil ein, "
-                        "um eine Checkliste zu sehen."
-                    )
-
-            with tab_evidence:
-                st.caption(
-                    "Quellenangaben aus dem Lebenslauf — kurze Textausschnitte "
-                    "als Beleg pro erkannter Qualifikation."
-                )
-                ev_list = cv_data.get("evidence", [])
-                if ev_list:
-                    for ev in ev_list:
-                        st.markdown(
-                            f"- **{ev.get('item', '')}**: "
-                            f"„{ev.get('excerpt', '')}“"
-                        )
-                else:
-                    st.write("Keine separaten Textbelege erfasst.")
+                    st.info("Kein Stellenprofil hinterlegt.")
 
             with tab_quality:
-                st.caption(
-                    "Vollständigkeits- und Klarheitsprüfung der Unterlagen — "
-                    "keine Bewertung, keine Priorisierung."
-                )
-                quality = selected.get("quality") or {}
+                st.caption("Datenqualität — keine Bewertung der Person.")
                 if quality.get("_error"):
-                    st.error(
-                        "Die Informationslücken-Prüfung konnte nicht "
-                        f"durchgeführt werden: {quality['_error']}"
-                    )
+                    st.error(f"Prüfung fehlgeschlagen: {quality['_error']}")
 
-                st.markdown("### Fehlende Informationen")
                 missing = quality.get("missing_information", [])
+                st.markdown(
+                    f"**Fehlende Informationen ({len(missing)})**"
+                )
                 if missing:
                     for item in missing:
                         st.markdown(f"- {item}")
                 else:
-                    st.write("Keine fehlenden Informationen erkannt.")
+                    st.caption("Keine fehlenden Informationen erkannt.")
 
-                st.markdown("### Unklare Informationen")
                 unclear = quality.get("unclear_information", [])
+                st.markdown(f"**Unklare Informationen ({len(unclear)})**")
                 if unclear:
                     for item in unclear:
                         st.markdown(f"- {item}")
                 else:
-                    st.write("Keine unklaren Informationen erkannt.")
+                    st.caption("Keine unklaren Informationen erkannt.")
 
                 extra_issues = cv_data.get("data_quality_issues", [])
                 if extra_issues:
                     with st.expander(
-                        "Zusätzliche Hinweise aus der CV-Extraktion"
+                        f"CV-Extraktions-Hinweise ({len(extra_issues)})"
                     ):
                         for issue in extra_issues:
                             st.markdown(f"- {issue}")
 
             with tab_feedback:
-                st.markdown(
-                    "Feedback verbessert nur die **Extraktion und "
-                    "Darstellung**, niemals die Auswahl. Es wird in "
-                    "`feedback.json` gespeichert und beim nächsten "
-                    "Extraktionslauf im Prompt berücksichtigt."
+                st.caption(
+                    "Feedback verbessert nur die Extraktion, nicht die Auswahl."
                 )
                 with st.form("feedback_form", clear_on_submit=True):
                     category = st.selectbox(
@@ -2106,10 +2144,7 @@ with main_tab_gaps:
         '<div class="kmu-card-title">Informationslücken (Übersicht)</div>',
         unsafe_allow_html=True,
     )
-    st.caption(
-        "Aggregierte Sicht der Datenqualitäts-Prüfung über alle bislang "
-        "analysierten Bewerbungen — keine Eignungsbewertung."
-    )
+    st.caption("Datenqualität pro Bewerbung — keine Bewertung der Person.")
     if not st.session_state.candidates:
         st.info("Noch keine Bewerbungen analysiert.")
     else:
@@ -2159,9 +2194,8 @@ with main_tab_questions:
         unsafe_allow_html=True,
     )
     st.caption(
-        "Der Rückfragen-Agent formuliert höfliche Rückfragen aus den "
-        "Informationslücken. **Es wird keine E-Mail automatisch versendet.** "
-        "Sie als Geschäftsführer prüfen, bearbeiten oder ignorieren jede Frage."
+        "Vorschläge des Rückfragen-Agenten. "
+        "**Es wird keine E-Mail automatisch versendet.**"
     )
     any_questions = False
     for c in st.session_state.candidates:
@@ -2225,11 +2259,7 @@ with main_tab_feedback:
         '<div class="kmu-card-title">Feedback-Übersicht</div>',
         unsafe_allow_html=True,
     )
-    st.caption(
-        "Feedback verbessert nur die **Extraktion und Darstellung**, niemals "
-        "die Auswahl. Pro Bewerber kannst du Feedback im Tab "
-        "„Kandidatenübersicht → Feedback“ eintragen."
-    )
+    st.caption("Feedback verbessert nur die Extraktion, nicht die Auswahl.")
     entries = load_feedback()
     if entries:
         st.dataframe(
@@ -2237,10 +2267,7 @@ with main_tab_feedback:
             use_container_width=True,
             hide_index=True,
         )
-        st.caption(
-            f"Insgesamt {len(entries)} Feedback-Einträge. "
-            "Diese fließen beim nächsten Extraktionslauf in den CV-Agenten-Prompt ein."
-        )
+        st.caption(f"{len(entries)} Einträge.")
     else:
         st.info("Noch kein Feedback vorhanden.")
 
@@ -2251,11 +2278,7 @@ with main_tab_audit:
         '<div class="kmu-card-title">Audit-Log</div>',
         unsafe_allow_html=True,
     )
-    st.caption(
-        "Jede wichtige Aktion wird protokolliert (Zeitstempel, Aktion, "
-        "Bewerber/Datei, Ergebnis, Autonomie-Stufe). "
-        f"Standardstufe für Recruiting-Analysen: {AUTONOMY_LEVEL}"
-    )
+    st.caption(f"Autonomie-Stufe: {AUTONOMY_LEVEL}")
     log_entries = load_audit_log()
     if log_entries:
         st.dataframe(
