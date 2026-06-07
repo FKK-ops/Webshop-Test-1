@@ -930,6 +930,150 @@ def calculate_requirement_coverage(
     }
 
 
+# ---------------------------------------------------------------------------
+# Qualifikationsabdeckung — nur leistungsbezogene Anforderungen
+# ---------------------------------------------------------------------------
+
+# Schlüsselwörter, die nicht-leistungsbezogen sind und aus der
+# Qualifikationsabdeckung ausgeschlossen werden müssen. Wenn ein
+# Anforderungstext eines dieser Wörter enthält, fließt er NICHT in die
+# Qualifikationsabdeckung ein (er kann separat als organisatorischer
+# Hinweis angezeigt werden).
+NON_PERFORMANCE_KEYWORDS: tuple[str, ...] = (
+    "gehalt", "gehaltsvorstellung", "vergütung", "verguetung", "lohn",
+    "arbeitszeit", "vollzeit", "teilzeit", "stundenmodell",
+    "remote", "homeoffice", "home office", "home-office", "mobiles arbeiten",
+    "standort", "umzug", "umzugsbereitschaft", "wohnort",
+    "startdatum", "verfügbarkeit", "verfuegbarkeit", "eintrittstermin",
+    "kündigungsfrist", "kuendigungsfrist",
+    "referenz", "referenzen",
+    "anschreiben", "bewerbungsfoto", "foto", "lichtbild",
+    "alter", "geburtsdatum",
+    "geschlecht", "gender",
+    "herkunft", "nationalität", "nationalitaet", "staatsangehörigkeit",
+    "name ", "adresse", "anschrift", "telefon", "e-mail", "email",
+    "familienstand", "familie", "kinder",
+    "motivation", "persönlichkeit", "persoenlichkeit",
+    "kulturelle passung", "cultural fit", "sympathie", "team-fit",
+)
+
+# Leistungsbezogene Kategorien (positive Liste für die Begründung).
+PERFORMANCE_CATEGORIES: dict[str, str] = {
+    "desired_skills": "Skill",
+    "desired_languages": "Sprache",
+    "desired_certificates": "Zertifikat",
+    "desired_experience": "Berufserfahrung",
+}
+
+
+def is_performance_criterion(text: str) -> bool:
+    """Filter: True, wenn die Anforderung leistungsbezogen ist.
+
+    Schließt nicht-leistungsbezogene Angaben (Gehalt, Arbeitszeit,
+    Standort, Persönlichkeit, Sympathie, …) aus.
+    """
+    if not text or not text.strip():
+        return False
+    low = text.lower()
+    for kw in NON_PERFORMANCE_KEYWORDS:
+        if kw in low:
+            return False
+    return True
+
+
+# Übersetzung interner Status → menschlich
+QUALIFICATION_STATUS_LABEL = {
+    "vorhanden": "Erfüllt",
+    "teilweise_vorhanden": "Teilweise erfüllt",
+    "nicht_gefunden": "Nicht gefunden",
+    "unklar": "Unklar",
+}
+
+
+def _qualification_reason(criterion: str, res: dict, category: str) -> str:
+    """Liefert eine nachvollziehbare Begründung für den Status."""
+    status = res["status"]
+    note = (res.get("note") or "").strip()
+    if status == "vorhanden":
+        return f"{category} „{criterion}“ im Lebenslauf gefunden."
+    if status == "teilweise_vorhanden":
+        return note or "Ähnliche Qualifikation erkannt."
+    if status == "unklar":
+        return note or "Angabe vorhanden, aber unklar (z. B. Niveau fehlt)."
+    return "Kein Hinweis im Lebenslauf gefunden."
+
+
+def build_qualification_coverage(
+    job_profile: dict | None, cv_data: dict
+) -> dict:
+    """Baut die Qualifikationsabdeckung — nur leistungsbezogene Anforderungen.
+
+    Nutzt die bereits vorhandene check_criterion()-Logik und filtert
+    nicht-leistungsbezogene Anforderungen über is_performance_criterion()
+    aus. Liefert:
+        {"computed": bool, "fulfilled": int, "total": int,
+         "rows": [{requirement, status, status_label, reason, category}],
+         "excluded": [{requirement, reason}]}
+    Erfüllt = status "vorhanden". Teilweise/Unklar/Nicht gefunden zählen
+    NICHT als erfüllt im Zähler "x von y". Keine Bewertung der Person,
+    keine Sortierung, keine Empfehlung.
+    """
+    empty = {
+        "computed": False,
+        "fulfilled": 0,
+        "total": 0,
+        "rows": [],
+        "excluded": [],
+    }
+    if not job_profile:
+        return empty
+
+    rows: list[dict] = []
+    excluded: list[dict] = []
+    seen: set[str] = set()
+    for key, category in PERFORMANCE_CATEGORIES.items():
+        for crit in job_profile.get(key, []) or []:
+            text = (crit or "").strip()
+            if not text:
+                continue
+            k = text.lower()
+            if k in seen:
+                continue
+            seen.add(k)
+            if not is_performance_criterion(text):
+                excluded.append(
+                    {
+                        "requirement": text,
+                        "reason": "nicht leistungsbezogen (organisatorisch).",
+                    }
+                )
+                continue
+            res = check_criterion(text, cv_data)
+            rows.append(
+                {
+                    "requirement": text,
+                    "status": res["status"],
+                    "status_label": QUALIFICATION_STATUS_LABEL.get(
+                        res["status"], res["status"]
+                    ),
+                    "reason": _qualification_reason(text, res, category),
+                    "category": category,
+                }
+            )
+
+    if not rows and not excluded:
+        return empty
+
+    fulfilled = sum(1 for r in rows if r["status"] == "vorhanden")
+    return {
+        "computed": True,
+        "fulfilled": fulfilled,
+        "total": len(rows),
+        "rows": rows,
+        "excluded": excluded,
+    }
+
+
 def log_coverage_once(candidate: dict, coverage: dict, job_profile: dict | None) -> None:
     """Loggt 'Abdeckungsgrad berechnet' genau einmal pro Kandidat/Profilstand."""
     if not coverage.get("computed"):
@@ -2025,6 +2169,51 @@ with main_tab_candidates:
                                     st.caption(f"+{len(items) - 8} weitere")
                             else:
                                 st.caption("—")
+
+                # ---- Qualifikationsabdeckung (nur leistungsbezogen) ----
+                qual = build_qualification_coverage(
+                    st.session_state.job_profile, cv_data
+                )
+                if qual["computed"]:
+                    st.markdown("### Qualifikationsabdeckung")
+                    st.markdown(
+                        f"**Bewerber erfüllt: {qual['fulfilled']} von "
+                        f"{qual['total']} leistungsbezogenen Anforderungen**"
+                    )
+                    st.caption(
+                        "Nur leistungsbezogene Anforderungen "
+                        "(Skills, Sprachen, Zertifikate, Berufserfahrung). "
+                        "Organisatorische Angaben wie Gehalt, Arbeitszeit, "
+                        "Standort, Verfügbarkeit oder weiche Merkmale fließen "
+                        "bewusst NICHT ein. Keine Bewertung der Person, "
+                        "keine Empfehlung, keine Sortierung."
+                    )
+                    qual_df = pd.DataFrame(
+                        [
+                            {
+                                "Anforderung": r["requirement"],
+                                "Status": r["status_label"],
+                                "Begründung": r["reason"],
+                            }
+                            for r in qual["rows"]
+                        ]
+                    )
+                    st.dataframe(
+                        qual_df, use_container_width=True, hide_index=True
+                    )
+                    if qual["excluded"]:
+                        with st.expander(
+                            "Nicht-leistungsbezogene Anforderungen "
+                            f"(ausgeschlossen, {len(qual['excluded'])})"
+                        ):
+                            st.caption(
+                                "Diese Angaben werden NICHT in den Zähler "
+                                "„x von y Anforderungen“ eingerechnet."
+                            )
+                            for ex in qual["excluded"]:
+                                st.markdown(
+                                    f"- {ex['requirement']} — {ex['reason']}"
+                                )
 
                 # Unklare Infos (aus dem Informationslücken-Agent)
                 unclear_info = quality.get("unclear_information") or []
