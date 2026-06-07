@@ -565,32 +565,40 @@ def _or_missing(value, marker: str = NICHT_GEFUNDEN) -> str:
     return value
 
 
-def candidates_to_dataframe(candidates: list[dict]) -> pd.DataFrame:
+def candidates_to_dataframe(
+    candidates: list[dict], job_profile: dict | None = None
+) -> pd.DataFrame:
     rows = []
     for c in candidates:
         d = c["data"]
-        rows.append(
-            {
-                "Datei": c["filename"],
-                "Name": d.get("name") or NICHT_GEFUNDEN,
-                "Skills": ", ".join(d.get("skills", [])) or NICHT_GEFUNDEN,
-                "Berufserfahrung": " | ".join(
-                    f"{e.get('role', '')} @ {e.get('company', '')} "
-                    f"({e.get('period', '')})".strip()
-                    for e in d.get("experience", [])
-                ) or NICHT_GEFUNDEN,
-                "Ausbildung": " | ".join(
-                    f"{e.get('degree', '')}, {e.get('institution', '')} "
-                    f"({e.get('period', '')})".strip()
-                    for e in d.get("education", [])
-                ) or NICHT_GEFUNDEN,
-                "Zertifikate": ", ".join(d.get("certificates", [])) or NICHT_GEFUNDEN,
-                "Sprachen": ", ".join(
-                    f"{l.get('language', '')} ({l.get('level', '')})".strip()
-                    for l in d.get("languages", [])
-                ) or NICHT_GEFUNDEN,
-            }
-        )
+        row = {
+            "Datei": c["filename"],
+            "Name": d.get("name") or NICHT_GEFUNDEN,
+            "Skills": ", ".join(d.get("skills", [])) or NICHT_GEFUNDEN,
+            "Berufserfahrung": " | ".join(
+                f"{e.get('role', '')} @ {e.get('company', '')} "
+                f"({e.get('period', '')})".strip()
+                for e in d.get("experience", [])
+            ) or NICHT_GEFUNDEN,
+            "Ausbildung": " | ".join(
+                f"{e.get('degree', '')}, {e.get('institution', '')} "
+                f"({e.get('period', '')})".strip()
+                for e in d.get("education", [])
+            ) or NICHT_GEFUNDEN,
+            "Zertifikate": ", ".join(d.get("certificates", [])) or NICHT_GEFUNDEN,
+            "Sprachen": ", ".join(
+                f"{l.get('language', '')} ({l.get('level', '')})".strip()
+                for l in d.get("languages", [])
+            ) or NICHT_GEFUNDEN,
+        }
+        # Zusätzliche, neutrale Spalte "Übereinstimmung" (Abdeckungsgrad).
+        # Keine Sortierung, kein Ranking — nur transparente Orientierung.
+        if job_profile is not None:
+            cov = calculate_requirement_coverage(job_profile, d)
+            row["Übereinstimmung"] = (
+                f"{cov['percent']} %" if cov["computed"] else "Nicht berechnet"
+            )
+        rows.append(row)
     return pd.DataFrame(rows)
 
 
@@ -739,6 +747,103 @@ def render_checklist(job: dict, cv_data: dict) -> None:
                 st.markdown(f"- **{c}** — nicht gefunden")
     if not any_rendered:
         st.write("Stellenprofil enthält keine prüfbaren Kriterien.")
+
+
+def calculate_requirement_coverage(
+    job_profile: dict | None, candidate_data: dict
+) -> dict:
+    """Regelbasierter Abdeckungsgrad der Anforderungen.
+
+    Berechnet: erfüllte objektiv gefundene Kriterien / insgesamt prüfbare
+    Kriterien * 100. Geprüft werden nur objektiv prüfbare Kriterien:
+    gewünschte Skills, Sprachen, Zertifikate und explizit genannte
+    Berufserfahrung. Die Bewertung erfolgt regelbasiert über
+    check_criterion() — KEINE freie LLM-Bewertung.
+
+    WICHTIG: Dies ist KEIN Score, KEIN Ranking, KEINE Eignungsaussage und
+    KEINE Entscheidungsgrundlage — nur ein transparenter Abdeckungsgrad der
+    objektiv im Lebenslauf gefundenen Anforderungen. Unklare Kriterien
+    zählen NICHT als erfüllt und werden zusätzlich als Informationslücke
+    zurückgegeben.
+
+    Rückgabe:
+        {"computed": bool, "percent": int | None, "fulfilled": int,
+         "total": int, "details": [{criterion, status}], "unclear": [..]}
+    """
+    empty = {
+        "computed": False,
+        "percent": None,
+        "fulfilled": 0,
+        "total": 0,
+        "details": [],
+        "unclear": [],
+    }
+    if not job_profile:
+        return empty
+
+    checkable: list[str] = []
+    for key in (
+        "desired_skills",
+        "desired_languages",
+        "desired_certificates",
+        "desired_experience",
+    ):
+        for crit in job_profile.get(key, []) or []:
+            if crit and crit.strip():
+                checkable.append(crit.strip())
+
+    # Duplikate entfernen, Reihenfolge erhalten
+    seen: set[str] = set()
+    items: list[str] = []
+    for c in checkable:
+        k = c.lower()
+        if k not in seen:
+            seen.add(k)
+            items.append(c)
+
+    if not items:
+        return empty
+
+    fulfilled = 0
+    details: list[dict] = []
+    unclear: list[str] = []
+    for c in items:
+        status = check_criterion(c, candidate_data)["status"]
+        if status == "vorhanden":
+            fulfilled += 1
+        elif status == "unklar":
+            unclear.append(c)
+        details.append({"criterion": c, "status": status})
+
+    percent = round(fulfilled / len(items) * 100)
+    return {
+        "computed": True,
+        "percent": percent,
+        "fulfilled": fulfilled,
+        "total": len(items),
+        "details": details,
+        "unclear": unclear,
+    }
+
+
+def log_coverage_once(candidate: dict, coverage: dict, job_profile: dict | None) -> None:
+    """Loggt 'Abdeckungsgrad berechnet' genau einmal pro Kandidat/Profilstand."""
+    if not coverage.get("computed"):
+        return
+    role = (job_profile or {}).get("role", "")
+    signature = (
+        f"{candidate.get('filename', '')}|{role}|"
+        f"{coverage['fulfilled']}/{coverage['total']}"
+    )
+    logged = st.session_state.setdefault("_coverage_logged", set())
+    if signature in logged:
+        return
+    logged.add(signature)
+    log_audit(
+        action="Abdeckungsgrad berechnet",
+        target=candidate["data"].get("name", "") or candidate["filename"],
+        result_type=f"{coverage['percent']} %",
+    )
 
 
 def render_cv_summary(cv_data: dict) -> None:
@@ -1068,6 +1173,32 @@ st.markdown(
         font-size: 14px;
     }
     .question-row.reviewed { border-left: 4px solid #10B981; }
+    /* Zentrale Upload-/Start-Card (st.container(border=True)) */
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        background: #0F1F35;
+        border: 1px solid #1E3A5F !important;
+        border-radius: 14px;
+    }
+    /* Dezente Human-in-the-Loop-Infozeile an der Navigation */
+    .hil-line {
+        color: #94A3B8;
+        font-size: 12px;
+        padding: 8px 14px;
+        margin: 4px 0 10px 0;
+        border-left: 3px solid #14B8A6;
+        background: rgba(20, 184, 166, 0.06);
+        border-radius: 6px;
+    }
+    /* Abdeckungsgrad-Anzeige (neutral, keine Bewertung) */
+    .coverage-box {
+        background: #10233A;
+        border: 1px solid #1E3A5F;
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin: 6px 0 4px 0;
+    }
+    .coverage-value { font-size: 26px; font-weight: 700; color: #14B8A6; }
+    .coverage-label { color: #94A3B8; font-size: 12px; margin-top: 4px; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -1157,219 +1288,25 @@ if "job_profile_source" not in st.session_state:
 if "reviewed_questions" not in st.session_state:
     # Map filename -> set of question-indices, die als geprüft markiert wurden
     st.session_state.reviewed_questions = {}
+if "_flash" not in st.session_state:
+    # Transiente Statusmeldungen, die einen st.rerun() überleben
+    st.session_state._flash = []
+if "_coverage_logged" not in st.session_state:
+    st.session_state._coverage_logged = set()
 
 
 # ---------------------------------------------------------------------------
 # Sidebar — Logo, Navigation, Eingaben, Hilfe
 # ---------------------------------------------------------------------------
 
-candidate_count = len(st.session_state.candidates)
-
 with st.sidebar:
     st.markdown(
         '<div class="kmu-logo">👥 KMU Recruiting Agent</div>',
         unsafe_allow_html=True,
     )
-
-    st.markdown(
-        f"""
-        <div class="kmu-nav-section">Übersicht</div>
-        <div class="kmu-nav-item active">📊 Dashboard</div>
-        <div class="kmu-nav-section">Stellenprofil</div>
-        <div class="kmu-nav-item">📝 Stellenprofil</div>
-        <div class="kmu-nav-item">✅ Anforderungen</div>
-        <div class="kmu-nav-section">Bewerbungen</div>
-        <div class="kmu-nav-item">📂 Bewerbungen
-            <span class="badge-num">{candidate_count}</span>
-        </div>
-        <div class="kmu-nav-item">👤 Kandidatenübersicht</div>
-        <div class="kmu-nav-section">Datenqualität</div>
-        <div class="kmu-nav-item">📈 Informationslücken</div>
-        <div class="kmu-nav-item">❓ Rückfragen</div>
-        <div class="kmu-nav-section">Sonstiges</div>
-        <div class="kmu-nav-item">💬 Feedback</div>
-        <div class="kmu-nav-item">📋 Audit Log</div>
-        """,
-        unsafe_allow_html=True,
-    )
-
+    st.caption("Demo-Version · KMU Recruiting Agent")
     st.divider()
-    st.markdown(
-        '<div class="kmu-nav-section">Stellenprofil eingeben</div>',
-        unsafe_allow_html=True,
-    )
-
-    job_url = st.text_input(
-        "Stellen-URL (optional, derzeit deaktiviert)",
-        placeholder="https://… (in dieser Demo nicht aktiv)",
-        label_visibility="collapsed",
-    )
-    if job_url.strip():
-        st.caption(
-            "Hinweis: URL-Fetch ist in dieser Demo nicht aktiviert. "
-            "Bitte den Stellentext direkt unten einfügen."
-        )
-
-    job_text = st.text_area(
-        "Stellenprofil",
-        height=160,
-        placeholder=(
-            "z. B. Wir suchen einen Python-Entwickler mit SQL und Deutsch C1 …"
-        ),
-        label_visibility="collapsed",
-    )
-
-    if st.button(
-        "Stellenprofil analysieren", disabled=not job_text.strip()
-    ):
-        with st.spinner("Strukturiere Stellenprofil ..."):
-            try:
-                profile = analyze_job_profile(job_text)
-                st.session_state.job_profile = profile
-                st.session_state.job_profile_source = job_text.strip()
-                log_audit(
-                    action="Stellenprofil analysiert",
-                    target=profile.get("role", "(ohne Titel)"),
-                    result_type="strukturiertes Stellenprofil",
-                )
-                st.success("Stellenprofil strukturiert.")
-            except Exception as e:  # noqa: BLE001
-                st.error(f"Fehler bei der Analyse des Stellenprofils: {e}")
-                log_audit(
-                    action="Stellenprofil analysiert",
-                    target="(Sidebar-Eingabe)",
-                    result_type=f"Fehler: {e}",
-                )
-
-    if st.session_state.job_profile and st.button("Stellenprofil löschen"):
-        st.session_state.job_profile = None
-        st.session_state.job_profile_source = ""
-        st.rerun()
-
-    st.divider()
-    st.markdown(
-        '<div class="kmu-nav-section">Lebensläufe hochladen</div>',
-        unsafe_allow_html=True,
-    )
-    uploaded = st.file_uploader(
-        "PDF-Dateien",
-        type=["pdf"],
-        accept_multiple_files=True,
-        label_visibility="collapsed",
-    )
-
-    if st.button("Extraktion starten", type="primary", disabled=not uploaded):
-        prior_feedback = feedback_block(load_feedback())
-        new_files = [
-            f for f in uploaded if f.name not in st.session_state.processed_files
-        ]
-        if not new_files:
-            st.warning("Alle ausgewählten Dateien wurden bereits verarbeitet.")
-        else:
-            progress = st.progress(0.0)
-            ok = 0
-            for i, f in enumerate(new_files, start=1):
-                with st.spinner(f"Verarbeite {f.name} ..."):
-                    try:
-                        log_audit(
-                            action="PDF hochgeladen",
-                            target=f.name,
-                            result_type="Datei akzeptiert",
-                        )
-                        text = extract_text_from_pdf(f.read())
-                        if not text:
-                            st.warning(
-                                f"{f.name}: kein Text extrahierbar "
-                                "(evtl. gescanntes PDF ohne OCR)."
-                            )
-                            log_audit(
-                                action="Text extrahiert",
-                                target=f.name,
-                                result_type="leer / nicht maschinenlesbar",
-                            )
-                            continue
-                        log_audit(
-                            action="Text extrahiert",
-                            target=f.name,
-                            result_type=f"{len(text)} Zeichen",
-                        )
-                        data = extract_cv(text, prior_feedback)
-                        log_audit(
-                            action="CV analysiert",
-                            target=data.get("name", "") or f.name,
-                            result_type="strukturierte Felder + Belege",
-                        )
-                        # Informationslücken-Agent
-                        try:
-                            gaps = analyze_information_gaps(text, data)
-                            log_audit(
-                                action="Informationslücken erkannt",
-                                target=data.get("name", "") or f.name,
-                                result_type=(
-                                    f"{len(gaps['missing_information'])} fehlend, "
-                                    f"{len(gaps['unclear_information'])} unklar"
-                                ),
-                            )
-                        except Exception as qe:  # noqa: BLE001
-                            gaps = {
-                                "missing_information": [],
-                                "unclear_information": [],
-                                "suggested_questions": [],
-                                "_error": str(qe),
-                            }
-                            log_audit(
-                                action="Informationslücken erkannt",
-                                target=f.name,
-                                result_type=f"Fehler: {qe}",
-                            )
-                        # Rückfragen-Agent
-                        try:
-                            followups = generate_follow_up_questions(
-                                gaps, st.session_state.job_profile
-                            )
-                            log_audit(
-                                action="Rückfragen erzeugt",
-                                target=data.get("name", "") or f.name,
-                                result_type=(
-                                    f"{len(followups['questions'])} Rückfragen "
-                                    "(warten auf Prüfung & Freigabe)"
-                                ),
-                            )
-                        except Exception as fe:  # noqa: BLE001
-                            followups = {"questions": gaps.get("suggested_questions", [])}
-                            log_audit(
-                                action="Rückfragen erzeugt",
-                                target=f.name,
-                                result_type=f"Fehler: {fe}",
-                            )
-                        st.session_state.candidates.append(
-                            {
-                                "filename": f.name,
-                                "data": data,
-                                "quality": gaps,
-                                "followups": followups,
-                            }
-                        )
-                        st.session_state.processed_files.add(f.name)
-                        ok += 1
-                    except Exception as e:  # noqa: BLE001
-                        st.error(f"Fehler bei {f.name}: {e}")
-                        log_audit(
-                            action="CV analysiert",
-                            target=f.name,
-                            result_type=f"Fehler: {e}",
-                        )
-                progress.progress(i / len(new_files))
-            if ok:
-                st.success(f"{ok} Lebensläufe analysiert.")
-
-    if st.session_state.candidates and st.button("Alle Kandidaten löschen"):
-        st.session_state.candidates = []
-        st.session_state.processed_files = set()
-        st.session_state.reviewed_questions = {}
-        st.rerun()
-
-    st.divider()
+    st.button("⚙️ Einstellungen", use_container_width=True)
     st.button("❔ Hilfe & Support", use_container_width=True)
 
 
@@ -1410,21 +1347,8 @@ with header_right:
     st.button(
         "⬆ Bewerbungen hochladen",
         use_container_width=True,
-        help="Lebensläufe lädst du in der Sidebar links hoch.",
+        help="Stellenprofil & Lebensläufe lädst du unten im Bereich „Stellenprofil & Bewerbungen“ hoch.",
     )
-
-st.markdown(
-    """
-    <div class="kmu-disclaimer">
-        <strong>Human-in-the-Loop:</strong>
-        Die KI trifft keine Personalentscheidung.
-        Sie erstellt kein Ranking, keinen Score und keine Empfehlung.
-        Der Geschäftsführer prüft und entscheidet final. Autonomie-Stufe:
-        <em>Rot — Mensch entscheidet, Agent liefert nur Daten.</em>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
 
 # ---- KPI-Karten (echte Daten aus der App) ----
 
@@ -1485,27 +1409,6 @@ with kpi4:
         """,
         unsafe_allow_html=True,
     )
-
-# ---- Zitat-Card ----
-
-st.markdown(
-    """
-    <div class="kmu-quote">
-        <div class="kmu-quote-mark">&ldquo;</div>
-        <div class="kmu-quote-body">
-            <div class="kmu-quote-text">
-                Etwa die Hälfte oder mehr der Bewerbungen passt nicht.
-                Und trotzdem müssen wir jede einzelne ansehen.
-            </div>
-            <div class="kmu-quote-source">
-                — Ali Metaj, GF GFL Garten- und Forstbau GmbH ·
-                Interview 27.05.2026 · 40 Mitarbeiter, kein HR-Team
-            </div>
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
 
 # ---- Dashboard-Grid: Letzte Bewerbungen | Datenqualität + Rückfragen ----
 
@@ -1631,10 +1534,225 @@ with right_col:
 
 
 # ---------------------------------------------------------------------------
-# Funktionsbereiche als Tabs unterhalb des Dashboards
+# Zentrale Upload-/Start-Card (verschoben aus der Sidebar)
 # ---------------------------------------------------------------------------
 
-st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+with st.container(border=True):
+    st.markdown(
+        '<div class="kmu-card-title">Stellenprofil &amp; Bewerbungen</div>',
+        unsafe_allow_html=True,
+    )
+
+    # Transiente Statusmeldungen, die einen st.rerun() überleben
+    for _level, _msg in st.session_state._flash:
+        getattr(st, _level, st.info)(_msg)
+    st.session_state._flash = []
+
+    up_left, up_right = st.columns(2)
+
+    with up_left:
+        st.markdown("**Stellenprofil eingeben**")
+        job_url = st.text_input(
+            "Stellen-URL (optional, derzeit deaktiviert)",
+            placeholder="https://… (in dieser Demo nicht aktiv)",
+            label_visibility="collapsed",
+        )
+        if job_url.strip():
+            st.caption(
+                "Hinweis: URL-Fetch ist in dieser Demo nicht aktiviert. "
+                "Bitte den Stellentext direkt unten einfügen."
+            )
+        job_text = st.text_area(
+            "Stellenprofil",
+            height=160,
+            placeholder=(
+                "z. B. Wir suchen einen Python-Entwickler mit SQL und "
+                "Deutsch C1 …"
+            ),
+            label_visibility="collapsed",
+        )
+        if st.button(
+            "Stellenprofil analysieren", disabled=not job_text.strip()
+        ):
+            with st.spinner("Strukturiere Stellenprofil ..."):
+                try:
+                    profile = analyze_job_profile(job_text)
+                    st.session_state.job_profile = profile
+                    st.session_state.job_profile_source = job_text.strip()
+                    st.session_state._coverage_logged = set()
+                    log_audit(
+                        action="Stellenprofil analysiert",
+                        target=profile.get("role", "(ohne Titel)"),
+                        result_type="strukturiertes Stellenprofil",
+                    )
+                    st.session_state._flash.append(
+                        ("success", "Stellenprofil strukturiert.")
+                    )
+                except Exception as e:  # noqa: BLE001
+                    log_audit(
+                        action="Stellenprofil analysiert",
+                        target="(Haupteingabe)",
+                        result_type=f"Fehler: {e}",
+                    )
+                    st.session_state._flash.append(
+                        ("error", f"Fehler bei der Analyse des Stellenprofils: {e}")
+                    )
+            st.rerun()
+
+        if st.session_state.job_profile and st.button("Stellenprofil löschen"):
+            st.session_state.job_profile = None
+            st.session_state.job_profile_source = ""
+            st.session_state._coverage_logged = set()
+            st.rerun()
+
+    with up_right:
+        st.markdown("**Lebensläufe hochladen (PDF)**")
+        uploaded = st.file_uploader(
+            "PDF-Dateien",
+            type=["pdf"],
+            accept_multiple_files=True,
+            label_visibility="collapsed",
+        )
+
+        if st.button(
+            "Extraktion starten", type="primary", disabled=not uploaded
+        ):
+            prior_feedback = feedback_block(load_feedback())
+            new_files = [
+                f
+                for f in uploaded
+                if f.name not in st.session_state.processed_files
+            ]
+            if not new_files:
+                st.session_state._flash.append(
+                    ("warning", "Alle ausgewählten Dateien wurden bereits verarbeitet.")
+                )
+                st.rerun()
+            else:
+                progress = st.progress(0.0)
+                ok = 0
+                errors: list[str] = []
+                for i, f in enumerate(new_files, start=1):
+                    with st.spinner(f"Verarbeite {f.name} ..."):
+                        try:
+                            log_audit(
+                                action="PDF hochgeladen",
+                                target=f.name,
+                                result_type="Datei akzeptiert",
+                            )
+                            text = extract_text_from_pdf(f.read())
+                            if not text:
+                                errors.append(
+                                    f"{f.name}: kein Text extrahierbar "
+                                    "(evtl. gescanntes PDF ohne OCR)."
+                                )
+                                log_audit(
+                                    action="Text extrahiert",
+                                    target=f.name,
+                                    result_type="leer / nicht maschinenlesbar",
+                                )
+                                progress.progress(i / len(new_files))
+                                continue
+                            log_audit(
+                                action="Text extrahiert",
+                                target=f.name,
+                                result_type=f"{len(text)} Zeichen",
+                            )
+                            data = extract_cv(text, prior_feedback)
+                            log_audit(
+                                action="CV analysiert",
+                                target=data.get("name", "") or f.name,
+                                result_type="strukturierte Felder + Belege",
+                            )
+                            # Informationslücken-Agent
+                            try:
+                                gaps = analyze_information_gaps(text, data)
+                                log_audit(
+                                    action="Informationslücken erkannt",
+                                    target=data.get("name", "") or f.name,
+                                    result_type=(
+                                        f"{len(gaps['missing_information'])} fehlend, "
+                                        f"{len(gaps['unclear_information'])} unklar"
+                                    ),
+                                )
+                            except Exception as qe:  # noqa: BLE001
+                                gaps = {
+                                    "missing_information": [],
+                                    "unclear_information": [],
+                                    "suggested_questions": [],
+                                    "_error": str(qe),
+                                }
+                                log_audit(
+                                    action="Informationslücken erkannt",
+                                    target=f.name,
+                                    result_type=f"Fehler: {qe}",
+                                )
+                            # Rückfragen-Agent
+                            try:
+                                followups = generate_follow_up_questions(
+                                    gaps, st.session_state.job_profile
+                                )
+                                log_audit(
+                                    action="Rückfragen erzeugt",
+                                    target=data.get("name", "") or f.name,
+                                    result_type=(
+                                        f"{len(followups['questions'])} Rückfragen "
+                                        "(warten auf Prüfung & Freigabe)"
+                                    ),
+                                )
+                            except Exception as fe:  # noqa: BLE001
+                                followups = {
+                                    "questions": gaps.get("suggested_questions", [])
+                                }
+                                log_audit(
+                                    action="Rückfragen erzeugt",
+                                    target=f.name,
+                                    result_type=f"Fehler: {fe}",
+                                )
+                            st.session_state.candidates.append(
+                                {
+                                    "filename": f.name,
+                                    "data": data,
+                                    "quality": gaps,
+                                    "followups": followups,
+                                }
+                            )
+                            st.session_state.processed_files.add(f.name)
+                            ok += 1
+                        except Exception as e:  # noqa: BLE001
+                            errors.append(f"Fehler bei {f.name}: {e}")
+                            log_audit(
+                                action="CV analysiert",
+                                target=f.name,
+                                result_type=f"Fehler: {e}",
+                            )
+                    progress.progress(i / len(new_files))
+                if ok:
+                    st.session_state._flash.append(
+                        ("success", f"{ok} Lebensläufe analysiert.")
+                    )
+                for err in errors:
+                    st.session_state._flash.append(("error", err))
+                st.rerun()
+
+        if st.session_state.candidates and st.button("Alle Kandidaten löschen"):
+            st.session_state.candidates = []
+            st.session_state.processed_files = set()
+            st.session_state.reviewed_questions = {}
+            st.session_state._coverage_logged = set()
+            st.rerun()
+
+
+# ---------------------------------------------------------------------------
+# Horizontale Funktionsnavigation (Tabs) + dezente Human-in-the-Loop-Zeile
+# ---------------------------------------------------------------------------
+
+st.markdown(
+    '<div class="hil-line">Der Agent trifft keine Personalentscheidung. '
+    "Er erstellt keine Empfehlung. Der Geschäftsführer entscheidet final."
+    "</div>",
+    unsafe_allow_html=True,
+)
 
 (
     main_tab_profile,
@@ -1664,9 +1782,10 @@ with main_tab_profile:
         unsafe_allow_html=True,
     )
     st.caption(
-        "Stellenprofil-Text in der Sidebar einfügen und auf "
-        "„Stellenprofil analysieren“ klicken. Der Stellenprofil-Agent "
-        "strukturiert nur Anforderungen — er bewertet keine Bewerber."
+        "Stellenprofil-Text oben im Bereich „Stellenprofil & Bewerbungen“ "
+        "einfügen und auf „Stellenprofil analysieren“ klicken. Der "
+        "Stellenprofil-Agent strukturiert nur Anforderungen — er bewertet "
+        "keine Bewerber."
     )
     if st.session_state.job_profile:
         jp = st.session_state.job_profile
@@ -1723,8 +1842,8 @@ with main_tab_apps:
         unsafe_allow_html=True,
     )
     st.markdown(
-        "Lade in der Sidebar links PDF-Lebensläufe hoch und klicke auf "
-        "**Extraktion starten**. Pipeline:"
+        "Lade oben im Bereich „Stellenprofil & Bewerbungen“ PDF-Lebensläufe "
+        "hoch und klicke auf **Extraktion starten**. Pipeline:"
     )
     st.markdown(
         "1. **CV-Agent** strukturiert objektive Daten aus dem PDF.  \n"
@@ -1781,8 +1900,23 @@ with main_tab_candidates:
         st.markdown(
             f"**{len(filtered)} von {len(st.session_state.candidates)} Kandidaten**"
         )
-        df = candidates_to_dataframe(filtered)
+        job_profile_state = st.session_state.job_profile
+        # Abdeckungsgrad pro Kandidat einmalig protokollieren (kein Spam).
+        if job_profile_state:
+            for _c in filtered:
+                _cov = calculate_requirement_coverage(
+                    job_profile_state, _c["data"]
+                )
+                log_coverage_once(_c, _cov, job_profile_state)
+        df = candidates_to_dataframe(filtered, job_profile_state)
         st.dataframe(df, use_container_width=True, hide_index=True)
+        if job_profile_state:
+            st.caption(
+                "Die Spalte „Übereinstimmung“ zeigt nur den Abdeckungsgrad "
+                "objektiv gefundener Anforderungen. Sie ist keine Bewertung, "
+                "kein Ranking und keine Empfehlung. Die Reihenfolge folgt der "
+                "Upload-Reihenfolge und wird nicht nach Prozentwert sortiert."
+            )
 
         options = [
             f"{c['data'].get('name') or '(ohne Name)'} – {c['filename']}"
@@ -1822,6 +1956,44 @@ with main_tab_candidates:
                 )
                 render_cv_summary(cv_data)
 
+                # Abdeckungsgrad der Anforderungen (neutral, keine Bewertung)
+                coverage = calculate_requirement_coverage(
+                    st.session_state.job_profile, cv_data
+                )
+                if coverage["computed"]:
+                    st.markdown(
+                        f"""
+                        <div class="coverage-box">
+                            <div class="coverage-value">
+                                Übereinstimmung mit Stellenprofil: {coverage['percent']} %
+                            </div>
+                            <div class="coverage-label">
+                                {coverage['fulfilled']} von {coverage['total']}
+                                objektiv prüfbaren Anforderungen im Lebenslauf gefunden.
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+                    st.caption(
+                        "Die Prozentzahl zeigt nur den Abdeckungsgrad objektiv "
+                        "gefundener Anforderungen. Sie ist keine Bewertung und "
+                        "keine Empfehlung."
+                    )
+                    if coverage["unclear"]:
+                        st.markdown(
+                            "**Unklar (nicht als erfüllt gezählt — als "
+                            "Informationslücke aufgeführt):**"
+                        )
+                        for u in coverage["unclear"]:
+                            st.markdown(f"- {u}")
+                else:
+                    st.info(
+                        "Übereinstimmung mit Stellenprofil: Nicht berechnet "
+                        "(kein Stellenprofil mit prüfbaren Anforderungen "
+                        "hinterlegt)."
+                    )
+
             with tab_overview:
                 st.json(cv_data)
 
@@ -1835,8 +2007,9 @@ with main_tab_candidates:
                     render_checklist(st.session_state.job_profile, cv_data)
                 else:
                     st.info(
-                        "Kein Stellenprofil hinterlegt. Füge in der Sidebar "
-                        "ein Stellenprofil ein, um eine Checkliste zu sehen."
+                        "Kein Stellenprofil hinterlegt. Füge oben im Bereich "
+                        "„Stellenprofil & Bewerbungen“ ein Stellenprofil ein, "
+                        "um eine Checkliste zu sehen."
                     )
 
             with tab_evidence:
