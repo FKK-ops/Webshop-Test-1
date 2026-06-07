@@ -595,32 +595,29 @@ def _short_languages(d: dict) -> str:
 def candidates_to_dataframe(
     candidates: list[dict], job_profile: dict | None = None
 ) -> pd.DataFrame:
-    """Kompakte Übersichtstabelle — kurze Stichpunkte, keine Fließtexte."""
+    """Kompakte Übersichtstabelle — Status-Counts statt langer Fließtexte."""
     rows = []
     for c in candidates:
         d = c["data"]
         q = c.get("quality") or {}
-        fups = (c.get("followups") or {}).get("questions") or []
-        skills = d.get("skills") or []
-        top_skills = ", ".join(skills[:4]) + (
-            f" +{len(skills) - 4}" if len(skills) > 4 else ""
-        )
         row = {
             "Name": d.get("name") or NICHT_GEFUNDEN,
-            "Skills (Top)": top_skills or "—",
-            "Sprachen": _short_languages(d),
-            "Erfahrung": _short_experience(d),
-            "Lücken": len(q.get("missing_information") or [])
-            + len(q.get("unclear_information") or []),
-            "Rückfragen": len(fups),
         }
-        # Neutrale Spalte "Übereinstimmung" (Abdeckungsgrad).
-        # Keine Sortierung, keine Bewertung — nur transparente Orientierung.
         if job_profile is not None:
             cov = calculate_requirement_coverage(job_profile, d)
             row["Übereinstimmung"] = (
                 f"{cov['percent']} %" if cov["computed"] else "—"
             )
+            req_rows = evaluate_candidate_requirements(job_profile, d)
+            counts = status_counts(req_rows)
+            row["✅ Vorhanden"] = counts["vorhanden"]
+            row["🟡 Teilweise"] = counts["teilweise_vorhanden"]
+            row["❌ Nicht gefunden"] = counts["nicht_gefunden"]
+            row["❓ Unklar"] = counts["unklar"]
+        row["Informationslücken"] = (
+            len(q.get("missing_information") or [])
+            + len(q.get("unclear_information") or [])
+        )
         rows.append(row)
     return pd.DataFrame(rows)
 
@@ -1072,6 +1069,227 @@ def build_qualification_coverage(
         "rows": rows,
         "excluded": excluded,
     }
+
+
+# ---------------------------------------------------------------------------
+# Stellenprofil-Checkliste pro Bewerber
+# ---------------------------------------------------------------------------
+
+import re as _re_eval
+
+LEVEL_RANKING = {"a1": 1, "a2": 2, "b1": 3, "b2": 4, "c1": 5, "c2": 6}
+NATIVE_KEYWORDS = (
+    "muttersprache",
+    "muttersprachler",
+    "muttersprachlerin",
+    "native speaker",
+    "native",
+    "mother tongue",
+)
+KNOWN_LANGUAGES = {
+    "deutsch": "Deutsch",
+    "german": "Deutsch",
+    "englisch": "Englisch",
+    "english": "Englisch",
+    "französisch": "Französisch",
+    "franzoesisch": "Französisch",
+    "french": "Französisch",
+    "spanisch": "Spanisch",
+    "spanish": "Spanisch",
+    "italienisch": "Italienisch",
+    "italian": "Italienisch",
+}
+
+STATUS_ICON = {
+    "vorhanden": "✅",
+    "teilweise_vorhanden": "🟡",
+    "nicht_gefunden": "❌",
+    "unklar": "❓",
+}
+STATUS_HUMAN = {
+    "vorhanden": "Vorhanden",
+    "teilweise_vorhanden": "Teilweise vorhanden",
+    "nicht_gefunden": "Nicht gefunden",
+    "unklar": "Unklar",
+}
+
+
+def _extract_ger_level(text: str) -> str | None:
+    if not text:
+        return None
+    m = _re_eval.search(r"\b([abc][12])\b", text.lower())
+    return m.group(1) if m else None
+
+
+def _is_native(text: str) -> bool:
+    if not text:
+        return False
+    low = text.lower()
+    return any(k in low for k in NATIVE_KEYWORDS)
+
+
+def _detect_language_in_criterion(crit_low: str) -> str | None:
+    """Liefert die kanonische Sprache (z. B. 'Deutsch'), wenn das Kriterium
+    auf eine bekannte Sprache verweist."""
+    for trigger, canonical in KNOWN_LANGUAGES.items():
+        if _re_eval.search(rf"\b{trigger}\b", crit_low):
+            return canonical
+    return None
+
+
+def _find_language_in_cv(canonical: str, cv_data: dict) -> dict | None:
+    """Sucht in cv_data.languages einen passenden Eintrag (bidirektional)."""
+    triggers = {t for t, c in KNOWN_LANGUAGES.items() if c == canonical}
+    triggers.add(canonical.lower())
+    for entry in cv_data.get("languages") or []:
+        name = (entry.get("language") or "").lower()
+        if any(t in name for t in triggers):
+            return entry
+    return None
+
+
+def _evaluate_language_requirement(
+    criterion: str, cv_data: dict
+) -> dict | None:
+    """Sprach-spezifische Bewertung. Liefert {status, reason} oder None.
+
+    Erkennt Muttersprache (auch native/native speaker) und vergleicht
+    GER-Niveaus (A1–C2) numerisch.
+    """
+    crit_low = criterion.lower()
+    canonical = _detect_language_in_criterion(crit_low)
+    if not canonical:
+        return None
+    requested_level = _extract_ger_level(crit_low)
+    cv_entry = _find_language_in_cv(canonical, cv_data)
+    if not cv_entry:
+        return {
+            "status": "nicht_gefunden",
+            "reason": f"{canonical} nicht im Lebenslauf angegeben.",
+        }
+    level_text = (cv_entry.get("level") or "")
+    name_text = (cv_entry.get("language") or "")
+    if _is_native(level_text) or _is_native(name_text):
+        return {
+            "status": "vorhanden",
+            "reason": (
+                f"{canonical} als Muttersprache angegeben — "
+                "erfüllt jedes geforderte Niveau."
+            ),
+        }
+    cv_level = _extract_ger_level(level_text)
+    if requested_level:
+        if cv_level:
+            if LEVEL_RANKING.get(cv_level, 0) >= LEVEL_RANKING.get(
+                requested_level, 0
+            ):
+                return {
+                    "status": "vorhanden",
+                    "reason": (
+                        f"{canonical} {cv_level.upper()} im Lebenslauf "
+                        f"genannt — erreicht das geforderte Niveau "
+                        f"{requested_level.upper()}."
+                    ),
+                }
+            return {
+                "status": "teilweise_vorhanden",
+                "reason": (
+                    f"{canonical} {cv_level.upper()} im Lebenslauf — "
+                    f"gefordert war {requested_level.upper()}."
+                ),
+            }
+        return {
+            "status": "unklar",
+            "reason": (
+                f"{canonical} genannt, Niveau nicht angegeben "
+                f"(gefordert: {requested_level.upper()})."
+            ),
+        }
+    # Kein Niveau gefordert — Sprache reicht.
+    return {
+        "status": "vorhanden",
+        "reason": f"{canonical} im Lebenslauf angegeben.",
+    }
+
+
+def evaluate_candidate_requirements(
+    job_profile: dict | None, candidate_data: dict
+) -> list[dict]:
+    """Zentrale Checkliste der Stellenprofil-Anforderungen pro Bewerber.
+
+    Geht alle Anforderungs-Listen des Stellenprofils durch und liefert pro
+    Anforderung einen sachlichen Eintrag mit Status und Kurzbegründung:
+        [{"requirement", "status", "reason", "category"}]
+    Wendet zuerst die sprach-spezifische Logik (Muttersprache, GER-Niveau)
+    an und nutzt sonst die bestehende check_criterion()-Logik. Keine
+    Bewertung der Person, keine Sortierung, keine Empfehlung.
+    """
+    if not job_profile:
+        return []
+    categories = [
+        ("must_criteria", "Muss-Kriterium"),
+        ("nice_criteria", "Kann-Kriterium"),
+        ("desired_skills", "Skill"),
+        ("desired_languages", "Sprache"),
+        ("desired_certificates", "Zertifikat"),
+        ("desired_experience", "Berufserfahrung"),
+    ]
+    rows: list[dict] = []
+    seen: set[str] = set()
+    for key, label in categories:
+        for crit in job_profile.get(key) or []:
+            text = (crit or "").strip()
+            if not text:
+                continue
+            k = (label + "|" + text).lower()
+            if k in seen:
+                continue
+            seen.add(k)
+            # Sprach-spezifische Bewertung zuerst
+            lang_res = _evaluate_language_requirement(text, candidate_data)
+            if lang_res is not None:
+                rows.append(
+                    {
+                        "requirement": text,
+                        "status": lang_res["status"],
+                        "reason": lang_res["reason"],
+                        "category": label,
+                    }
+                )
+                continue
+            res = check_criterion(text, candidate_data)
+            status = res["status"]
+            note = (res.get("note") or "").strip()
+            if status == "vorhanden":
+                reason = f"„{text}“ im Lebenslauf gefunden."
+            elif status == "teilweise_vorhanden":
+                reason = note or "Ähnliche Qualifikation erkannt."
+            elif status == "unklar":
+                reason = note or "Angabe vorhanden, aber unklar."
+            else:
+                reason = "Kein Hinweis im Lebenslauf gefunden."
+            rows.append(
+                {
+                    "requirement": text,
+                    "status": status,
+                    "reason": reason,
+                    "category": label,
+                }
+            )
+    return rows
+
+
+def status_counts(rows: list[dict]) -> dict[str, int]:
+    """Zählt die vier Status in einer Anforderungs-Liste."""
+    counts = {
+        "vorhanden": 0,
+        "teilweise_vorhanden": 0,
+        "nicht_gefunden": 0,
+        "unklar": 0,
+    }
+    for r in rows:
+        counts[r["status"]] = counts.get(r["status"], 0) + 1
+    return counts
 
 
 def log_coverage_once(candidate: dict, coverage: dict, job_profile: dict | None) -> None:
@@ -1923,7 +2141,6 @@ st.markdown(
 (
     main_tab_profile,
     main_tab_candidates,
-    main_tab_gaps,
     main_tab_questions,
     main_tab_feedback,
     main_tab_audit,
@@ -1931,7 +2148,6 @@ st.markdown(
     [
         "Stellenprofil",
         "Kandidatenübersicht",
-        "Informationslücken",
         "Rückfragen",
         "Feedback",
         "Audit Log",
@@ -2140,35 +2356,38 @@ with main_tab_candidates:
                             + (f" · {e['period']}" if e.get('period') else "")
                         )
 
-                # Qualifikations-Status (4 Status, neutral)
-                if coverage["computed"]:
-                    by_status: dict[str, list[str]] = {
-                        "vorhanden": [],
-                        "teilweise_vorhanden": [],
-                        "nicht_gefunden": [],
-                        "unklar": [],
-                    }
-                    for d in coverage["details"]:
-                        by_status.setdefault(d["status"], []).append(
-                            d["criterion"]
-                        )
-                    cols = st.columns(4)
-                    for col, key, title in (
-                        (cols[0], "vorhanden", "Vorhanden"),
-                        (cols[1], "teilweise_vorhanden", "Teilweise vorhanden"),
-                        (cols[2], "nicht_gefunden", "Nicht gefunden"),
-                        (cols[3], "unklar", "Unklar"),
-                    ):
-                        with col:
-                            st.markdown(f"**{title}**")
-                            items = by_status.get(key) or []
-                            if items:
-                                for x in items[:8]:
-                                    st.markdown(f"- {x}")
-                                if len(items) > 8:
-                                    st.caption(f"+{len(items) - 8} weitere")
-                            else:
-                                st.caption("—")
+                # ---- Stellenprofil-Checkliste (Anforderungen je Bewerber) ----
+                req_rows = evaluate_candidate_requirements(
+                    st.session_state.job_profile, cv_data
+                )
+                if req_rows:
+                    counts_local = status_counts(req_rows)
+                    st.markdown("### Stellenprofil-Checkliste")
+                    st.caption(
+                        f"✅ {counts_local['vorhanden']} vorhanden · "
+                        f"🟡 {counts_local['teilweise_vorhanden']} teilweise · "
+                        f"❌ {counts_local['nicht_gefunden']} nicht gefunden · "
+                        f"❓ {counts_local['unklar']} unklar  ·  Keine "
+                        "Bewertung der Person, keine Sortierung."
+                    )
+                    check_df = pd.DataFrame(
+                        [
+                            {
+                                "Anforderung": r["requirement"],
+                                "Status": (
+                                    f"{STATUS_ICON[r['status']]} "
+                                    f"{STATUS_HUMAN[r['status']]}"
+                                ),
+                                "Kurzbegründung": r["reason"],
+                            }
+                            for r in req_rows
+                        ]
+                    )
+                    st.dataframe(
+                        check_df,
+                        use_container_width=True,
+                        hide_index=True,
+                    )
 
                 # ---- Qualifikationsabdeckung (nur leistungsbezogen) ----
                 qual = build_qualification_coverage(
@@ -2177,58 +2396,38 @@ with main_tab_candidates:
                 if qual["computed"]:
                     st.markdown("### Qualifikationsabdeckung")
                     st.markdown(
-                        f"**Bewerber erfüllt: {qual['fulfilled']} von "
-                        f"{qual['total']} leistungsbezogenen Anforderungen**"
+                        f"**{qual['fulfilled']} von {qual['total']} "
+                        "leistungsbezogenen Anforderungen erfüllt**"
                     )
                     st.caption(
-                        "Nur leistungsbezogene Anforderungen "
-                        "(Skills, Sprachen, Zertifikate, Berufserfahrung). "
-                        "Organisatorische Angaben wie Gehalt, Arbeitszeit, "
-                        "Standort, Verfügbarkeit oder weiche Merkmale fließen "
-                        "bewusst NICHT ein. Keine Bewertung der Person, "
-                        "keine Empfehlung, keine Sortierung."
-                    )
-                    qual_df = pd.DataFrame(
-                        [
-                            {
-                                "Anforderung": r["requirement"],
-                                "Status": r["status_label"],
-                                "Begründung": r["reason"],
-                            }
-                            for r in qual["rows"]
-                        ]
-                    )
-                    st.dataframe(
-                        qual_df, use_container_width=True, hide_index=True
+                        "Nur Skills, Sprachen, Zertifikate und Berufserfahrung. "
+                        "Organisatorische/weiche Angaben fließen NICHT ein."
                     )
                     if qual["excluded"]:
                         with st.expander(
-                            "Nicht-leistungsbezogene Anforderungen "
-                            f"(ausgeschlossen, {len(qual['excluded'])})"
+                            "Ausgeschlossene Anforderungen "
+                            f"({len(qual['excluded'])})"
                         ):
-                            st.caption(
-                                "Diese Angaben werden NICHT in den Zähler "
-                                "„x von y Anforderungen“ eingerechnet."
-                            )
                             for ex in qual["excluded"]:
                                 st.markdown(
                                     f"- {ex['requirement']} — {ex['reason']}"
                                 )
 
-                # Unklare Infos (aus dem Informationslücken-Agent)
+                # ---- Informationslücken & Rückfragen (kombiniert) ----
                 unclear_info = quality.get("unclear_information") or []
-                if unclear_info:
-                    with st.expander(
-                        f"Unklare Informationen ({len(unclear_info)})"
-                    ):
+                missing_info = quality.get("missing_information") or []
+                if unclear_info or missing_info or followups_q:
+                    st.markdown("### Informationslücken & Rückfragen")
+                    if missing_info:
+                        st.markdown("**Fehlende Informationen**")
+                        for m in missing_info:
+                            st.markdown(f"- {m}")
+                    if unclear_info:
+                        st.markdown("**Unklare Informationen**")
                         for u in unclear_info:
                             st.markdown(f"- {u}")
-
-                # Rückfragevorschläge
-                if followups_q:
-                    with st.expander(
-                        f"Rückfragevorschläge ({len(followups_q)})"
-                    ):
+                    if followups_q:
+                        st.markdown("**Rückfragevorschläge**")
                         for q in followups_q:
                             st.markdown(f"- {q}")
                         st.caption(
@@ -2325,55 +2524,6 @@ with main_tab_candidates:
                             st.success("Feedback gespeichert.")
         else:
             st.write("Keine Bewerber entsprechen den Filtern.")
-
-# ---- Tab: Informationslücken (Aggregation) ----
-
-with main_tab_gaps:
-    st.markdown(
-        '<div class="kmu-card-title">Informationslücken (Übersicht)</div>',
-        unsafe_allow_html=True,
-    )
-    st.caption("Datenqualität pro Bewerbung — keine Bewertung der Person.")
-    if not st.session_state.candidates:
-        st.info("Noch keine Bewerbungen analysiert.")
-    else:
-        rows = []
-        for c in st.session_state.candidates:
-            q = c.get("quality") or {}
-            rows.append(
-                {
-                    "Datei": c["filename"],
-                    "Name": c["data"].get("name") or NICHT_GEFUNDEN,
-                    "Datenqualität": quality_bucket(q),
-                    "Fehlend": len(q.get("missing_information", [])),
-                    "Unklar": len(q.get("unclear_information", [])),
-                    "Rückfragen": len(
-                        (c.get("followups") or {}).get("questions", [])
-                    ),
-                }
-            )
-        st.dataframe(
-            pd.DataFrame(rows), use_container_width=True, hide_index=True
-        )
-
-        for c in st.session_state.candidates:
-            q = c.get("quality") or {}
-            missing = q.get("missing_information", [])
-            unclear = q.get("unclear_information", [])
-            if not missing and not unclear:
-                continue
-            with st.expander(
-                f"{c['data'].get('name') or '(ohne Name)'} — "
-                f"{len(missing)} fehlend / {len(unclear)} unklar"
-            ):
-                if missing:
-                    st.markdown("**Fehlende Informationen**")
-                    for m in missing:
-                        st.markdown(f"- {m}")
-                if unclear:
-                    st.markdown("**Unklare Informationen**")
-                    for u in unclear:
-                        st.markdown(f"- {u}")
 
 # ---- Tab: Rückfragen (Human-in-the-Loop) ----
 
