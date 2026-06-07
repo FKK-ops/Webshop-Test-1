@@ -1,15 +1,21 @@
 """
 HR-Recruiting-Assistent (Streamlit-Prototyp, Single-File).
 
-Lädt mehrere PDF-Lebensläufe, extrahiert per pdfplumber den Text und ruft
-die Claude API auf, um daraus rein objektive Informationen zu strukturieren.
-Optional kann ein Stellenprofil eingegeben werden — der Agent strukturiert
-es nur, er bewertet nichts und gewichtet nichts.
+Demo-Version eines KI-Recruiting-Agenten für KMU. Strukturiert Stellen-
+profile und Lebensläufe, prüft Informationslücken und schlägt Rückfragen
+vor. Die KI trifft keine Personalentscheidung — der Geschäftsführer prüft
+und entscheidet final.
+
+Pipeline (jeder Schritt ist ein eigener Claude-Agent):
+    1. analyze_job_profile()           Stellenprofil-Agent
+    2. extract_cv()                    CV-Agent
+    3. analyze_information_gaps()      Informationslücken-Agent
+    4. generate_follow_up_questions()  Rückfragen-Agent
 
 Grundregel:
-- Der Agent trifft keine Personalentscheidung.
-- Der Agent erstellt keine Empfehlung.
-- Der Agent extrahiert objektive Informationen und macht Bewerbungen
+- Die KI trifft keine Personalentscheidung.
+- Die KI erstellt kein Ranking, keinen Score und keine Empfehlung.
+- Die KI extrahiert objektive Informationen und macht Bewerbungen
   vergleichbar. Die finale Bewertung trifft immer der Geschäftsführer.
 
 Autonomie-Stufe: Rot — Mensch entscheidet, Agent liefert nur Daten.
@@ -50,10 +56,10 @@ TEST_RESULTS_PATH = BASE_DIR / "test_results.json"
 AUTONOMY_LEVEL = "Rot: Mensch entscheidet, Agent liefert nur Daten"
 
 DISCLAIMER = (
-    "Der Agent trifft **keine Personalentscheidung**. "
-    "Der Agent erstellt **keine Empfehlung**. "
-    "Er extrahiert objektive Informationen und macht Bewerbungen vergleichbar. "
-    "Die finale Bewertung trifft immer der Geschäftsführer."
+    "Die KI trifft **keine Personalentscheidung**. "
+    "Sie erstellt **kein Ranking, keinen Score und keine Empfehlung**. "
+    "Sie strukturiert ausschließlich objektive Informationen. "
+    "Der Geschäftsführer prüft und entscheidet final."
 )
 
 FEEDBACK_CATEGORIES = [
@@ -73,6 +79,8 @@ REGELN:
 - Extrahiere NUR, was wörtlich oder eindeutig im Text steht.
 - Keine Bewertungen, kein Ranking, kein Score, keine Empfehlung,
   keine Eignungseinschätzung, keine Personalentscheidung.
+- Keine Interpretation von Persönlichkeit, Motivation, Alter, Herkunft,
+  Geschlecht, Name, Foto oder anderen weichen Merkmalen.
 - Wenn eine Information fehlt: leeres Array bzw. leerer String.
 - Antworte ausschließlich im vorgegebenen strukturierten Format.
 """
@@ -96,41 +104,42 @@ Lebenslauf:
   "Berufserfahrung nur grob beschrieben",
   "Zertifikat erwähnt, aber Name unklar",
   "PDF möglicherweise unvollständig ausgelesen".
-  Das ist keine Bewertung des Bewerbers, sondern ein Datenqualitäts-Hinweis.
+
+Keine Bewertung des Bewerbers, keine Interpretation weicher Merkmale.
 """
 
-QUALITY_INSTRUCTIONS = """Du führst eine Datenqualitäts-Prüfung der
-Bewerbungsunterlage durch. Du bewertest NICHT die Eignung des Bewerbers,
-du gibst keine Empfehlung, du priorisierst nicht und du vergibst keinen
-Score.
+QUALITY_INSTRUCTIONS = """Du bist der Informationslücken-Agent. Du
+analysierst ausschließlich die Datenqualität und Vollständigkeit der
+Bewerbungsunterlage. Du bewertest NICHT die Eignung des Bewerbers, du
+gibst keine Empfehlung, du priorisierst nicht und du vergibst keinen Score.
 
-Du prüfst ausschließlich, ob die Unterlage vollständig und eindeutig ist:
+Liefere drei Listen:
 
 - missing_information: Felder oder Angaben, die im Lebenslauf gar nicht
   vorkommen. Beispiele:
     "Sprachkenntnisse nicht angegeben"
     "Zertifikate nicht angegeben"
+    "Verfügbarkeit nicht angegeben"
     "Berufserfahrung enthält keine Zeiträume"
 - unclear_information: Angaben, die zwar vorhanden, aber unklar,
   unvollständig oder mehrdeutig sind. Beispiele:
-    "Dauer der Berufserfahrung unklar"
+    "Dauer der SQL-Erfahrung unklar"
     "Sprachlevel nicht eindeutig angegeben"
     "Zertifikat erwähnt, aber Name fehlt"
-    "PDF möglicherweise unvollständig ausgelesen"
+    "Berufserfahrung nur allgemein beschrieben"
 - suggested_questions: konkrete Rückfragen an den Bewerber, die helfen
-  würden, fehlende oder unklare Informationen zu klären. Beispiele:
-    "Bitte nennen Sie den genauen Zeitraum Ihrer Tätigkeit bei XY."
-    "Welches Sprachniveau (z. B. nach GER) haben Sie in Englisch?"
+  würden, fehlende oder unklare Informationen zu klären.
 
 Wenn alles klar und vollständig ist, lasse die jeweiligen Arrays leer.
 Keine Bewertung des Bewerbers. Keine Empfehlung. Kein Ranking.
 """
 
-JOB_PROFILE_INSTRUCTIONS = """Strukturiere das folgende Stellenprofil.
-Du bewertest nichts und gewichtest nichts — du strukturierst nur, was im
-Text steht.
+JOB_PROFILE_INSTRUCTIONS = """Du bist der Stellenprofil-Agent. Du
+strukturierst Anforderungen aus einem Stellenprofil-Text. Du bewertest
+nichts und gewichtest nichts — du strukturierst nur, was im Text steht.
 
 Extrahiere:
+- role: Stellentitel / Rolle (z. B. "Senior Python-Entwickler/in")
 - must_criteria: Muss-Kriterien (Pflichtanforderungen)
 - nice_criteria: Kann-Kriterien ("wünschenswert", "von Vorteil")
 - desired_skills: gewünschte fachliche Skills
@@ -138,7 +147,26 @@ Extrahiere:
 - desired_certificates: gewünschte Zertifikate
 - desired_experience: gewünschte Berufserfahrung (Branchen, Rollen, Jahre)
 
-Wenn etwas nicht im Text steht, lasse das jeweilige Array leer.
+Wenn etwas nicht im Text steht, lasse das jeweilige Feld leer.
+"""
+
+FOLLOWUP_INSTRUCTIONS = """Du bist der Rückfragen-Agent. Du formulierst
+aus einer Liste von Informationslücken professionelle, höfliche
+Rückfragen an den Bewerber. Du bewertest nichts und gibst keine
+Empfehlung.
+
+Anforderungen:
+- Höfliche Sie-Form.
+- Pro Lücke eine konkrete, eindeutige Frage.
+- Keine Bewertung, keine Anspielung auf Eignung.
+- Maximal 8 Fragen, sortiert nach Relevanz für die ausgeschriebene Rolle
+  (aber ohne Reihenfolge als Ranking zu verstehen).
+- Wenn vorhandene Vorschläge schon gut sind, übernimm sie sinngemäß.
+
+Beispiele für den Stil:
+  "Könnten Sie bitte angeben, auf welchem Niveau Sie Englisch beherrschen?"
+  "Würden Sie uns mitteilen, wie lange Sie bereits mit SQL gearbeitet haben?"
+  "Können Sie uns den genauen Namen des Zertifikats nennen?"
 """
 
 
@@ -182,6 +210,7 @@ class CVData(BaseModel):
 
 
 class JobProfile(BaseModel):
+    role: str
     must_criteria: list[str]
     nice_criteria: list[str]
     desired_skills: list[str]
@@ -194,6 +223,10 @@ class QualityCheck(BaseModel):
     missing_information: list[str]
     unclear_information: list[str]
     suggested_questions: list[str]
+
+
+class FollowUpQuestions(BaseModel):
+    questions: list[str]
 
 
 # ---------------------------------------------------------------------------
@@ -287,7 +320,11 @@ def log_audit(
     result_type: str = "",
     autonomy_level: str = AUTONOMY_LEVEL,
 ) -> None:
-    """Hängt einen Audit-Log-Eintrag an audit_log.json an."""
+    """Hängt einen Audit-Log-Eintrag an audit_log.json an.
+
+    Felder: Zeitstempel, Aktion, betroffene Datei/Bewerber (target),
+    Ergebnis (result_type), Autonomie-Stufe.
+    """
     entries = load_audit_log()
     entries.append(
         {
@@ -345,7 +382,7 @@ def save_test_result(test_id: str, outcome: str, note: str = "") -> None:
 
 
 # ---------------------------------------------------------------------------
-# Claude-API-Aufrufe
+# Claude-API-Aufrufe (vier Agenten teilen sich denselben API-Wrapper)
 # ---------------------------------------------------------------------------
 
 
@@ -388,14 +425,14 @@ def _call_parse(user_prompt: str, output_format):
 
 
 def extract_cv(cv_text: str, prior_feedback: str = "") -> dict:
-    """Strukturiert objektive CV-Daten inkl. Belegen und Datenqualitäts-Hinweisen."""
+    """CV-Agent. Strukturiert objektive CV-Daten inkl. Belegen und Datenqualitäts-Hinweisen."""
     feedback_section = ""
     if prior_feedback:
         feedback_section = (
             "\n\nFRÜHERES NUTZER-FEEDBACK (bitte berücksichtigen, damit "
             "ähnliche Extraktions-Fehler nicht wiederholt werden — Feedback "
             "verbessert nur die Extraktion und Darstellung, nicht die "
-            "Bewerberauswahl):\n"
+            "Auswahl):\n"
             f"{prior_feedback}\n"
         )
 
@@ -417,8 +454,8 @@ def extract_cv(cv_text: str, prior_feedback: str = "") -> dict:
     return parsed.model_dump()
 
 
-def extract_job_profile(job_text: str) -> dict:
-    """Strukturiert ein Stellenprofil — ohne Bewertung, ohne Gewichtung."""
+def analyze_job_profile(job_text: str) -> dict:
+    """Stellenprofil-Agent. Strukturiert nur Anforderungen, bewertet keine Bewerber."""
     user_prompt = (
         f"{JOB_PROFILE_INSTRUCTIONS}\n"
         "STELLENPROFIL:\n"
@@ -437,12 +474,12 @@ def extract_job_profile(job_text: str) -> dict:
     return parsed.model_dump()
 
 
-def analyze_data_quality(cv_text: str, cv_data: dict) -> dict:
-    """Vollständigkeits- und Klarheitsprüfung der Bewerbungsunterlage.
+# Kompatibilitäts-Alias (alter Funktionsname)
+extract_job_profile = analyze_job_profile
 
-    Liefert {"missing_information", "unclear_information",
-    "suggested_questions"}. Keine Eignungsbewertung — nur Datenqualität.
-    """
+
+def analyze_information_gaps(cv_text: str, cv_data: dict) -> dict:
+    """Informationslücken-Agent. Prüft nur Datenqualität, keine Eignung."""
     user_prompt = (
         f"{QUALITY_INSTRUCTIONS}\n"
         "STRUKTURIERTE CV-DATEN (aus der Extraktion):\n"
@@ -453,21 +490,79 @@ def analyze_data_quality(cv_text: str, cv_data: dict) -> dict:
         "-------------------------\n"
         f"{cv_text}\n"
         "-------------------------\n"
-        "Gib jetzt die strukturierte Datenqualitäts-Prüfung zurück."
+        "Gib jetzt die strukturierte Informationslücken-Prüfung zurück."
     )
 
     response = _call_parse(user_prompt, QualityCheck)
     parsed = response.parsed_output
     if parsed is None:
         raise RuntimeError(
-            "Die Datenqualitäts-Prüfung konnte nicht geparst werden."
+            "Die Informationslücken-Prüfung konnte nicht geparst werden."
         )
+    return parsed.model_dump()
+
+
+# Kompatibilitäts-Alias (alter Funktionsname)
+analyze_data_quality = analyze_information_gaps
+
+
+def generate_follow_up_questions(
+    gaps: dict, job_profile: dict | None = None
+) -> dict:
+    """Rückfragen-Agent. Formuliert aus Lücken professionelle Rückfragen.
+
+    Versendet NICHTS — die Fragen werden nur vorgeschlagen und warten auf
+    Prüfung und Freigabe durch den Geschäftsführer.
+    """
+    missing = gaps.get("missing_information", []) or []
+    unclear = gaps.get("unclear_information", []) or []
+    existing = gaps.get("suggested_questions", []) or []
+    if not missing and not unclear and not existing:
+        return {"questions": []}
+
+    role_hint = ""
+    if job_profile and job_profile.get("role"):
+        role_hint = f"Ausgeschriebene Rolle: {job_profile['role']}\n"
+
+    user_prompt = (
+        f"{FOLLOWUP_INSTRUCTIONS}\n"
+        f"{role_hint}"
+        "INFORMATIONSLÜCKEN:\n"
+        f"Fehlend: {json.dumps(missing, ensure_ascii=False)}\n"
+        f"Unklar:  {json.dumps(unclear, ensure_ascii=False)}\n"
+        "BEREITS VORGESCHLAGENE FRAGEN (zur Verfeinerung):\n"
+        f"{json.dumps(existing, ensure_ascii=False)}\n\n"
+        "Gib jetzt die finalen Rückfragen als Liste zurück."
+    )
+
+    try:
+        response = _call_parse(user_prompt, FollowUpQuestions)
+    except RuntimeError:
+        # Fallback: bestehende suggested_questions verwenden
+        return {"questions": existing}
+    parsed = response.parsed_output
+    if parsed is None:
+        return {"questions": existing}
     return parsed.model_dump()
 
 
 # ---------------------------------------------------------------------------
 # Hilfsfunktionen für die UI
 # ---------------------------------------------------------------------------
+
+
+NICHT_GEFUNDEN = "nicht gefunden"
+
+
+def _or_missing(value, marker: str = NICHT_GEFUNDEN) -> str:
+    """Gibt Wert zurück oder ein neutrales Marker-Wort, wenn leer."""
+    if value is None:
+        return marker
+    if isinstance(value, str) and not value.strip():
+        return marker
+    if isinstance(value, (list, dict)) and not value:
+        return marker
+    return value
 
 
 def candidates_to_dataframe(candidates: list[dict]) -> pd.DataFrame:
@@ -477,23 +572,23 @@ def candidates_to_dataframe(candidates: list[dict]) -> pd.DataFrame:
         rows.append(
             {
                 "Datei": c["filename"],
-                "Name": d.get("name", ""),
-                "Skills": ", ".join(d.get("skills", [])),
+                "Name": d.get("name") or NICHT_GEFUNDEN,
+                "Skills": ", ".join(d.get("skills", [])) or NICHT_GEFUNDEN,
                 "Berufserfahrung": " | ".join(
                     f"{e.get('role', '')} @ {e.get('company', '')} "
                     f"({e.get('period', '')})".strip()
                     for e in d.get("experience", [])
-                ),
+                ) or NICHT_GEFUNDEN,
                 "Ausbildung": " | ".join(
                     f"{e.get('degree', '')}, {e.get('institution', '')} "
                     f"({e.get('period', '')})".strip()
                     for e in d.get("education", [])
-                ),
-                "Zertifikate": ", ".join(d.get("certificates", [])),
+                ) or NICHT_GEFUNDEN,
+                "Zertifikate": ", ".join(d.get("certificates", [])) or NICHT_GEFUNDEN,
                 "Sprachen": ", ".join(
                     f"{l.get('language', '')} ({l.get('level', '')})".strip()
                     for l in d.get("languages", [])
-                ),
+                ) or NICHT_GEFUNDEN,
             }
         )
     return pd.DataFrame(rows)
@@ -573,7 +668,6 @@ def check_criterion(criterion: str, cv_data: dict) -> dict:
     haystack = _searchable_text(cv_data).lower()
     crit_low = crit.lower()
 
-    # Voller Treffer → vorhanden
     if crit_low in haystack:
         return {
             "status": "vorhanden",
@@ -581,7 +675,6 @@ def check_criterion(criterion: str, cv_data: dict) -> dict:
             "note": None,
         }
 
-    # Token-basierter Teil-Match → unklar
     tokens = [t for t in crit_low.split() if len(t) >= 2]
     matched_tokens = [t for t in tokens if t in haystack]
     if tokens and matched_tokens and len(matched_tokens) < len(tokens):
@@ -596,7 +689,6 @@ def check_criterion(criterion: str, cv_data: dict) -> dict:
             "note": note,
         }
 
-    # Datenqualitäts-Hinweis erwähnt das Kriterium → unklar
     issues_blob = " ".join(cv_data.get("data_quality_issues", [])).lower()
     for token in tokens or [crit_low]:
         if token and token in issues_blob:
@@ -649,6 +741,61 @@ def render_checklist(job: dict, cv_data: dict) -> None:
         st.write("Stellenprofil enthält keine prüfbaren Kriterien.")
 
 
+def render_cv_summary(cv_data: dict) -> None:
+    """Menschenlesbare CV-Zusammenfassung mit ‚nicht gefunden‘-Markern."""
+    name = cv_data.get("name") or NICHT_GEFUNDEN
+    st.markdown(f"**Name:** {name}")
+
+    skills = cv_data.get("skills", [])
+    st.markdown(
+        f"**Skills:** {', '.join(skills) if skills else NICHT_GEFUNDEN}"
+    )
+
+    experience = cv_data.get("experience", [])
+    if experience:
+        st.markdown("**Berufserfahrung:**")
+        for e in experience:
+            line = (
+                f"- {e.get('role') or NICHT_GEFUNDEN} @ "
+                f"{e.get('company') or NICHT_GEFUNDEN} "
+                f"({e.get('period') or NICHT_GEFUNDEN})"
+            )
+            desc = e.get("description")
+            if desc:
+                line += f" — {desc}"
+            st.markdown(line)
+    else:
+        st.markdown(f"**Berufserfahrung:** {NICHT_GEFUNDEN}")
+
+    education = cv_data.get("education", [])
+    if education:
+        st.markdown("**Ausbildung:**")
+        for e in education:
+            st.markdown(
+                f"- {e.get('degree') or NICHT_GEFUNDEN}, "
+                f"{e.get('institution') or NICHT_GEFUNDEN} "
+                f"({e.get('period') or NICHT_GEFUNDEN})"
+            )
+    else:
+        st.markdown(f"**Ausbildung:** {NICHT_GEFUNDEN}")
+
+    certificates = cv_data.get("certificates", [])
+    st.markdown(
+        f"**Zertifikate:** "
+        f"{', '.join(certificates) if certificates else NICHT_GEFUNDEN}"
+    )
+
+    languages = cv_data.get("languages", [])
+    if languages:
+        lang_str = ", ".join(
+            f"{l.get('language', '')} ({l.get('level') or NICHT_GEFUNDEN})"
+            for l in languages
+        )
+        st.markdown(f"**Sprachen:** {lang_str}")
+    else:
+        st.markdown(f"**Sprachen:** {NICHT_GEFUNDEN}")
+
+
 # ---------------------------------------------------------------------------
 # Streamlit-UI
 # ---------------------------------------------------------------------------
@@ -659,6 +806,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
 
 # ---------------------------------------------------------------------------
 # Custom CSS — Dark Dashboard Theme
@@ -711,6 +859,7 @@ st.markdown(
         border-radius: 10px;
         padding: 6px;
         gap: 4px;
+        flex-wrap: wrap;
     }
     [data-testid="stTabs"] [role="tab"] {
         color: #94A3B8 !important;
@@ -735,7 +884,6 @@ st.markdown(
         border-radius: 10px;
         padding: 8px;
     }
-    /* === Custom Dashboard Components === */
     .kmu-card {
         background: #0F1F35;
         border: 1px solid #1E3A5F;
@@ -757,10 +905,10 @@ st.markdown(
         background: #0F1F35;
         border: 1px solid #1E3A5F;
         border-radius: 14px;
-        padding: 22px 24px;
+        padding: 20px 22px;
         position: relative;
         overflow: hidden;
-        min-height: 150px;
+        min-height: 130px;
     }
     .kpi-card::before {
         content: "";
@@ -768,22 +916,26 @@ st.markdown(
         top: 0; left: 0; right: 0;
         height: 4px;
     }
-    .kpi-card.red::before { background: #EF4444; }
-    .kpi-card.orange::before { background: #F59E0B; }
     .kpi-card.teal::before { background: #14B8A6; }
+    .kpi-card.orange::before { background: #F59E0B; }
+    .kpi-card.blue::before { background: #3B82F6; }
+    .kpi-card.green::before { background: #10B981; }
+    .kpi-card.red::before { background: #EF4444; }
     .kpi-value {
-        font-size: 38px;
+        font-size: 34px;
         font-weight: 700;
         line-height: 1.2;
-        margin-top: 6px;
+        margin-top: 4px;
     }
-    .kpi-value.red { color: #EF4444; }
-    .kpi-value.orange { color: #F59E0B; }
     .kpi-value.teal { color: #14B8A6; }
+    .kpi-value.orange { color: #F59E0B; }
+    .kpi-value.blue { color: #3B82F6; }
+    .kpi-value.green { color: #10B981; }
+    .kpi-value.red { color: #EF4444; }
     .kpi-label {
         color: #94A3B8;
         font-size: 13px;
-        margin-top: 12px;
+        margin-top: 10px;
         line-height: 1.4;
     }
     .kmu-topbar {
@@ -798,21 +950,12 @@ st.markdown(
     }
     .kmu-topbar-left { font-size: 22px; color: #94A3B8; }
     .kmu-topbar-right {
-        display: flex;
-        align-items: center;
-        gap: 18px;
-        color: #94A3B8;
+        display: flex; align-items: center; gap: 18px; color: #94A3B8;
     }
-    .kmu-topbar-icon {
-        position: relative;
-        font-size: 18px;
-        cursor: default;
-    }
+    .kmu-topbar-icon { position: relative; font-size: 18px; cursor: default; }
     .kmu-topbar-icon .badge {
-        position: absolute;
-        top: -8px; right: -8px;
-        background: #EF4444;
-        color: white;
+        position: absolute; top: -8px; right: -8px;
+        background: #EF4444; color: white;
         border-radius: 50%;
         width: 16px; height: 16px;
         font-size: 10px;
@@ -820,58 +963,32 @@ st.markdown(
         font-weight: 700;
     }
     .kmu-avatar {
-        background: #14B8A6;
-        color: #07172A;
-        width: 32px; height: 32px;
-        border-radius: 50%;
+        background: #14B8A6; color: #07172A;
+        width: 32px; height: 32px; border-radius: 50%;
         display: inline-flex; align-items: center; justify-content: center;
-        font-weight: 700;
-        font-size: 13px;
+        font-weight: 700; font-size: 13px;
     }
     .dashboard-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
+        display: flex; justify-content: space-between; align-items: flex-end;
         margin-bottom: 20px;
     }
-    .dashboard-header h1 {
-        font-size: 30px !important;
-        margin: 0 !important;
-        font-weight: 700;
-    }
-    .dashboard-header .subtitle {
-        color: #94A3B8;
-        font-size: 14px;
-        margin-top: 4px;
-    }
+    .dashboard-header h1 { font-size: 30px !important; margin: 0 !important; font-weight: 700; }
+    .dashboard-header .subtitle { color: #94A3B8; font-size: 14px; margin-top: 4px; }
     .kmu-quote {
         background: #0F1F35;
         border: 1px solid #1E3A5F;
         border-radius: 14px;
-        padding: 24px 28px;
+        padding: 22px 28px;
         margin-bottom: 22px;
-        display: flex;
-        gap: 18px;
-        align-items: flex-start;
+        display: flex; gap: 18px; align-items: flex-start;
     }
     .kmu-quote-mark {
-        color: #14B8A6;
-        font-size: 44px;
-        line-height: 0.8;
+        color: #14B8A6; font-size: 44px; line-height: 0.8;
         font-family: Georgia, serif;
     }
     .kmu-quote-body { flex: 1; }
-    .kmu-quote-text {
-        font-style: italic;
-        color: #F8FAFC;
-        font-size: 16px;
-        line-height: 1.5;
-    }
-    .kmu-quote-source {
-        color: #14B8A6;
-        font-size: 13px;
-        margin-top: 14px;
-    }
+    .kmu-quote-text { font-style: italic; color: #F8FAFC; font-size: 16px; line-height: 1.5; }
+    .kmu-quote-source { color: #14B8A6; font-size: 13px; margin-top: 14px; }
     .kmu-disclaimer {
         background: rgba(20, 184, 166, 0.08);
         border: 1px solid #14B8A6;
@@ -894,107 +1011,67 @@ st.markdown(
     .kmu-badge-ok { background: rgba(16, 185, 129, 0.16); color: #10B981; }
     .kmu-badge-warn { background: rgba(245, 158, 11, 0.16); color: #F59E0B; }
     .kmu-badge-err { background: rgba(239, 68, 68, 0.16); color: #EF4444; }
+    .kmu-badge-info { background: rgba(59, 130, 246, 0.16); color: #3B82F6; }
     .kmu-list-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        display: flex; justify-content: space-between; align-items: center;
         padding: 12px 0;
         border-bottom: 1px solid #1E3A5F;
         gap: 12px;
     }
     .kmu-list-item:last-child { border-bottom: none; }
     .kmu-list-avatar {
-        width: 36px; height: 36px;
-        border-radius: 50%;
-        background: #0F9181;
-        color: #07172A;
-        display: inline-flex;
-        align-items: center; justify-content: center;
-        font-weight: 700;
-        font-size: 13px;
-        flex-shrink: 0;
+        width: 36px; height: 36px; border-radius: 50%;
+        background: #0F9181; color: #07172A;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 13px; flex-shrink: 0;
     }
     .kmu-list-name { font-weight: 600; color: #F8FAFC; font-size: 14px; }
     .kmu-list-file { color: #94A3B8; font-size: 12px; margin-top: 2px; }
     .kmu-logo {
-        font-size: 17px;
-        font-weight: 700;
-        color: #14B8A6;
+        font-size: 17px; font-weight: 700; color: #14B8A6;
         padding: 4px 8px 18px 8px;
     }
     .kmu-nav-section {
-        color: #94A3B8;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
+        color: #94A3B8; font-size: 11px; font-weight: 700;
+        letter-spacing: 1.5px; text-transform: uppercase;
         margin: 16px 8px 6px 8px;
     }
     .kmu-nav-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 9px 12px;
-        border-radius: 8px;
-        color: #94A3B8;
-        font-size: 14px;
-        margin: 2px 4px;
+        display: flex; align-items: center; gap: 10px;
+        padding: 9px 12px; border-radius: 8px;
+        color: #94A3B8; font-size: 14px; margin: 2px 4px;
     }
     .kmu-nav-item.active {
-        background: #0F9181;
-        color: #F8FAFC;
-        font-weight: 600;
+        background: #0F9181; color: #F8FAFC; font-weight: 600;
     }
     .kmu-nav-item .badge-num {
         margin-left: auto;
-        background: #14B8A6;
-        color: #07172A;
-        padding: 1px 7px;
-        border-radius: 10px;
-        font-size: 11px;
-        font-weight: 700;
+        background: #14B8A6; color: #07172A;
+        padding: 1px 7px; border-radius: 10px;
+        font-size: 11px; font-weight: 700;
     }
-    .donut-wrap {
-        display: flex;
-        align-items: center;
-        gap: 24px;
-    }
+    .donut-wrap { display: flex; align-items: center; gap: 24px; }
     .donut-legend { font-size: 13px; flex: 1; }
     .donut-legend-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 6px 0;
+        display: flex; align-items: center; gap: 8px;
+        padding: 6px 0; color: #F8FAFC;
+    }
+    .donut-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+    .donut-count { margin-left: auto; color: #94A3B8; font-weight: 600; }
+    .question-row {
+        background: #10233A;
+        border: 1px solid #1E3A5F;
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-bottom: 8px;
         color: #F8FAFC;
+        font-size: 14px;
     }
-    .donut-dot {
-        width: 12px; height: 12px;
-        border-radius: 3px;
-        flex-shrink: 0;
-    }
-    .donut-count {
-        margin-left: auto;
-        color: #94A3B8;
-        font-weight: 600;
-    }
+    .question-row.reviewed { border-left: 4px solid #10B981; }
     </style>
     """,
     unsafe_allow_html=True,
 )
-
-
-# ---------------------------------------------------------------------------
-# Session State
-# ---------------------------------------------------------------------------
-
-if "candidates" not in st.session_state:
-    st.session_state.candidates = []
-if "processed_files" not in st.session_state:
-    st.session_state.processed_files = set()
-if "job_profile" not in st.session_state:
-    st.session_state.job_profile = None
-if "job_profile_source" not in st.session_state:
-    st.session_state.job_profile_source = ""
 
 
 # ---------------------------------------------------------------------------
@@ -1003,11 +1080,7 @@ if "job_profile_source" not in st.session_state:
 
 
 def quality_bucket(quality: dict | None) -> str:
-    """Klassifiziert die DATENQUALITÄT (nicht den Bewerber) in drei Buckets.
-
-    Bewertet ausschließlich, wie vollständig die Unterlage ist:
-    vollständig / informationslücken / unvollständig.
-    """
+    """Klassifiziert die DATENQUALITÄT in drei Buckets (kein Eignungsurteil)."""
     if not quality or quality.get("_error"):
         return "unvollständig"
     missing_n = len(quality.get("missing_information", []))
@@ -1070,6 +1143,23 @@ def initials_for(name: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Session State
+# ---------------------------------------------------------------------------
+
+if "candidates" not in st.session_state:
+    st.session_state.candidates = []
+if "processed_files" not in st.session_state:
+    st.session_state.processed_files = set()
+if "job_profile" not in st.session_state:
+    st.session_state.job_profile = None
+if "job_profile_source" not in st.session_state:
+    st.session_state.job_profile_source = ""
+if "reviewed_questions" not in st.session_state:
+    # Map filename -> set of question-indices, die als geprüft markiert wurden
+    st.session_state.reviewed_questions = {}
+
+
+# ---------------------------------------------------------------------------
 # Sidebar — Logo, Navigation, Eingaben, Hilfe
 # ---------------------------------------------------------------------------
 
@@ -1092,15 +1182,12 @@ with st.sidebar:
         <div class="kmu-nav-item">📂 Bewerbungen
             <span class="badge-num">{candidate_count}</span>
         </div>
-        <div class="kmu-nav-item">👤 Kandidaten</div>
-        <div class="kmu-nav-section">Analyse</div>
-        <div class="kmu-nav-item">📈 Bewerbungsqualität</div>
+        <div class="kmu-nav-item">👤 Kandidatenübersicht</div>
+        <div class="kmu-nav-section">Datenqualität</div>
+        <div class="kmu-nav-item">📈 Informationslücken</div>
         <div class="kmu-nav-item">❓ Rückfragen</div>
-        <div class="kmu-nav-section">Kommunikation</div>
-        <div class="kmu-nav-item">📄 Vorlagen</div>
-        <div class="kmu-nav-item">✉️ E-Mails</div>
-        <div class="kmu-nav-section">Einstellungen</div>
-        <div class="kmu-nav-item">⚙️ Einstellungen</div>
+        <div class="kmu-nav-section">Sonstiges</div>
+        <div class="kmu-nav-item">💬 Feedback</div>
         <div class="kmu-nav-item">📋 Audit Log</div>
         """,
         unsafe_allow_html=True,
@@ -1111,6 +1198,18 @@ with st.sidebar:
         '<div class="kmu-nav-section">Stellenprofil eingeben</div>',
         unsafe_allow_html=True,
     )
+
+    job_url = st.text_input(
+        "Stellen-URL (optional, derzeit deaktiviert)",
+        placeholder="https://… (in dieser Demo nicht aktiv)",
+        label_visibility="collapsed",
+    )
+    if job_url.strip():
+        st.caption(
+            "Hinweis: URL-Fetch ist in dieser Demo nicht aktiviert. "
+            "Bitte den Stellentext direkt unten einfügen."
+        )
+
     job_text = st.text_area(
         "Stellenprofil",
         height=160,
@@ -1125,12 +1224,12 @@ with st.sidebar:
     ):
         with st.spinner("Strukturiere Stellenprofil ..."):
             try:
-                profile = extract_job_profile(job_text)
+                profile = analyze_job_profile(job_text)
                 st.session_state.job_profile = profile
                 st.session_state.job_profile_source = job_text.strip()
                 log_audit(
                     action="Stellenprofil analysiert",
-                    target="(Sidebar-Eingabe)",
+                    target=profile.get("role", "(ohne Titel)"),
                     result_type="strukturiertes Stellenprofil",
                 )
                 st.success("Stellenprofil strukturiert.")
@@ -1196,52 +1295,78 @@ with st.sidebar:
                         )
                         data = extract_cv(text, prior_feedback)
                         log_audit(
-                            action="CV-Daten extrahiert",
-                            target=f.name,
+                            action="CV analysiert",
+                            target=data.get("name", "") or f.name,
                             result_type="strukturierte Felder + Belege",
                         )
+                        # Informationslücken-Agent
                         try:
-                            quality = analyze_data_quality(text, data)
+                            gaps = analyze_information_gaps(text, data)
                             log_audit(
-                                action="Datenqualität geprüft",
+                                action="Informationslücken erkannt",
                                 target=data.get("name", "") or f.name,
                                 result_type=(
-                                    f"{len(quality['missing_information'])} fehlend, "
-                                    f"{len(quality['unclear_information'])} unklar, "
-                                    f"{len(quality['suggested_questions'])} Rückfragen"
+                                    f"{len(gaps['missing_information'])} fehlend, "
+                                    f"{len(gaps['unclear_information'])} unklar"
                                 ),
                             )
                         except Exception as qe:  # noqa: BLE001
-                            quality = {
+                            gaps = {
                                 "missing_information": [],
                                 "unclear_information": [],
                                 "suggested_questions": [],
                                 "_error": str(qe),
                             }
                             log_audit(
-                                action="Datenqualität geprüft",
+                                action="Informationslücken erkannt",
                                 target=f.name,
                                 result_type=f"Fehler: {qe}",
                             )
+                        # Rückfragen-Agent
+                        try:
+                            followups = generate_follow_up_questions(
+                                gaps, st.session_state.job_profile
+                            )
+                            log_audit(
+                                action="Rückfragen erzeugt",
+                                target=data.get("name", "") or f.name,
+                                result_type=(
+                                    f"{len(followups['questions'])} Rückfragen "
+                                    "(warten auf Prüfung & Freigabe)"
+                                ),
+                            )
+                        except Exception as fe:  # noqa: BLE001
+                            followups = {"questions": gaps.get("suggested_questions", [])}
+                            log_audit(
+                                action="Rückfragen erzeugt",
+                                target=f.name,
+                                result_type=f"Fehler: {fe}",
+                            )
                         st.session_state.candidates.append(
-                            {"filename": f.name, "data": data, "quality": quality}
+                            {
+                                "filename": f.name,
+                                "data": data,
+                                "quality": gaps,
+                                "followups": followups,
+                            }
                         )
                         st.session_state.processed_files.add(f.name)
                         ok += 1
                     except Exception as e:  # noqa: BLE001
                         st.error(f"Fehler bei {f.name}: {e}")
                         log_audit(
-                            action="CV-Daten extrahiert",
+                            action="CV analysiert",
                             target=f.name,
                             result_type=f"Fehler: {e}",
                         )
                 progress.progress(i / len(new_files))
             if ok:
-                st.success(f"{ok} Lebensläufe extrahiert.")
+                st.success(f"{ok} Lebensläufe analysiert.")
 
     if st.session_state.candidates and st.button("Alle Kandidaten löschen"):
         st.session_state.candidates = []
         st.session_state.processed_files = set()
+        st.session_state.reviewed_questions = {}
         st.rerun()
 
     st.divider()
@@ -1291,45 +1416,71 @@ with header_right:
 st.markdown(
     """
     <div class="kmu-disclaimer">
-        <strong>Hinweis:</strong> Der Agent trifft keine Personalentscheidung.
-        Er erstellt kein Ranking, keinen Score und keine Empfehlung.
-        Er extrahiert ausschließlich objektive Informationen und bereitet sie
-        für den Geschäftsführer auf. Autonomie-Stufe:
+        <strong>Human-in-the-Loop:</strong>
+        Die KI trifft keine Personalentscheidung.
+        Sie erstellt kein Ranking, keinen Score und keine Empfehlung.
+        Der Geschäftsführer prüft und entscheidet final. Autonomie-Stufe:
         <em>Rot — Mensch entscheidet, Agent liefert nur Daten.</em>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-# ---- KPI-Karten (Marktkontext, keine Bewerberbewertung) ----
+# ---- KPI-Karten (echte Daten aus der App) ----
 
-kpi1, kpi2, kpi3 = st.columns(3)
+total_candidates = len(st.session_state.candidates)
+total_gaps = sum(
+    len((c.get("quality") or {}).get("missing_information") or [])
+    + len((c.get("quality") or {}).get("unclear_information") or [])
+    for c in st.session_state.candidates
+)
+total_questions = sum(
+    len((c.get("followups") or {}).get("questions") or [])
+    for c in st.session_state.candidates
+)
+buckets = {"vollständig": 0, "informationslücken": 0, "unvollständig": 0}
+for c in st.session_state.candidates:
+    buckets[quality_bucket(c.get("quality"))] += 1
+complete_count = buckets["vollständig"]
+gap_count = buckets["informationslücken"] + buckets["unvollständig"]
+
+kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 with kpi1:
     st.markdown(
-        """
-        <div class="kpi-card red">
-            <div class="kpi-value red">~50 %</div>
-            <div class="kpi-label">der Bewerbungen passen nicht von Anfang an</div>
+        f"""
+        <div class="kpi-card teal">
+            <div class="kpi-value teal">{total_candidates}</div>
+            <div class="kpi-label">analysierte Bewerbungen</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 with kpi2:
     st.markdown(
-        """
+        f"""
         <div class="kpi-card orange">
-            <div class="kpi-value orange">Std./Woche</div>
-            <div class="kpi-label">manuelle Sichtung pro offene Stelle</div>
+            <div class="kpi-value orange">{total_gaps}</div>
+            <div class="kpi-label">erkannte Informationslücken (Datenqualität)</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 with kpi3:
     st.markdown(
-        """
-        <div class="kpi-card teal">
-            <div class="kpi-value teal">40.000 €</div>
-            <div class="kpi-label">kostet eine einzige Fehlbesetzung im KMU</div>
+        f"""
+        <div class="kpi-card blue">
+            <div class="kpi-value blue">{total_questions}</div>
+            <div class="kpi-label">vorbereitete Rückfragen (warten auf Freigabe)</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+with kpi4:
+    st.markdown(
+        f"""
+        <div class="kpi-card green">
+            <div class="kpi-value green">{complete_count} / {gap_count}</div>
+            <div class="kpi-label">vollständig / mit Informationslücken</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1356,9 +1507,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ---- Dashboard-Grid: Letzte Bewerbungen | Qualität + Rückfragen ----
+# ---- Dashboard-Grid: Letzte Bewerbungen | Datenqualität + Rückfragen ----
 
-# Datenaggregation aus echten Daten (oder Platzhalter)
 recent_html_rows: list[str] = []
 if st.session_state.candidates:
     for c in st.session_state.candidates[-5:][::-1]:
@@ -1410,23 +1560,17 @@ else:
             """
         )
 
-# Bewerbungsqualitäts-Verteilung (Datenqualität, NICHT Eignung)
-buckets = {"vollständig": 0, "informationslücken": 0, "unvollständig": 0}
-if st.session_state.candidates:
-    for c in st.session_state.candidates:
-        buckets[quality_bucket(c.get("quality"))] += 1
-else:
-    buckets = {"vollständig": 14, "informationslücken": 18, "unvollständig": 8}
-total_buckets = sum(buckets.values()) or 1
-donut_svg = render_donut(buckets)
-
-# Offene Rückfragen
-total_questions = sum(
-    len((c.get("quality") or {}).get("suggested_questions") or [])
-    for c in st.session_state.candidates
+donut_buckets = (
+    buckets
+    if st.session_state.candidates
+    else {"vollständig": 14, "informationslücken": 18, "unvollständig": 8}
 )
-if not st.session_state.candidates:
-    total_questions = 12
+total_buckets = sum(donut_buckets.values()) or 1
+donut_svg = render_donut(donut_buckets)
+
+display_questions = total_questions or (
+    12 if not st.session_state.candidates else 0
+)
 
 left_col, right_col = st.columns([1.4, 1])
 
@@ -1448,24 +1592,24 @@ with right_col:
     st.markdown(
         f"""
         <div class="kmu-card">
-            <div class="kmu-card-title">Bewerbungsqualität <small>(Datenqualität, keine Eignung)</small></div>
+            <div class="kmu-card-title">Datenqualität <small>(keine Eignungsbewertung)</small></div>
             <div class="donut-wrap">
                 {donut_svg}
                 <div class="donut-legend">
                     <div class="donut-legend-row">
                         <span class="donut-dot" style="background:#10B981"></span>
                         Vollständig
-                        <span class="donut-count">{buckets['vollständig']} ({buckets['vollständig'] * 100 // total_buckets}%)</span>
+                        <span class="donut-count">{donut_buckets['vollständig']} ({donut_buckets['vollständig'] * 100 // total_buckets}%)</span>
                     </div>
                     <div class="donut-legend-row">
                         <span class="donut-dot" style="background:#F59E0B"></span>
                         Informationslücken
-                        <span class="donut-count">{buckets['informationslücken']} ({buckets['informationslücken'] * 100 // total_buckets}%)</span>
+                        <span class="donut-count">{donut_buckets['informationslücken']} ({donut_buckets['informationslücken'] * 100 // total_buckets}%)</span>
                     </div>
                     <div class="donut-legend-row">
                         <span class="donut-dot" style="background:#EF4444"></span>
                         Unvollständig
-                        <span class="donut-count">{buckets['unvollständig']} ({buckets['unvollständig'] * 100 // total_buckets}%)</span>
+                        <span class="donut-count">{donut_buckets['unvollständig']} ({donut_buckets['unvollständig'] * 100 // total_buckets}%)</span>
                     </div>
                 </div>
             </div>
@@ -1473,9 +1617,9 @@ with right_col:
         <div class="kmu-card">
             <div class="kmu-card-title">Offene Rückfragen</div>
             <div style="display:flex; align-items:center; gap:14px;">
-                <div style="font-size:38px; font-weight:700; color:#14B8A6;">{total_questions}</div>
+                <div style="font-size:38px; font-weight:700; color:#14B8A6;">{display_questions}</div>
                 <div style="color:#94A3B8; font-size:13px;">
-                    Rückfragen vorbereitet —<br/>
+                    Rückfragevorschläge —<br/>
                     warten auf Ihre Prüfung und Freigabe.<br/>
                     <em style="color:#94A3B8">Es wird keine E-Mail automatisch versendet.</em>
                 </div>
@@ -1493,53 +1637,24 @@ with right_col:
 st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
 (
-    main_tab_apps,
     main_tab_profile,
+    main_tab_apps,
     main_tab_candidates,
-    main_tab_quality,
+    main_tab_gaps,
     main_tab_questions,
+    main_tab_feedback,
     main_tab_audit,
-    main_tab_tests,
 ) = st.tabs(
     [
-        "Bewerbungen analysieren",
         "Stellenprofil",
+        "Bewerbungen analysieren",
         "Kandidatenübersicht",
-        "Bewerbungsqualität",
+        "Informationslücken",
         "Rückfragen",
+        "Feedback",
         "Audit Log",
-        "Test-Center",
     ]
 )
-
-# ---- Tab: Bewerbungen analysieren ----
-
-with main_tab_apps:
-    st.markdown(
-        '<div class="kmu-card-title">Bewerbungen analysieren</div>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        "Lade in der Sidebar links PDF-Lebensläufe hoch und klicke auf "
-        "**Extraktion starten**. Der Agent extrahiert objektive Informationen, "
-        "schlägt Rückfragen vor und protokolliert jede Aktion im Audit-Log. "
-        "Es findet keine Bewertung des Bewerbers statt."
-    )
-    if st.session_state.candidates:
-        st.success(
-            f"{len(st.session_state.candidates)} Bewerbungen analysiert. "
-            "Details siehst du im Tab „Kandidatenübersicht“."
-        )
-    else:
-        st.info("Noch keine Bewerbungen analysiert.")
-    st.markdown("**Bisheriges Feedback (fließt in den nächsten Lauf ein)**")
-    entries = load_feedback()
-    if entries:
-        st.dataframe(
-            pd.DataFrame(entries), use_container_width=True, hide_index=True
-        )
-    else:
-        st.caption("Noch kein Feedback vorhanden.")
 
 # ---- Tab: Stellenprofil ----
 
@@ -1550,13 +1665,91 @@ with main_tab_profile:
     )
     st.caption(
         "Stellenprofil-Text in der Sidebar einfügen und auf "
-        "„Stellenprofil analysieren“ klicken. Die KI strukturiert nur — "
-        "sie bewertet nichts und gewichtet nichts."
+        "„Stellenprofil analysieren“ klicken. Der Stellenprofil-Agent "
+        "strukturiert nur Anforderungen — er bewertet keine Bewerber."
     )
     if st.session_state.job_profile:
-        st.json(st.session_state.job_profile)
+        jp = st.session_state.job_profile
+        st.markdown(f"**Rolle:** {jp.get('role') or NICHT_GEFUNDEN}")
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("**Muss-Kriterien**")
+            if jp.get("must_criteria"):
+                for x in jp["must_criteria"]:
+                    st.markdown(f"- {x}")
+            else:
+                st.caption(NICHT_GEFUNDEN)
+            st.markdown("**Gewünschte Skills**")
+            if jp.get("desired_skills"):
+                for x in jp["desired_skills"]:
+                    st.markdown(f"- {x}")
+            else:
+                st.caption(NICHT_GEFUNDEN)
+            st.markdown("**Gewünschte Zertifikate**")
+            if jp.get("desired_certificates"):
+                for x in jp["desired_certificates"]:
+                    st.markdown(f"- {x}")
+            else:
+                st.caption(NICHT_GEFUNDEN)
+        with c2:
+            st.markdown("**Kann-Kriterien**")
+            if jp.get("nice_criteria"):
+                for x in jp["nice_criteria"]:
+                    st.markdown(f"- {x}")
+            else:
+                st.caption(NICHT_GEFUNDEN)
+            st.markdown("**Gewünschte Sprachen**")
+            if jp.get("desired_languages"):
+                for x in jp["desired_languages"]:
+                    st.markdown(f"- {x}")
+            else:
+                st.caption(NICHT_GEFUNDEN)
+            st.markdown("**Gewünschte Berufserfahrung**")
+            if jp.get("desired_experience"):
+                for x in jp["desired_experience"]:
+                    st.markdown(f"- {x}")
+            else:
+                st.caption(NICHT_GEFUNDEN)
+        with st.expander("Rohdaten (JSON)"):
+            st.json(jp)
     else:
         st.info("Noch kein Stellenprofil hinterlegt.")
+
+# ---- Tab: Bewerbungen analysieren ----
+
+with main_tab_apps:
+    st.markdown(
+        '<div class="kmu-card-title">Bewerbungen analysieren</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "Lade in der Sidebar links PDF-Lebensläufe hoch und klicke auf "
+        "**Extraktion starten**. Pipeline:"
+    )
+    st.markdown(
+        "1. **CV-Agent** strukturiert objektive Daten aus dem PDF.  \n"
+        "2. **Informationslücken-Agent** prüft Datenqualität.  \n"
+        "3. **Rückfragen-Agent** formuliert höfliche Rückfragen.  \n"
+        "_Es wird keine Bewertung des Bewerbers vorgenommen._"
+    )
+    if st.session_state.candidates:
+        st.success(
+            f"{len(st.session_state.candidates)} Bewerbungen analysiert. "
+            "Details siehst du im Tab „Kandidatenübersicht“."
+        )
+    else:
+        st.info("Noch keine Bewerbungen analysiert.")
+
+    st.markdown(
+        "**Bisheriges Feedback** (fließt in den nächsten Lauf des CV-Agenten ein)"
+    )
+    entries = load_feedback()
+    if entries:
+        st.dataframe(
+            pd.DataFrame(entries), use_container_width=True, hide_index=True
+        )
+    else:
+        st.caption("Noch kein Feedback vorhanden.")
 
 # ---- Tab: Kandidatenübersicht ----
 
@@ -1605,6 +1798,7 @@ with main_tab_candidates:
             cv_data = selected["data"]
 
             (
+                tab_summary,
                 tab_overview,
                 tab_checklist,
                 tab_evidence,
@@ -1612,13 +1806,21 @@ with main_tab_candidates:
                 tab_feedback,
             ) = st.tabs(
                 [
-                    "Strukturierte Daten",
+                    "Übersicht",
+                    "Rohdaten (JSON)",
                     "Kriterien-Checkliste",
                     "Textbelege",
                     "Datenqualität",
                     "Feedback",
                 ]
             )
+
+            with tab_summary:
+                st.caption(
+                    "Menschenlesbare Zusammenfassung. Felder ohne Wert werden "
+                    "als „nicht gefunden“ markiert."
+                )
+                render_cv_summary(cv_data)
 
             with tab_overview:
                 st.json(cv_data)
@@ -1628,7 +1830,7 @@ with main_tab_candidates:
                     st.caption(
                         "Neutrale Gegenüberstellung mit drei Status: "
                         "vorhanden / unklar / nicht gefunden. "
-                        "Keine Prozentzahl, kein Score, kein Ranking."
+                        "Keine Prozentzahl, kein Score."
                     )
                     render_checklist(st.session_state.job_profile, cv_data)
                 else:
@@ -1646,7 +1848,8 @@ with main_tab_candidates:
                 if ev_list:
                     for ev in ev_list:
                         st.markdown(
-                            f"- **{ev.get('item', '')}**: „{ev.get('excerpt', '')}“"
+                            f"- **{ev.get('item', '')}**: "
+                            f"„{ev.get('excerpt', '')}“"
                         )
                 else:
                     st.write("Keine separaten Textbelege erfasst.")
@@ -1654,14 +1857,13 @@ with main_tab_candidates:
             with tab_quality:
                 st.caption(
                     "Vollständigkeits- und Klarheitsprüfung der Unterlagen — "
-                    "keine Bewertung des Bewerbers, keine Empfehlung, keine "
-                    "Priorisierung."
+                    "keine Bewertung, keine Priorisierung."
                 )
                 quality = selected.get("quality") or {}
                 if quality.get("_error"):
                     st.error(
-                        "Die Datenqualitäts-Prüfung konnte nicht durchgeführt "
-                        f"werden: {quality['_error']}"
+                        "Die Informationslücken-Prüfung konnte nicht "
+                        f"durchgeführt werden: {quality['_error']}"
                     )
 
                 st.markdown("### Fehlende Informationen")
@@ -1680,14 +1882,6 @@ with main_tab_candidates:
                 else:
                     st.write("Keine unklaren Informationen erkannt.")
 
-                st.markdown("### Vorgeschlagene Rückfragen")
-                questions = quality.get("suggested_questions", [])
-                if questions:
-                    for q in questions:
-                        st.markdown(f"- {q}")
-                else:
-                    st.write("Keine offenen Rückfragen.")
-
                 extra_issues = cv_data.get("data_quality_issues", [])
                 if extra_issues:
                     with st.expander(
@@ -1699,7 +1893,7 @@ with main_tab_candidates:
             with tab_feedback:
                 st.markdown(
                     "Feedback verbessert nur die **Extraktion und "
-                    "Darstellung**, nicht die Bewerberauswahl. Es wird in "
+                    "Darstellung**, niemals die Auswahl. Es wird in "
                     "`feedback.json` gespeichert und beim nächsten "
                     "Extraktionslauf im Prompt berücksichtigt."
                 )
@@ -1732,16 +1926,16 @@ with main_tab_candidates:
         else:
             st.write("Keine Bewerber entsprechen den Filtern.")
 
-# ---- Tab: Bewerbungsqualität (Aggregation) ----
+# ---- Tab: Informationslücken (Aggregation) ----
 
-with main_tab_quality:
+with main_tab_gaps:
     st.markdown(
-        '<div class="kmu-card-title">Bewerbungsqualität (Aggregation)</div>',
+        '<div class="kmu-card-title">Informationslücken (Übersicht)</div>',
         unsafe_allow_html=True,
     )
     st.caption(
-        "Aggregierte Datenqualitäts-Sicht über alle bislang analysierten "
-        "Bewerbungen — keine Eignungsbewertung."
+        "Aggregierte Sicht der Datenqualitäts-Prüfung über alle bislang "
+        "analysierten Bewerbungen — keine Eignungsbewertung."
     )
     if not st.session_state.candidates:
         st.info("Noch keine Bewerbungen analysiert.")
@@ -1752,18 +1946,39 @@ with main_tab_quality:
             rows.append(
                 {
                     "Datei": c["filename"],
-                    "Name": c["data"].get("name", ""),
-                    "Bucket": quality_bucket(q),
+                    "Name": c["data"].get("name") or NICHT_GEFUNDEN,
+                    "Datenqualität": quality_bucket(q),
                     "Fehlend": len(q.get("missing_information", [])),
                     "Unklar": len(q.get("unclear_information", [])),
-                    "Rückfragen": len(q.get("suggested_questions", [])),
+                    "Rückfragen": len(
+                        (c.get("followups") or {}).get("questions", [])
+                    ),
                 }
             )
         st.dataframe(
             pd.DataFrame(rows), use_container_width=True, hide_index=True
         )
 
-# ---- Tab: Rückfragen (konsolidiert) ----
+        for c in st.session_state.candidates:
+            q = c.get("quality") or {}
+            missing = q.get("missing_information", [])
+            unclear = q.get("unclear_information", [])
+            if not missing and not unclear:
+                continue
+            with st.expander(
+                f"{c['data'].get('name') or '(ohne Name)'} — "
+                f"{len(missing)} fehlend / {len(unclear)} unklar"
+            ):
+                if missing:
+                    st.markdown("**Fehlende Informationen**")
+                    for m in missing:
+                        st.markdown(f"- {m}")
+                if unclear:
+                    st.markdown("**Unklare Informationen**")
+                    for u in unclear:
+                        st.markdown(f"- {u}")
+
+# ---- Tab: Rückfragen (Human-in-the-Loop) ----
 
 with main_tab_questions:
     st.markdown(
@@ -1771,24 +1986,90 @@ with main_tab_questions:
         unsafe_allow_html=True,
     )
     st.caption(
-        "Rückfragevorschläge pro Bewerbung. **Es wird keine E-Mail "
-        "automatisch versendet** — alle Rückfragen warten auf Ihre Prüfung "
-        "und Freigabe."
+        "Der Rückfragen-Agent formuliert höfliche Rückfragen aus den "
+        "Informationslücken. **Es wird keine E-Mail automatisch versendet.** "
+        "Sie als Geschäftsführer prüfen, bearbeiten oder ignorieren jede Frage."
     )
     any_questions = False
     for c in st.session_state.candidates:
-        questions = (c.get("quality") or {}).get("suggested_questions") or []
+        questions = (c.get("followups") or {}).get("questions") or []
         if not questions:
             continue
         any_questions = True
+        fname = c["filename"]
+        reviewed_set = st.session_state.reviewed_questions.setdefault(
+            fname, set()
+        )
         with st.expander(
             f"{c['data'].get('name') or '(ohne Name)'} — "
             f"{len(questions)} Rückfrage(n)"
         ):
-            for q in questions:
-                st.markdown(f"- {q}")
+            for i, q in enumerate(questions):
+                is_reviewed = i in reviewed_set
+                row_class = "question-row reviewed" if is_reviewed else "question-row"
+                tag = (
+                    '<span class="kmu-badge kmu-badge-ok">geprüft</span>'
+                    if is_reviewed
+                    else '<span class="kmu-badge kmu-badge-info">offen</span>'
+                )
+                st.markdown(
+                    f'<div class="{row_class}">{q} &nbsp; {tag}</div>',
+                    unsafe_allow_html=True,
+                )
+                btn_col1, btn_col2 = st.columns([1, 1])
+                with btn_col1:
+                    if not is_reviewed and st.button(
+                        "Rückfrage prüfen",
+                        key=f"check_{fname}_{i}",
+                    ):
+                        log_audit(
+                            action="Rückfrage geprüft",
+                            target=c["data"].get("name", "") or fname,
+                            result_type=q[:80],
+                        )
+                        st.toast(
+                            "Rückfrage markiert als geprüft.", icon="✅"
+                        )
+                with btn_col2:
+                    if not is_reviewed and st.button(
+                        "Als geprüft markieren",
+                        key=f"mark_{fname}_{i}",
+                    ):
+                        reviewed_set.add(i)
+                        log_audit(
+                            action="Rückfrage als geprüft markiert",
+                            target=c["data"].get("name", "") or fname,
+                            result_type=q[:80],
+                        )
+                        st.rerun()
     if not any_questions:
-        st.info("Keine offenen Rückfragen.")
+        st.info("Keine offenen Rückfragevorschläge.")
+
+# ---- Tab: Feedback (Gesamtübersicht) ----
+
+with main_tab_feedback:
+    st.markdown(
+        '<div class="kmu-card-title">Feedback-Übersicht</div>',
+        unsafe_allow_html=True,
+    )
+    st.caption(
+        "Feedback verbessert nur die **Extraktion und Darstellung**, niemals "
+        "die Auswahl. Pro Bewerber kannst du Feedback im Tab "
+        "„Kandidatenübersicht → Feedback“ eintragen."
+    )
+    entries = load_feedback()
+    if entries:
+        st.dataframe(
+            pd.DataFrame(entries),
+            use_container_width=True,
+            hide_index=True,
+        )
+        st.caption(
+            f"Insgesamt {len(entries)} Feedback-Einträge. "
+            "Diese fließen beim nächsten Extraktionslauf in den CV-Agenten-Prompt ein."
+        )
+    else:
+        st.info("Noch kein Feedback vorhanden.")
 
 # ---- Tab: Audit Log ----
 
@@ -1798,7 +2079,8 @@ with main_tab_audit:
         unsafe_allow_html=True,
     )
     st.caption(
-        "Jeder Eintrag enthält die Autonomie-Stufe. "
+        "Jede wichtige Aktion wird protokolliert (Zeitstempel, Aktion, "
+        "Bewerber/Datei, Ergebnis, Autonomie-Stufe). "
         f"Standardstufe für Recruiting-Analysen: {AUTONOMY_LEVEL}"
     )
     log_entries = load_audit_log()
@@ -1811,51 +2093,8 @@ with main_tab_audit:
     else:
         st.info("Audit-Log ist leer.")
 
-# ---- Tab: Test-Center ----
-
-with main_tab_tests:
-    st.markdown(
-        '<div class="kmu-card-title">Test-Center</div>',
-        unsafe_allow_html=True,
-    )
-    st.write(
-        "Manuelle Tests des Extraktions-Workflows. "
-        "Hier werden **keine Bewerber bewertet** — nur der Agent selbst wird "
-        "anhand drei Testtypen geprüft."
-    )
-    for tc in TEST_CASES:
-        with st.expander(f"{tc['name']} — {tc['description']}"):
-            with st.form(f"test_form_{tc['id']}", clear_on_submit=True):
-                outcome = st.selectbox(
-                    "Ergebnis",
-                    TEST_OUTCOMES,
-                    key=f"outcome_{tc['id']}",
-                )
-                note = st.text_input(
-                    "Notiz (optional)", key=f"note_{tc['id']}"
-                )
-                if st.form_submit_button("Ergebnis speichern"):
-                    save_test_result(tc["id"], outcome, note)
-                    log_audit(
-                        action="Testergebnis gespeichert",
-                        target=tc["name"],
-                        result_type=outcome,
-                    )
-                    st.success(
-                        f"Testergebnis für „{tc['name']}“ gespeichert."
-                    )
-
-    with st.expander("Bisherige Testergebnisse"):
-        tr = load_test_results()
-        if tr:
-            st.dataframe(
-                pd.DataFrame(tr), use_container_width=True, hide_index=True
-            )
-        else:
-            st.write("Noch keine Testergebnisse vorhanden.")
-
 st.caption(
-    "Der Agent trifft keine Personalentscheidung. Er extrahiert objektive "
-    "Informationen und macht Bewerbungen vergleichbar. Die finale Bewertung "
-    "trifft immer der Geschäftsführer."
+    "Die KI trifft keine Personalentscheidung. Sie strukturiert objektive "
+    "Informationen und macht Bewerbungen vergleichbar. Der Geschäftsführer "
+    "prüft und entscheidet final."
 )
