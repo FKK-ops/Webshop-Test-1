@@ -136,18 +136,64 @@ Keine Bewertung des Bewerbers. Keine Empfehlung. Kein Ranking.
 
 JOB_PROFILE_INSTRUCTIONS = """Du bist der Stellenprofil-Agent. Du
 strukturierst Anforderungen aus einem Stellenprofil-Text. Du bewertest
-nichts und gewichtest nichts — du strukturierst nur, was im Text steht.
+nichts und gewichtest nichts.
 
-Extrahiere:
-- role: Stellentitel / Rolle (z. B. "Senior Python-Entwickler/in")
-- must_criteria: Muss-Kriterien (Pflichtanforderungen)
-- nice_criteria: Kann-Kriterien ("wünschenswert", "von Vorteil")
-- desired_skills: gewünschte fachliche Skills
-- desired_languages: gewünschte Sprachen (inkl. Niveau, wenn genannt)
-- desired_certificates: gewünschte Zertifikate
-- desired_experience: gewünschte Berufserfahrung (Branchen, Rollen, Jahre)
+KERNREGEL — sehr wichtig:
+Extrahiere AUSSCHLIESSLICH objektiv prüfbare Qualifikationen in die
+fachlichen Felder. Soft Skills, Persönlichkeitsmerkmale und nicht
+messbare Eigenschaften gehören NIEMALS in must_criteria, nice_criteria,
+desired_skills, desired_languages, desired_certificates oder
+desired_experience. Sie kommen ausschließlich in das separate Feld
+non_checkable_requirements.
 
-Wenn etwas nicht im Text steht, lasse das jeweilige Feld leer.
+Felder:
+- role: Stellentitel (z. B. "Senior Python-Entwickler/in")
+- must_criteria: Muss-Kriterien — NUR objektiv prüfbar (Skills, Tools,
+  Frameworks, Methoden, Sprachen, Zertifikate, konkrete Berufserfahrung)
+- nice_criteria: Kann-Kriterien („wünschenswert", „von Vorteil") —
+  ebenfalls NUR objektiv prüfbar
+- desired_skills: konkrete fachliche Skills (Technologien, Tools,
+  Frameworks, Programmiersprachen, Methoden) — KEINE Soft Skills
+- desired_languages: Sprachen inkl. Niveau (A1–C2, Muttersprache),
+  wenn genannt
+- desired_certificates: konkret benannte Zertifikate / Abschlüsse
+- desired_experience: konkrete Berufserfahrung (Branche, Rolle, Jahre,
+  Projekte)
+- non_checkable_requirements: Liste aller im Stellenprofil genannten
+  Soft Skills, Persönlichkeitsmerkmale und nicht messbaren Eigenschaften
+  (z. B. Kreativität, Teamfähigkeit, Motivation, Belastbarkeit,
+  Eigeninitiative, Lernbereitschaft, Kommunikationsstärke, kulturelle
+  Passung, Persönlichkeit, Mindset, Leidenschaft, Flexibilität ohne
+  Konkretisierung, technische Affinität ohne konkrete Tools,
+  selbstständige Arbeitsweise, proaktives Denken, Innovationsfähigkeit,
+  Hands-on-Mentalität). Diese fließen NICHT in den fachlichen Abgleich,
+  werden aber transparent angezeigt.
+
+VERBOTEN in den objektiven Feldern (gehört entweder in
+non_checkable_requirements oder gar nicht in das Profil):
+- Soft Skills jeder Art (Kreativität, Teamfähigkeit, Motivation,
+  Belastbarkeit, Eigeninitiative, Lernbereitschaft, Kommunikationsstärke,
+  selbstständige Arbeitsweise, proaktives Denken, Hands-on-Mentalität,
+  Innovationsfähigkeit, …)
+- Persönlichkeitsmerkmale (Persönlichkeit, Mindset, Leidenschaft,
+  Engagement, freundlich, sympathisch …)
+- weiche Formulierungen ohne objektiven Nachweis („technische Affinität"
+  ohne konkrete Tools, „Flexibilität" ohne Konkretisierung,
+  „lösungsorientiert", „kundenorientiert", „serviceorientiert", …)
+- organisatorische Angaben (Gehalt, Vollzeit/Teilzeit, Remote/Homeoffice,
+  Standort, Verfügbarkeit, Startdatum, Referenzen, Anschreiben/Foto,
+  Alter, Geschlecht, Herkunft, Familienstand, …) — diese gehören
+  überhaupt nicht ins Profil (auch nicht in non_checkable_requirements).
+
+REGEL „technische Affinität / Flexibilität / Hands-on":
+- Wenn die Formulierung konkrete Tools/Technologien nennt
+  (z. B. „technische Affinität mit Power BI und SQL"), extrahiere NUR
+  die konkreten Tools („Power BI", „SQL") in desired_skills.
+- Die übergeordnete weiche Phrase („technische Affinität") wandert
+  zusätzlich in non_checkable_requirements.
+
+Wenn ein Feld leer bleibt, gib ein leeres Array zurück.
+Keine Bewertung, keine Empfehlung, keine Gewichtung.
 """
 
 FOLLOWUP_INSTRUCTIONS = """Du bist der Rückfragen-Agent. Du formulierst
@@ -217,6 +263,7 @@ class JobProfile(BaseModel):
     desired_languages: list[str]
     desired_certificates: list[str]
     desired_experience: list[str]
+    non_checkable_requirements: list[str] = []
 
 
 class QualityCheck(BaseModel):
@@ -455,7 +502,12 @@ def extract_cv(cv_text: str, prior_feedback: str = "") -> dict:
 
 
 def analyze_job_profile(job_text: str) -> dict:
-    """Stellenprofil-Agent. Strukturiert nur Anforderungen, bewertet keine Bewerber."""
+    """Stellenprofil-Agent. Strukturiert ausschließlich objektiv prüfbare
+    Qualifikationen. Soft Skills landen separat in
+    non_checkable_requirements und fließen nicht in den fachlichen
+    Abgleich ein. Organisatorische Angaben (Gehalt, Standort, …) werden
+    komplett entfernt.
+    """
     user_prompt = (
         f"{JOB_PROFILE_INSTRUCTIONS}\n"
         "STELLENPROFIL:\n"
@@ -471,7 +523,72 @@ def analyze_job_profile(job_text: str) -> dict:
         raise RuntimeError(
             "Das Stellenprofil konnte nicht in das erwartete Format geparst werden."
         )
-    return parsed.model_dump()
+    return _sanitize_job_profile(parsed.model_dump())
+
+
+def _sanitize_job_profile(profile: dict) -> dict:
+    """Härte die LLM-Ausgabe gegen Soft-Skill- / Organisations-Lecks.
+
+    - Items in fachlichen Feldern, die nicht objektiv prüfbar sind, werden
+      entfernt. Soft Skills wandern in non_checkable_requirements;
+      organisatorische Angaben (Gehalt, Vollzeit, Standort …) werden
+      komplett verworfen — sie gehören weder in den Abgleich noch in die
+      Soft-Skill-Liste.
+    - Doppelte Einträge werden entfernt (case-insensitive, Reihenfolge
+      bleibt erhalten).
+    """
+    cleaned: dict = dict(profile)
+    fachliche_felder = (
+        "must_criteria",
+        "nice_criteria",
+        "desired_skills",
+        "desired_languages",
+        "desired_certificates",
+        "desired_experience",
+    )
+    soft_collected: list[str] = list(profile.get("non_checkable_requirements") or [])
+    seen_soft = {s.lower(): True for s in soft_collected if s}
+
+    for key in fachliche_felder:
+        kept: list[str] = []
+        seen_low: set[str] = set()
+        for raw in profile.get(key) or []:
+            text = (raw or "").strip()
+            if not text:
+                continue
+            low = text.lower()
+            if low in seen_low:
+                continue
+            # Organisatorisch (Gehalt, Vollzeit, Standort, …) → komplett raus
+            if not is_performance_criterion(text):
+                continue
+            if is_objectively_checkable(text):
+                seen_low.add(low)
+                kept.append(text)
+            else:
+                # weiches Merkmal → in non_checkable_requirements verschieben
+                if low not in seen_soft:
+                    soft_collected.append(text)
+                    seen_soft[low] = True
+        cleaned[key] = kept
+
+    # auch die non_checkable-Liste deduplizieren und organisatorische
+    # Angaben dort herausfiltern, falls die LLM sie dort abgelegt hat.
+    dedup_soft: list[str] = []
+    seen2: set[str] = set()
+    for raw in soft_collected:
+        text = (raw or "").strip()
+        if not text:
+            continue
+        low = text.lower()
+        if low in seen2:
+            continue
+        if not is_performance_criterion(text):
+            continue
+        seen2.add(low)
+        dedup_soft.append(text)
+    cleaned["non_checkable_requirements"] = dedup_soft
+    return cleaned
 
 
 # Kompatibilitäts-Alias (alter Funktionsname)
@@ -1138,7 +1255,29 @@ def _collect_all_requirements(job_profile: dict | None) -> list[str]:
 
 
 def get_not_checkable_requirements(job_profile: dict | None) -> list[str]:
-    """Liefert nur die nicht automatisch prüfbaren Anforderungen."""
+    """Liefert nur die nicht automatisch prüfbaren Anforderungen.
+
+    Bevorzugt das explizite Feld non_checkable_requirements (das der
+    Stellenprofil-Agent sauber befüllt). Fallback: durchsucht die alten
+    fachlichen Felder eines Profils, das ohne dieses Feld erstellt wurde.
+    """
+    if not job_profile:
+        return []
+    explicit = job_profile.get("non_checkable_requirements") or []
+    if explicit:
+        # Dedup case-insensitive, Reihenfolge erhalten.
+        seen: set[str] = set()
+        out: list[str] = []
+        for it in explicit:
+            t = (it or "").strip()
+            if not t:
+                continue
+            k = t.lower()
+            if k in seen:
+                continue
+            seen.add(k)
+            out.append(t)
+        return out
     items = _collect_all_requirements(job_profile)
     _, not_checkable = filter_objectively_checkable_requirements(items)
     return not_checkable
