@@ -605,7 +605,7 @@ def candidates_to_dataframe(
         }
         if job_profile is not None:
             cov = calculate_requirement_coverage(job_profile, d)
-            row["Übereinstimmung"] = (
+            row["Abgleich"] = (
                 f"{cov['percent']} %" if cov["computed"] else "—"
             )
             req_rows = evaluate_candidate_requirements(job_profile, d)
@@ -680,7 +680,70 @@ def _evidence_for(query: str, cv_data: dict) -> str | None:
     return None
 
 
-# Synonym-Tabelle für eine nutzerfreundliche Übereinstimmungs-Prüfung.
+def find_source_excerpt(requirement: str, cv_data: dict) -> str | None:
+    """Liefert eine kurze, konkrete Fundstelle aus dem Lebenslauf.
+
+    Sucht zuerst in der evidence-Liste; sonst in Skills, Zertifikaten,
+    Sprachen und Berufserfahrung; sonst über bekannte Synonyme. Liefert
+    None, wenn nichts Belastbares gefunden wurde.
+    """
+    if not requirement:
+        return None
+    ev = _evidence_for(requirement, cv_data)
+    if ev:
+        return ev
+
+    crit_low = requirement.lower()
+
+    def _from_list(label: str, items: list[str], needle: str) -> str | None:
+        for it in items:
+            if it and (needle in it.lower() or it.lower() in needle):
+                preview = ", ".join(items)[:160]
+                return f"{label}: {preview}"
+        return None
+
+    skills = cv_data.get("skills") or []
+    hit = _from_list("Skills", skills, crit_low)
+    if hit:
+        return hit
+    certs = cv_data.get("certificates") or []
+    hit = _from_list("Zertifikate", certs, crit_low)
+    if hit:
+        return hit
+    for l in cv_data.get("languages") or []:
+        name = (l.get("language") or "").lower()
+        if name and (name in crit_low or crit_low in name):
+            lvl = l.get("level") or "ohne Niveau"
+            return f"Sprachen: {l.get('language','?')} – {lvl}"
+    for exp in cv_data.get("experience") or []:
+        text = " ".join(
+            x for x in [exp.get("role"), exp.get("company"), exp.get("description")] if x
+        )
+        if crit_low in text.lower():
+            snippet = (exp.get("description") or "")[:160] or text[:160]
+            return f"{exp.get('role','?')} @ {exp.get('company','?')}: {snippet}"
+
+    # Synonym-Fallback
+    for syn in _synonyms_of(crit_low):
+        if not syn:
+            continue
+        hit = _from_list(f"Skills (sinngemäß: {syn})", skills, syn)
+        if hit:
+            return hit
+        for exp in cv_data.get("experience") or []:
+            text = " ".join(
+                x for x in [exp.get("role"), exp.get("company"), exp.get("description")] if x
+            )
+            if syn in text.lower():
+                snippet = (exp.get("description") or "")[:160] or text[:160]
+                return (
+                    f"{exp.get('role','?')} @ {exp.get('company','?')} "
+                    f"(sinngemäß: {syn}): {snippet}"
+                )
+    return None
+
+
+
 # Bidirektional: jeder Eintrag matcht in beide Richtungen.
 SYNONYMS: dict[str, list[str]] = {
     "excel": ["tabellenkalkulation", "ms excel", "microsoft excel", "spreadsheet"],
@@ -2251,10 +2314,7 @@ with main_tab_candidates:
         df = candidates_to_dataframe(filtered, job_profile_state)
         st.dataframe(df, use_container_width=True, hide_index=True)
         if job_profile_state:
-            st.caption(
-                "„Übereinstimmung“ = Abdeckungsgrad objektiv gefundener "
-                "Anforderungen. Keine Bewertung, keine Sortierung."
-            )
+            st.caption("„Abgleich“ = nur fachliche Anforderungen, keine Sortierung.")
 
         options = [
             f"{c['data'].get('name') or '(ohne Name)'} – {c['filename']}"
@@ -2298,7 +2358,7 @@ with main_tab_candidates:
                             <div class="coverage-box">
                                 <div class="coverage-value">{coverage['percent']} %</div>
                                 <div class="coverage-label">
-                                    Übereinstimmung mit Stellenprofil
+                                    Abgleich
                                 </div>
                             </div>
                             """,
@@ -2356,172 +2416,107 @@ with main_tab_candidates:
                             + (f" · {e['period']}" if e.get('period') else "")
                         )
 
-                # ---- Stellenprofil-Checkliste (Anforderungen je Bewerber) ----
+                # ---- Anforderungen (kompaktes Widget je Anforderung) ----
                 req_rows = evaluate_candidate_requirements(
                     st.session_state.job_profile, cv_data
                 )
+
+                # "Unklar" wird im UI als "Teilweise" angezeigt
+                # (Status-Liste reduziert auf 3 Klassen).
+                def _ui_status(internal: str) -> tuple[str, str]:
+                    if internal == "vorhanden":
+                        return ("✅", "Vorhanden")
+                    if internal == "nicht_gefunden":
+                        return ("❌", "Nicht gefunden")
+                    # teilweise_vorhanden + unklar → ⚠️ Teilweise
+                    return ("⚠️", "Teilweise")
+
                 if req_rows:
-                    counts_local = status_counts(req_rows)
-                    st.markdown("### Stellenprofil-Checkliste")
+                    counts_ui = {"vorhanden": 0, "teilweise": 0, "nicht_gefunden": 0}
+                    for r in req_rows:
+                        if r["status"] == "vorhanden":
+                            counts_ui["vorhanden"] += 1
+                        elif r["status"] == "nicht_gefunden":
+                            counts_ui["nicht_gefunden"] += 1
+                        else:
+                            counts_ui["teilweise"] += 1
+                    st.markdown("### Anforderungen")
                     st.caption(
-                        f"✅ {counts_local['vorhanden']} vorhanden · "
-                        f"🟡 {counts_local['teilweise_vorhanden']} teilweise · "
-                        f"❌ {counts_local['nicht_gefunden']} nicht gefunden · "
-                        f"❓ {counts_local['unklar']} unklar  ·  Keine "
-                        "Bewertung der Person, keine Sortierung."
+                        f"✅ {counts_ui['vorhanden']} · "
+                        f"⚠️ {counts_ui['teilweise']} · "
+                        f"❌ {counts_ui['nicht_gefunden']}  ·  "
+                        "Nur fachliche Anforderungen aus dem Stellenprofil."
                     )
-                    check_df = pd.DataFrame(
-                        [
-                            {
-                                "Anforderung": r["requirement"],
-                                "Status": (
-                                    f"{STATUS_ICON[r['status']]} "
-                                    f"{STATUS_HUMAN[r['status']]}"
-                                ),
-                                "Kurzbegründung": r["reason"],
-                            }
-                            for r in req_rows
-                        ]
-                    )
-                    st.dataframe(
-                        check_df,
-                        use_container_width=True,
-                        hide_index=True,
-                    )
-
-                # ---- Qualifikationsabdeckung (nur leistungsbezogen) ----
-                qual = build_qualification_coverage(
-                    st.session_state.job_profile, cv_data
-                )
-                if qual["computed"]:
-                    st.markdown("### Qualifikationsabdeckung")
-                    st.markdown(
-                        f"**{qual['fulfilled']} von {qual['total']} "
-                        "leistungsbezogenen Anforderungen erfüllt**"
-                    )
-                    st.caption(
-                        "Nur Skills, Sprachen, Zertifikate und Berufserfahrung. "
-                        "Organisatorische/weiche Angaben fließen NICHT ein."
-                    )
-                    if qual["excluded"]:
+                    for r in req_rows:
+                        icon, label = _ui_status(r["status"])
+                        # Kurze, aussagekräftige Hinweistexte (eine Zeile)
+                        if r["status"] == "vorhanden":
+                            hinweis = "Im Lebenslauf gefunden."
+                        elif r["status"] == "nicht_gefunden":
+                            hinweis = "Kein Nachweis gefunden."
+                        else:
+                            hinweis = r.get("reason") or "Teilweise erkannt."
                         with st.expander(
-                            "Ausgeschlossene Anforderungen "
-                            f"({len(qual['excluded'])})"
+                            f"{icon} **{r['requirement']}** — {label} · {hinweis}"
                         ):
-                            for ex in qual["excluded"]:
-                                st.markdown(
-                                    f"- {ex['requirement']} — {ex['reason']}"
-                                )
+                            src = find_source_excerpt(r["requirement"], cv_data)
+                            if src:
+                                st.markdown(f"**Fundstelle im Lebenslauf:**")
+                                st.markdown(f"> {src}")
+                            else:
+                                st.caption("Keine konkrete Fundstelle erfasst.")
 
-                # ---- Informationslücken & Rückfragen (kombiniert) ----
+                # ---- Fehlende Angaben (kombiniert) ----
                 unclear_info = quality.get("unclear_information") or []
                 missing_info = quality.get("missing_information") or []
-                if unclear_info or missing_info or followups_q:
-                    st.markdown("### Informationslücken & Rückfragen")
-                    if missing_info:
-                        st.markdown("**Fehlende Informationen**")
-                        for m in missing_info:
-                            st.markdown(f"- {m}")
-                    if unclear_info:
-                        st.markdown("**Unklare Informationen**")
-                        for u in unclear_info:
-                            st.markdown(f"- {u}")
-                    if followups_q:
-                        st.markdown("**Rückfragevorschläge**")
-                        for q in followups_q:
-                            st.markdown(f"- {q}")
-                        st.caption(
-                            "Es wird keine E-Mail automatisch versendet."
-                        )
+                if missing_info or unclear_info:
+                    st.markdown("### Fehlende Angaben")
+                    col_a, col_b = st.columns(2)
+                    with col_a:
+                        if missing_info:
+                            st.markdown("**Fehlt**")
+                            for m in missing_info:
+                                st.markdown(f"- {m}")
+                    with col_b:
+                        if unclear_info:
+                            st.markdown("**Unklar**")
+                            for u in unclear_info:
+                                st.markdown(f"- {u}")
 
-                # Optionale Roh-Daten
+                # ---- Inline Feedback + Technische Details ----
+                with st.expander("Feedback geben"):
+                    st.caption(
+                        "Feedback verbessert nur die Extraktion, nicht die Auswahl."
+                    )
+                    with st.form("feedback_form", clear_on_submit=True):
+                        category = st.selectbox(
+                            "Art der Korrektur", FEEDBACK_CATEGORIES
+                        )
+                        note = st.text_area(
+                            "Anmerkung",
+                            placeholder=(
+                                "z. B. „SQL wurde übersehen“ oder "
+                                "„Sprache Französisch falsch erkannt“"
+                            ),
+                        )
+                        submitted = st.form_submit_button("Feedback speichern")
+                        if submitted:
+                            if not note.strip():
+                                st.warning("Bitte eine Anmerkung eingeben.")
+                            else:
+                                add_feedback(
+                                    cv_data.get("name", ""), category, note
+                                )
+                                log_audit(
+                                    action="Feedback gespeichert",
+                                    target=cv_data.get("name", "")
+                                    or selected["filename"],
+                                    result_type=category,
+                                )
+                                st.success("Feedback gespeichert.")
+
                 with st.expander("Technische Details (JSON)"):
                     st.json(cv_data)
-
-            # ---- Sub-Tabs: Checkliste · Datenqualität · Feedback ----
-            (
-                tab_checklist,
-                tab_quality,
-                tab_feedback,
-            ) = st.tabs(
-                [
-                    "Kriterien-Checkliste",
-                    "Datenqualität",
-                    "Feedback",
-                ]
-            )
-
-            with tab_checklist:
-                if st.session_state.job_profile:
-                    st.caption(
-                        "Vier Status: vorhanden · teilweise vorhanden · "
-                        "unklar · nicht gefunden. Keine Bewertung."
-                    )
-                    render_checklist(st.session_state.job_profile, cv_data)
-                else:
-                    st.info("Kein Stellenprofil hinterlegt.")
-
-            with tab_quality:
-                st.caption("Datenqualität — keine Bewertung der Person.")
-                if quality.get("_error"):
-                    st.error(f"Prüfung fehlgeschlagen: {quality['_error']}")
-
-                missing = quality.get("missing_information", [])
-                st.markdown(
-                    f"**Fehlende Informationen ({len(missing)})**"
-                )
-                if missing:
-                    for item in missing:
-                        st.markdown(f"- {item}")
-                else:
-                    st.caption("Keine fehlenden Informationen erkannt.")
-
-                unclear = quality.get("unclear_information", [])
-                st.markdown(f"**Unklare Informationen ({len(unclear)})**")
-                if unclear:
-                    for item in unclear:
-                        st.markdown(f"- {item}")
-                else:
-                    st.caption("Keine unklaren Informationen erkannt.")
-
-                extra_issues = cv_data.get("data_quality_issues", [])
-                if extra_issues:
-                    with st.expander(
-                        f"CV-Extraktions-Hinweise ({len(extra_issues)})"
-                    ):
-                        for issue in extra_issues:
-                            st.markdown(f"- {issue}")
-
-            with tab_feedback:
-                st.caption(
-                    "Feedback verbessert nur die Extraktion, nicht die Auswahl."
-                )
-                with st.form("feedback_form", clear_on_submit=True):
-                    category = st.selectbox(
-                        "Art der Korrektur", FEEDBACK_CATEGORIES
-                    )
-                    note = st.text_area(
-                        "Anmerkung",
-                        placeholder=(
-                            "z. B. „SQL wurde übersehen“ oder "
-                            "„Sprache Französisch falsch erkannt“"
-                        ),
-                    )
-                    submitted = st.form_submit_button("Feedback speichern")
-                    if submitted:
-                        if not note.strip():
-                            st.warning("Bitte eine Anmerkung eingeben.")
-                        else:
-                            add_feedback(
-                                cv_data.get("name", ""), category, note
-                            )
-                            log_audit(
-                                action="Feedback gespeichert",
-                                target=cv_data.get("name", "")
-                                or selected["filename"],
-                                result_type=category,
-                            )
-                            st.success("Feedback gespeichert.")
         else:
             st.write("Keine Bewerber entsprechen den Filtern.")
 
