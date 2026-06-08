@@ -595,29 +595,27 @@ def _short_languages(d: dict) -> str:
 def candidates_to_dataframe(
     candidates: list[dict], job_profile: dict | None = None
 ) -> pd.DataFrame:
-    """Kompakte Übersichtstabelle — Status-Counts statt langer Fließtexte."""
+    """Kompakte Übersichtstabelle ohne Prozentlogik als Hauptanzeige."""
     rows = []
     for c in candidates:
         d = c["data"]
-        q = c.get("quality") or {}
+        skills = d.get("skills") or []
+        top_skills = ", ".join(skills[:4]) + (
+            f" +{len(skills) - 4}" if len(skills) > 4 else ""
+        )
         row = {
             "Name": d.get("name") or NICHT_GEFUNDEN,
         }
         if job_profile is not None:
-            cov = calculate_requirement_coverage(job_profile, d)
-            row["Abgleich"] = (
-                f"{cov['percent']} %" if cov["computed"] else "—"
-            )
             req_rows = evaluate_candidate_requirements(job_profile, d)
             counts = status_counts(req_rows)
-            row["✅ Vorhanden"] = counts["vorhanden"]
-            row["🟡 Teilweise"] = counts["teilweise_vorhanden"]
-            row["❌ Nicht gefunden"] = counts["nicht_gefunden"]
-            row["❓ Unklar"] = counts["unklar"]
-        row["Informationslücken"] = (
-            len(q.get("missing_information") or [])
-            + len(q.get("unclear_information") or [])
-        )
+            total = len(req_rows)
+            row["Gefunden"] = (
+                f"{counts['Gefunden']} / {total}" if total else "—"
+            )
+            row["Klärungspunkte"] = counts["Teilweise gefunden"]
+        row["Wichtigste Skills"] = top_skills or "—"
+        row["Sprachen"] = _short_languages(d)
         rows.append(row)
     return pd.DataFrame(rows)
 
@@ -746,7 +744,10 @@ def find_source_excerpt(requirement: str, cv_data: dict) -> str | None:
 
 # Bidirektional: jeder Eintrag matcht in beide Richtungen.
 SYNONYMS: dict[str, list[str]] = {
-    "excel": ["tabellenkalkulation", "ms excel", "microsoft excel", "spreadsheet"],
+    "excel": [
+        "tabellenkalkulation", "ms excel", "microsoft excel", "spreadsheet",
+        "ms office", "microsoft office", "office",
+    ],
     "ms office": ["microsoft office", "office", "office-paket", "office paket"],
     "office": ["ms office", "microsoft office", "office-paket"],
     "deutsch": ["deutschkenntnisse", "german", "muttersprache deutsch"],
@@ -1041,6 +1042,112 @@ def is_performance_criterion(text: str) -> bool:
     return True
 
 
+# Soft-Skill / nicht-automatisch-prüfbar — wenn ein Stichwort auftaucht,
+# wird die Anforderung NICHT in den fachlichen Abgleich aufgenommen.
+SOFT_REQUIREMENT_KEYWORDS: tuple[str, ...] = (
+    "kreativität", "kreativ",
+    "offenheit", "offen für",
+    "motivation", "motiviert", "motivierten",
+    "teamfähig", "teamplayer", "teamarbeit",
+    "kommunikationsstärke", "kommunikativ", "kommunikationsfähig",
+    "belastbar", "belastbarkeit",
+    "eigeninitiative", "eigenverantwortlich", "eigenverantwortung",
+    "lernbereitschaft", "lernbereit",
+    "kulturelle passung", "cultural fit", "team-fit",
+    "persönlichkeit", "persoenlichkeit",
+    "mindset",
+    "leidenschaft", "passion", "passioniert", "begeistert",
+    "flexibilität", "flexibel",
+    "technische affinität", "tech-affinität",
+    "selbstständige arbeitsweise", "selbständige arbeitsweise",
+    "selbstständig", "selbständig",
+    "proaktiv", "proaktives denken",
+    "innovationsfähigkeit", "innovativ",
+    "hands-on", "hands on",
+    "soft skill", "soft-skill", "soft skills",
+    "engagement", "engagiert",
+    "zuverlässig", "zuverlässigkeit",
+    "verantwortungsbewusst", "verantwortungsvoll",
+    "lösungsorientiert", "loesungsorientiert",
+    "kundenorientiert", "serviceorientiert",
+    "freundlich", "sympathisch",
+)
+
+
+def is_objectively_checkable(text: str) -> bool:
+    """True, wenn die Anforderung objektiv aus einem CV prüfbar ist.
+
+    Schließt organisatorische Angaben (Gehalt, Arbeitszeit, Standort …)
+    UND weiche/nicht-messbare Anforderungen (Kreativität, Teamfähigkeit,
+    Motivation, Persönlichkeit, technische Affinität …) aus.
+    """
+    if not text or not text.strip():
+        return False
+    if not is_performance_criterion(text):
+        return False
+    low = text.lower()
+    for kw in SOFT_REQUIREMENT_KEYWORDS:
+        if kw in low:
+            return False
+    return True
+
+
+def filter_objectively_checkable_requirements(
+    items: list[str],
+) -> tuple[list[str], list[str]]:
+    """Partitioniert eine Liste in (prüfbar, nicht_prüfbar)."""
+    checkable: list[str] = []
+    not_checkable: list[str] = []
+    for it in items or []:
+        text = (it or "").strip()
+        if not text:
+            continue
+        if is_objectively_checkable(text):
+            checkable.append(text)
+        else:
+            not_checkable.append(text)
+    return checkable, not_checkable
+
+
+def _collect_all_requirements(job_profile: dict | None) -> list[str]:
+    """Sammelt alle Anforderungstexte aus dem Stellenprofil (dedupliziert)."""
+    if not job_profile:
+        return []
+    items: list[str] = []
+    for key in (
+        "must_criteria",
+        "nice_criteria",
+        "desired_skills",
+        "desired_languages",
+        "desired_certificates",
+        "desired_experience",
+    ):
+        for it in job_profile.get(key) or []:
+            t = (it or "").strip()
+            if t:
+                items.append(t)
+    seen: set[str] = set()
+    out: list[str] = []
+    for it in items:
+        k = it.lower()
+        if k in seen:
+            continue
+        seen.add(k)
+        out.append(it)
+    return out
+
+
+def get_not_checkable_requirements(job_profile: dict | None) -> list[str]:
+    """Liefert nur die nicht automatisch prüfbaren Anforderungen."""
+    items = _collect_all_requirements(job_profile)
+    _, not_checkable = filter_objectively_checkable_requirements(items)
+    return not_checkable
+
+
+# Kompatibilitäts-Alias: extract_job_requirements = analyze_job_profile
+extract_job_requirements = analyze_job_profile
+
+
 # Übersetzung interner Status → menschlich
 QUALIFICATION_STATUS_LABEL = {
     "vorhanden": "Erfüllt",
@@ -1278,80 +1385,72 @@ def _evaluate_language_requirement(
 def evaluate_candidate_requirements(
     job_profile: dict | None, candidate_data: dict
 ) -> list[dict]:
-    """Zentrale Checkliste der Stellenprofil-Anforderungen pro Bewerber.
+    """Zentraler Abgleich der **fachlich prüfbaren** Anforderungen.
 
-    Geht alle Anforderungs-Listen des Stellenprofils durch und liefert pro
-    Anforderung einen sachlichen Eintrag mit Status und Kurzbegründung:
-        [{"requirement", "status", "reason", "category"}]
-    Wendet zuerst die sprach-spezifische Logik (Muttersprache, GER-Niveau)
-    an und nutzt sonst die bestehende check_criterion()-Logik. Keine
-    Bewertung der Person, keine Sortierung, keine Empfehlung.
+    Nicht-automatisch-prüfbare Anforderungen (Kreativität, Teamfähigkeit,
+    Motivation, …) und organisatorische Angaben (Gehalt, Standort, …)
+    werden über filter_objectively_checkable_requirements() ausgeschlossen
+    und nicht in dieser Liste zurückgegeben — sie sind über
+    get_not_checkable_requirements(job_profile) abrufbar.
+
+    Liefert pro prüfbarer Anforderung:
+        {"requirement", "status", "reason", "evidence"}
+    Status-Werte (UI-Schreibweise):
+        "Gefunden" · "Teilweise gefunden" · "Nicht gefunden"
     """
     if not job_profile:
         return []
-    categories = [
-        ("must_criteria", "Muss-Kriterium"),
-        ("nice_criteria", "Kann-Kriterium"),
-        ("desired_skills", "Skill"),
-        ("desired_languages", "Sprache"),
-        ("desired_certificates", "Zertifikat"),
-        ("desired_experience", "Berufserfahrung"),
-    ]
+    all_items = _collect_all_requirements(job_profile)
+    checkable, _ = filter_objectively_checkable_requirements(all_items)
     rows: list[dict] = []
-    seen: set[str] = set()
-    for key, label in categories:
-        for crit in job_profile.get(key) or []:
-            text = (crit or "").strip()
-            if not text:
-                continue
-            k = (label + "|" + text).lower()
-            if k in seen:
-                continue
-            seen.add(k)
-            # Sprach-spezifische Bewertung zuerst
-            lang_res = _evaluate_language_requirement(text, candidate_data)
-            if lang_res is not None:
-                rows.append(
-                    {
-                        "requirement": text,
-                        "status": lang_res["status"],
-                        "reason": lang_res["reason"],
-                        "category": label,
-                    }
-                )
-                continue
+    for text in checkable:
+        # Sprach-spezifische Bewertung zuerst (Muttersprache, GER-Niveau)
+        lang_res = _evaluate_language_requirement(text, candidate_data)
+        if lang_res is not None:
+            internal = lang_res["status"]
+            reason = lang_res["reason"]
+        else:
             res = check_criterion(text, candidate_data)
-            status = res["status"]
+            internal = res["status"]
             note = (res.get("note") or "").strip()
-            if status == "vorhanden":
-                reason = f"„{text}“ im Lebenslauf gefunden."
-            elif status == "teilweise_vorhanden":
+            if internal == "vorhanden":
+                reason = "Im Lebenslauf gefunden."
+            elif internal == "teilweise_vorhanden":
                 reason = note or "Ähnliche Qualifikation erkannt."
-            elif status == "unklar":
-                reason = note or "Angabe vorhanden, aber unklar."
+            elif internal == "unklar":
+                reason = note or "Angabe vorhanden, Niveau/Detail unklar."
             else:
-                reason = "Kein Hinweis im Lebenslauf gefunden."
-            rows.append(
-                {
-                    "requirement": text,
-                    "status": status,
-                    "reason": reason,
-                    "category": label,
-                }
-            )
+                reason = "Kein Nachweis im Lebenslauf gefunden."
+        # UI-Status: nur drei Werte; "unklar" → "Teilweise gefunden".
+        if internal == "vorhanden":
+            label = "Gefunden"
+        elif internal == "nicht_gefunden":
+            label = "Nicht gefunden"
+        else:
+            label = "Teilweise gefunden"
+        evidence = find_source_excerpt(text, candidate_data) or ""
+        rows.append(
+            {
+                "requirement": text,
+                "status": label,
+                "reason": reason,
+                "evidence": evidence,
+            }
+        )
     return rows
 
 
 def status_counts(rows: list[dict]) -> dict[str, int]:
-    """Zählt die vier Status in einer Anforderungs-Liste."""
+    """Zählt die UI-Status in einer evaluate_candidate_requirements-Liste."""
     counts = {
-        "vorhanden": 0,
-        "teilweise_vorhanden": 0,
-        "nicht_gefunden": 0,
-        "unklar": 0,
+        "Gefunden": 0,
+        "Teilweise gefunden": 0,
+        "Nicht gefunden": 0,
     }
     for r in rows:
-        counts[r["status"]] = counts.get(r["status"], 0) + 1
+        s = r.get("status")
+        if s in counts:
+            counts[s] += 1
     return counts
 
 
@@ -2032,6 +2131,21 @@ with st.container(border=True):
                         target=profile.get("role", "(ohne Titel)"),
                         result_type="strukturiertes Stellenprofil",
                     )
+                    # Aufteilung in prüfbar / nicht prüfbar protokollieren
+                    _all_req = _collect_all_requirements(profile)
+                    _check, _soft = filter_objectively_checkable_requirements(
+                        _all_req
+                    )
+                    log_audit(
+                        action="fachlich prüfbare Anforderungen extrahiert",
+                        target=profile.get("role", "(ohne Titel)"),
+                        result_type=f"{len(_check)} prüfbar",
+                    )
+                    log_audit(
+                        action="nicht automatisch prüfbare Anforderungen erkannt",
+                        target=profile.get("role", "(ohne Titel)"),
+                        result_type=f"{len(_soft)} weich/soft",
+                    )
                     st.session_state._flash.append(
                         ("success", "Stellenprofil strukturiert.")
                     )
@@ -2166,6 +2280,28 @@ with st.container(border=True):
                             )
                             st.session_state.processed_files.add(f.name)
                             ok += 1
+                            # Abgleich der prüfbaren Anforderungen protokollieren
+                            if st.session_state.job_profile:
+                                _req = evaluate_candidate_requirements(
+                                    st.session_state.job_profile, data
+                                )
+                                _cnt = status_counts(_req)
+                                log_audit(
+                                    action="Anforderungen abgeglichen",
+                                    target=data.get("name", "") or f.name,
+                                    result_type=(
+                                        f"{_cnt['Gefunden']} gefunden, "
+                                        f"{_cnt['Teilweise gefunden']} teilweise, "
+                                        f"{_cnt['Nicht gefunden']} nicht gefunden"
+                                    ),
+                                )
+                                _klaer = _cnt["Teilweise gefunden"]
+                                if _klaer:
+                                    log_audit(
+                                        action="Klärungspunkte erkannt",
+                                        target=data.get("name", "") or f.name,
+                                        result_type=f"{_klaer} Klärungspunkte",
+                                    )
                         except Exception as e:  # noqa: BLE001
                             errors.append(f"Fehler bei {f.name}: {e}")
                             log_audit(
@@ -2195,8 +2331,9 @@ with st.container(border=True):
 # ---------------------------------------------------------------------------
 
 st.markdown(
-    '<div class="hil-line">Der Agent trifft keine Personalentscheidung. '
-    "Er erstellt keine Empfehlung. Der Geschäftsführer entscheidet final."
+    '<div class="hil-line">Der Agent bewertet keine Bewerber. '
+    "Er zeigt nur nachweisbare Informationen. "
+    "Die Entscheidung trifft der Geschäftsführer."
     "</div>",
     unsafe_allow_html=True,
 )
@@ -2332,9 +2469,18 @@ with main_tab_candidates:
             followups_q = (selected.get("followups") or {}).get(
                 "questions"
             ) or []
-            coverage = calculate_requirement_coverage(
+            # Neue Kern-Logik: Anforderungen abgleichen (ohne Prozent).
+            req_rows = evaluate_candidate_requirements(
                 st.session_state.job_profile, cv_data
             )
+            req_counts = status_counts(req_rows)
+            req_total = len(req_rows)
+            not_checkable = get_not_checkable_requirements(
+                st.session_state.job_profile
+            )
+            klaerung_items = [
+                r for r in req_rows if r["status"] == "Teilweise gefunden"
+            ]
 
             # ---- Detailfenster (Card, kompakt, mit Badges) ----
             with st.container(border=True):
@@ -2352,20 +2498,20 @@ with main_tab_candidates:
                         if sub:
                             st.caption(sub)
                 with head_r:
-                    if coverage["computed"]:
+                    if req_total:
                         st.markdown(
                             f"""
                             <div class="coverage-box">
-                                <div class="coverage-value">{coverage['percent']} %</div>
+                                <div class="coverage-value">{req_counts['Gefunden']} / {req_total}</div>
                                 <div class="coverage-label">
-                                    Abgleich
+                                    fachlich gefunden
                                 </div>
                             </div>
                             """,
                             unsafe_allow_html=True,
                         )
                     else:
-                        st.caption("Übereinstimmung: nicht berechnet")
+                        st.caption("Kein Stellenprofil hinterlegt.")
 
                 # Kurze Badge-Reihen
                 skills = cv_data.get("skills") or []
@@ -2416,55 +2562,62 @@ with main_tab_candidates:
                             + (f" · {e['period']}" if e.get('period') else "")
                         )
 
-                # ---- Anforderungen (kompaktes Widget je Anforderung) ----
-                req_rows = evaluate_candidate_requirements(
-                    st.session_state.job_profile, cv_data
-                )
-
-                # "Unklar" wird im UI als "Teilweise" angezeigt
-                # (Status-Liste reduziert auf 3 Klassen).
-                def _ui_status(internal: str) -> tuple[str, str]:
-                    if internal == "vorhanden":
-                        return ("✅", "Vorhanden")
-                    if internal == "nicht_gefunden":
-                        return ("❌", "Nicht gefunden")
-                    # teilweise_vorhanden + unklar → ⚠️ Teilweise
-                    return ("⚠️", "Teilweise")
-
+                # ---- Gefundene Anforderungen (fachlich prüfbar) ----
+                STATUS_ICON_MAP = {
+                    "Gefunden": "✅",
+                    "Teilweise gefunden": "⚠️",
+                    "Nicht gefunden": "❌",
+                }
                 if req_rows:
-                    counts_ui = {"vorhanden": 0, "teilweise": 0, "nicht_gefunden": 0}
-                    for r in req_rows:
-                        if r["status"] == "vorhanden":
-                            counts_ui["vorhanden"] += 1
-                        elif r["status"] == "nicht_gefunden":
-                            counts_ui["nicht_gefunden"] += 1
-                        else:
-                            counts_ui["teilweise"] += 1
-                    st.markdown("### Anforderungen")
+                    st.markdown("### Gefundene Anforderungen")
                     st.caption(
-                        f"✅ {counts_ui['vorhanden']} · "
-                        f"⚠️ {counts_ui['teilweise']} · "
-                        f"❌ {counts_ui['nicht_gefunden']}  ·  "
-                        "Nur fachliche Anforderungen aus dem Stellenprofil."
+                        f"Gefunden: **{req_counts['Gefunden']} von "
+                        f"{req_total}** fachlich prüfbaren Anforderungen "
+                        f"·  ✅ {req_counts['Gefunden']}  "
+                        f"⚠️ {req_counts['Teilweise gefunden']}  "
+                        f"❌ {req_counts['Nicht gefunden']}"
                     )
                     for r in req_rows:
-                        icon, label = _ui_status(r["status"])
-                        # Kurze, aussagekräftige Hinweistexte (eine Zeile)
-                        if r["status"] == "vorhanden":
-                            hinweis = "Im Lebenslauf gefunden."
-                        elif r["status"] == "nicht_gefunden":
-                            hinweis = "Kein Nachweis gefunden."
-                        else:
-                            hinweis = r.get("reason") or "Teilweise erkannt."
+                        icon = STATUS_ICON_MAP.get(r["status"], "•")
+                        hinweis = r.get("reason") or ""
                         with st.expander(
-                            f"{icon} **{r['requirement']}** — {label} · {hinweis}"
+                            f"{icon} **{r['requirement']}** — "
+                            f"{r['status']} · {hinweis}"
                         ):
-                            src = find_source_excerpt(r["requirement"], cv_data)
+                            src = r.get("evidence") or find_source_excerpt(
+                                r["requirement"], cv_data
+                            )
                             if src:
-                                st.markdown(f"**Fundstelle im Lebenslauf:**")
+                                st.markdown("**Fundstelle im Lebenslauf:**")
                                 st.markdown(f"> {src}")
                             else:
                                 st.caption("Keine konkrete Fundstelle erfasst.")
+
+                # ---- Nicht automatisch prüfbar (weiche/soft) ----
+                if not_checkable:
+                    st.markdown("### Nicht automatisch prüfbar")
+                    st.caption(
+                        "Diese Punkte werden nicht automatisch bewertet, "
+                        "da sie aus einem Lebenslauf nicht zuverlässig "
+                        "messbar sind."
+                    )
+                    for it in not_checkable:
+                        st.markdown(f"- {it}")
+
+                # ---- Klärungsbedarf (Teilweise gefunden + Rückfragen) ----
+                if klaerung_items or followups_q:
+                    st.markdown("### Klärungsbedarf")
+                    for r in klaerung_items:
+                        st.markdown(
+                            f"- **{r['requirement']}** — {r['reason']}"
+                        )
+                    if followups_q:
+                        st.markdown("**Rückfragevorschläge**")
+                        for q in followups_q:
+                            st.markdown(f"- {q}")
+                        st.caption(
+                            "Es wird keine E-Mail automatisch versendet."
+                        )
 
                 # ---- Fehlende Angaben (kombiniert) ----
                 unclear_info = quality.get("unclear_information") or []
