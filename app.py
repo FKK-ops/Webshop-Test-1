@@ -2732,49 +2732,6 @@ with main_tab_candidates:
                             else:
                                 st.caption("Keine konkrete Fundstelle erfasst.")
 
-                # ---- Nicht automatisch prüfbar (weiche/soft) ----
-                if not_checkable:
-                    st.markdown("### Nicht automatisch prüfbar")
-                    st.caption(
-                        "Diese Punkte werden nicht automatisch bewertet, "
-                        "da sie aus einem Lebenslauf nicht zuverlässig "
-                        "messbar sind."
-                    )
-                    for it in not_checkable:
-                        st.markdown(f"- {it}")
-
-                # ---- Klärungsbedarf (Teilweise gefunden + Rückfragen) ----
-                if klaerung_items or followups_q:
-                    st.markdown("### Klärungsbedarf")
-                    for r in klaerung_items:
-                        st.markdown(
-                            f"- **{r['requirement']}** — {r['reason']}"
-                        )
-                    if followups_q:
-                        st.markdown("**Rückfragevorschläge**")
-                        for q in followups_q:
-                            st.markdown(f"- {q}")
-                        st.caption(
-                            "Es wird keine E-Mail automatisch versendet."
-                        )
-
-                # ---- Fehlende Angaben (kombiniert) ----
-                unclear_info = quality.get("unclear_information") or []
-                missing_info = quality.get("missing_information") or []
-                if missing_info or unclear_info:
-                    st.markdown("### Fehlende Angaben")
-                    col_a, col_b = st.columns(2)
-                    with col_a:
-                        if missing_info:
-                            st.markdown("**Fehlt**")
-                            for m in missing_info:
-                                st.markdown(f"- {m}")
-                    with col_b:
-                        if unclear_info:
-                            st.markdown("**Unklar**")
-                            for u in unclear_info:
-                                st.markdown(f"- {u}")
-
                 # ---- Inline Feedback + Technische Details ----
                 with st.expander("Feedback geben"):
                     st.caption(
