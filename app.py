@@ -2233,88 +2233,104 @@ st.markdown(
 
 # ---- Hero (zweispaltig: Text links · Spline-3D rechts) ----
 
-# Linke Spalte: Text, CTAs, Trust-Badges (scoped Styles, klasse .rh*)
-_HERO_LEFT_HTML = """
+# Ein einziger, transparenter Hero-Stage: Text links · Spline-3D frei
+# schwebend rechts/mittig. Kein schwarzer Kasten, kein iframe-Rahmen.
+_HERO_HTML = """
+<!DOCTYPE html><html><head><meta charset="utf-8">
 <style>
-  .rh { padding: 28px 8px 12px 2px; font-family:'Inter',-apple-system,sans-serif; }
-  .rh-pill { display:inline-flex; align-items:center; gap:8px;
-    background:rgba(255,255,255,0.78); border:1px solid #E6E3F7;
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:100%; height:100%; overflow:hidden; background:transparent;
+    font-family:'Inter',-apple-system,Segoe UI,Roboto,sans-serif; }
+  /* heller Hero mit weiß/violett-blauem Verlauf */
+  .hero { position:relative; width:100%; height:100%; border-radius:28px;
+    overflow:hidden;
+    background:
+      radial-gradient(1100px 480px at 30% -12%, rgba(111,110,255,0.22), transparent 62%),
+      radial-gradient(760px 420px at 92% 14%, rgba(91,92,240,0.16), transparent 60%),
+      radial-gradient(620px 420px at 8% 96%, rgba(20,184,166,0.12), transparent 62%),
+      linear-gradient(165deg, #F4F3FF 0%, #FAF9FF 55%, #FFFFFF 100%);
+    border:1px solid rgba(255,255,255,0.7);
+    box-shadow:0 16px 44px rgba(32,20,92,0.10); }
+  /* Spline schwebt frei rechts/mittig, hinter dem Text, transparent */
+  .spline-float { position:absolute; right:3%; top:45%;
+    transform:translateY(-50%); z-index:0;
+    width:58%; height:108%; pointer-events:auto;
+    -webkit-mask-image:radial-gradient(closest-side at 55% 50%, #000 58%, transparent 100%);
+    mask-image:radial-gradient(closest-side at 55% 50%, #000 58%, transparent 100%); }
+  spline-viewer { width:100%; height:100%; background:transparent !important; }
+  /* heller Schein hinter dem Text → Lesbarkeit auch bei Überlappung */
+  .text-glow { position:absolute; left:-6%; top:0; width:70%; height:100%;
+    z-index:1; pointer-events:none;
+    background:radial-gradient(620px 520px at 28% 50%,
+      rgba(250,249,255,0.92), rgba(250,249,255,0.45) 46%, transparent 72%); }
+  .content { position:absolute; z-index:2; left:52px; top:50%;
+    transform:translateY(-50%); max-width:560px; }
+  .pill { display:inline-flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,0.82); border:1px solid #E6E3F7;
     color:#5B5CF0; font-weight:600; font-size:13px;
     padding:7px 16px; border-radius:999px; margin-bottom:22px;
     box-shadow:0 2px 12px rgba(32,20,92,0.07); }
-  .rh-pill b { color:#20145C; }
-  .rh h1 { font-size:56px !important; font-weight:800; line-height:1.04;
-    letter-spacing:-0.03em; color:#20145C !important; margin:0 0 16px; }
-  .rh h1 .accent { background:linear-gradient(120deg,#5B5CF0,#6F6EFF);
+  .pill b { color:#20145C; }
+  h1 { font-size:56px; font-weight:800; line-height:1.04; letter-spacing:-0.03em;
+    color:#20145C; margin-bottom:16px; }
+  h1 .accent { background:linear-gradient(120deg,#5B5CF0,#6F6EFF);
     -webkit-background-clip:text; background-clip:text;
     -webkit-text-fill-color:transparent; }
-  .rh .sub { color:#2E2459; font-size:20px; font-weight:600; max-width:520px;
+  .sub { color:#2E2459; font-size:20px; font-weight:600; max-width:520px;
     margin-bottom:10px; }
-  .rh .desc { color:#6B6391; font-size:16px; line-height:1.6; max-width:540px;
+  .desc { color:#6B6391; font-size:16px; line-height:1.6; max-width:520px;
     margin-bottom:26px; }
-  .rh .ctas { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:26px; }
-  .rh .cta1 { background:#20145C; color:#fff !important; font-weight:700;
-    font-size:15px; padding:14px 28px; border-radius:999px;
+  .ctas { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:26px; }
+  .cta1 { background:#20145C; color:#fff; font-weight:700; font-size:15px;
+    padding:14px 28px; border-radius:999px;
     box-shadow:0 12px 26px rgba(32,20,92,0.30); }
-  .rh .cta2 { background:rgba(255,255,255,0.92); color:#20145C !important;
-    font-weight:700; font-size:15px; padding:14px 28px; border-radius:999px;
+  .cta2 { background:rgba(255,255,255,0.92); color:#20145C; font-weight:700;
+    font-size:15px; padding:14px 28px; border-radius:999px;
     border:1.6px solid #20145C; }
-  .rh .trust { display:grid; grid-template-columns:1fr 1fr; gap:10px 22px;
-    max-width:560px; }
-  .rh .trust div { color:#5B4F86; font-size:13.5px; font-weight:600;
+  .trust { display:grid; grid-template-columns:1fr 1fr; gap:10px 22px;
+    max-width:540px; }
+  .trust div { color:#5B4F86; font-size:13.5px; font-weight:600;
     display:flex; align-items:center; gap:8px; }
-  .rh .trust div i { color:#5B5CF0; font-weight:800; font-style:normal; }
-  @media (max-width:900px){ .rh h1 { font-size:40px !important; } }
-</style>
-<div class="rh">
-  <div class="rh-pill">🤖 <b>Multi-Agent Recruiting System</b> · Human-in-the-Loop</div>
-  <h1>Recruiting <span class="accent">AI</span></h1>
-  <div class="sub">Strukturierte Bewerbungsanalyse für kleine und mittlere
-    Unternehmen.</div>
-  <div class="desc">Lebensläufe analysieren, Qualifikationen prüfen und
-    Informationslücken erkennen &ndash; in Sekunden statt stundenlanger
-    manueller Sichtung.</div>
-  <div class="ctas">
-    <span class="cta1">Stellenprofil analysieren</span>
-    <span class="cta2">Bewerbungen hochladen</span>
-  </div>
-  <div class="trust">
-    <div><i>✓</i> Multi-Agent Recruiting System</div>
-    <div><i>✓</i> Human-in-the-Loop</div>
-    <div><i>✓</i> Transparente Qualifikationsprüfung</div>
-    <div><i>✓</i> Keine automatischen Personalentscheidungen</div>
-  </div>
-</div>
-"""
-
-# Rechte Spalte: interaktive Spline-3D-Szene (eigener iframe via components.html)
-_SPLINE_HTML = """
-<!DOCTYPE html><html><head><meta charset="utf-8">
-<style>
-  html,body { margin:0; height:100%; overflow:hidden; background:transparent; }
-  .stage { position:relative; width:100%; height:100%;
-    border-radius:24px; overflow:hidden;
-    background:
-      radial-gradient(520px 420px at 60% 40%, rgba(111,110,255,0.18), transparent 65%),
-      radial-gradient(420px 360px at 30% 80%, rgba(20,184,166,0.12), transparent 65%),
-      linear-gradient(160deg, #F6F4FF 0%, #FBFAFF 60%, #FFFFFF 100%); }
-  spline-viewer { width:100%; height:100%; }
+  .trust div i { color:#5B5CF0; font-weight:800; font-style:normal; }
+  @media (max-width:900px){
+    .spline-float { opacity:0.35; }
+    h1 { font-size:40px; } .sub { font-size:17px; }
+  }
 </style></head>
 <body>
-  <div class="stage">
-    <spline-viewer loading-anim-type="none"
-      url="https://prod.spline.design/nCXAoqaZqHSCRuf9/scene.splinecode"></spline-viewer>
+  <div class="hero">
+    <div class="spline-float">
+      <spline-viewer loading-anim-type="none"
+        style="background:transparent"
+        url="https://prod.spline.design/nCXAoqaZqHSCRuf9/scene.splinecode"></spline-viewer>
+    </div>
+    <div class="text-glow"></div>
+    <div class="content">
+      <div class="pill">🤖 <b>Multi-Agent Recruiting System</b> · Human-in-the-Loop</div>
+      <h1>Recruiting <span class="accent">AI</span></h1>
+      <div class="sub">Strukturierte Bewerbungsanalyse für kleine und mittlere
+        Unternehmen.</div>
+      <div class="desc">Lebensläufe analysieren, Qualifikationen prüfen und
+        Informationslücken erkennen &ndash; in Sekunden statt stundenlanger
+        manueller Sichtung.</div>
+      <div class="ctas">
+        <span class="cta1">Stellenprofil analysieren</span>
+        <span class="cta2">Bewerbungen hochladen</span>
+      </div>
+      <div class="trust">
+        <div><i>✓</i> Multi-Agent Recruiting System</div>
+        <div><i>✓</i> Human-in-the-Loop</div>
+        <div><i>✓</i> Transparente Qualifikationsprüfung</div>
+        <div><i>✓</i> Keine automatischen Personalentscheidungen</div>
+      </div>
+    </div>
   </div>
   <script type="module"
     src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
 </body></html>
 """
 
-hero_left, hero_right = st.columns([1.05, 1], gap="large")
-with hero_left:
-    st.markdown(_HERO_LEFT_HTML, unsafe_allow_html=True)
-with hero_right:
-    components.html(_SPLINE_HTML, height=520)
+components.html(_HERO_HTML, height=560)
 
 # ---- CTA-Section mit Three.js Wireframe-Globus (isolierter iframe) ----
 
