@@ -2290,6 +2290,7 @@ _HERO_LEFT_HTML = """
 # Rechte Spalte: interaktiver Spline-Roboter (Maskottchen), horizontal/
 # vertikal zentriert, feste Höhe, transparenter Wrapper, kein Container/
 # Rahmen/Kreis, KEINE absolute Positionierung. Roboter schwebt frei.
+# Kein Orb-Fallback mehr: lädt der Roboter nicht, erscheint nur Text.
 _SPLINE_HTML = """
 <!DOCTYPE html><html><head><meta charset="utf-8">
 <style>
@@ -2299,14 +2300,34 @@ _SPLINE_HTML = """
     width:100%; height:100%; position:relative;
     background:transparent; border:none; box-shadow:none; overflow:hidden; }
   spline-viewer { width:100%; height:100%; background:transparent !important; }
+  .fallback { display:none; align-items:center; justify-content:center;
+    width:100%; height:100%; color:#6B6391; font-size:15px; font-weight:600;
+    text-align:center; padding:0 24px; }
 </style></head>
 <body>
   <div class="wrap">
-    <spline-viewer loading-anim-type="none" style="background:transparent"
+    <spline-viewer id="sv" loading-anim-type="none" style="background:transparent"
       url="https://prod.spline.design/oiWrxoCBrGOIbosk/scene.splinecode"></spline-viewer>
+    <div id="fb" class="fallback">Roboter konnte nicht geladen werden.</div>
   </div>
   <script type="module"
     src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
+  <script>
+    (function(){
+      var loaded=false;
+      var sv=document.getElementById('sv');
+      var fb=document.getElementById('fb');
+      function showFallback(){ if(sv){sv.style.display='none';} fb.style.display='flex'; }
+      if(sv){
+        sv.addEventListener('load', function(){ loaded=true; });
+        sv.addEventListener('error', showFallback);
+      }
+      window.addEventListener('error', function(e){
+        if(!loaded && e && e.target && e.target.tagName==='SCRIPT'){ showFallback(); }
+      }, true);
+      setTimeout(function(){ if(!loaded){ showFallback(); } }, 9000);
+    })();
+  </script>
 </body></html>
 """
 
@@ -2316,7 +2337,7 @@ hero_left, hero_right = st.columns(
 with hero_left:
     st.markdown(_HERO_LEFT_HTML, unsafe_allow_html=True)
 with hero_right:
-    components.html(_SPLINE_HTML, height=560)
+    components.html(_SPLINE_HTML, height=600)
 
 # ---- CTA-Section mit Three.js Wireframe-Globus (isolierter iframe) ----
 
