@@ -2230,31 +2230,186 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ---- Hero ----
+# ---- Hero (Spline 3D-Hintergrund + Text-Overlay, in isoliertem iframe) ----
 
-st.markdown(
-    """
-    <div class="hero">
-        <div class="hero-pill">🤖 <b>Multi-Agent Recruiting System</b> · Human-in-the-Loop</div>
-        <h1>Recruiting <span class="accent">AI</span></h1>
-        <div class="sub">Strukturierte Bewerbungsanalyse für kleine und mittlere
-        Unternehmen.</div>
-        <div class="sub2">Lebensläufe analysieren, Qualifikationen prüfen und
+_HERO_HTML = """
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:100%; height:100%; overflow:hidden;
+    font-family:'Inter',-apple-system,Segoe UI,Roboto,sans-serif; }
+  .hero {
+    position:relative; width:100%; height:100%; border-radius:28px;
+    overflow:hidden; text-align:center;
+    background:
+      radial-gradient(1100px 460px at 50% -10%, rgba(111,110,255,0.30), transparent 62%),
+      radial-gradient(800px 380px at 90% 6%, rgba(91,92,240,0.18), transparent 60%),
+      radial-gradient(700px 420px at 8% 90%, rgba(20,184,166,0.16), transparent 62%),
+      linear-gradient(180deg, #F3F2FF 0%, #FAF9FF 50%, #FFFFFF 100%);
+    border:1px solid rgba(255,255,255,0.7);
+    box-shadow:0 16px 44px rgba(32,20,92,0.10);
+  }
+  /* Spline scene fills the hero, sits behind the text */
+  spline-viewer { position:absolute; inset:0; width:100%; height:100%;
+    z-index:0; opacity:0.95; }
+  /* gradient fade so the 3D scene melts into the page */
+  .fade { position:absolute; inset:0; z-index:1; pointer-events:none;
+    background:
+      linear-gradient(180deg, rgba(243,242,255,0.0) 38%, rgba(250,249,255,0.55) 78%, #FFFFFF 100%),
+      radial-gradient(900px 520px at 50% 38%, rgba(255,255,255,0.55), transparent 70%); }
+  .content { position:absolute; inset:0; z-index:2; display:flex;
+    flex-direction:column; align-items:center; justify-content:center;
+    padding:40px 28px; pointer-events:none; }
+  .pill { display:inline-flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,0.78); backdrop-filter:blur(8px);
+    border:1px solid #E6E3F7; color:#5B5CF0; font-weight:600; font-size:13px;
+    padding:7px 16px; border-radius:999px; margin-bottom:22px;
+    box-shadow:0 2px 12px rgba(32,20,92,0.07); }
+  .pill b { color:#20145C; }
+  h1 { font-size:58px; font-weight:800; line-height:1.04; letter-spacing:-0.03em;
+    color:#20145C; margin-bottom:16px; max-width:920px; }
+  h1 .accent { background:linear-gradient(120deg,#5B5CF0,#6F6EFF);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .sub { color:#2E2459; font-size:20px; font-weight:600; max-width:720px; margin-bottom:8px; }
+  .sub2 { color:#6B6391; font-size:16px; line-height:1.6; max-width:680px; }
+  .ctas { display:flex; gap:14px; justify-content:center; margin:26px 0 22px; flex-wrap:wrap; }
+  .cta-primary { background:#20145C; color:#fff; font-weight:700; font-size:15px;
+    padding:14px 30px; border-radius:999px; box-shadow:0 12px 26px rgba(32,20,92,0.30); }
+  .cta-secondary { background:rgba(255,255,255,0.9); color:#20145C; font-weight:700; font-size:15px;
+    padding:14px 30px; border-radius:999px; border:1.6px solid #20145C; }
+  .trust { display:flex; gap:12px 28px; justify-content:center; flex-wrap:wrap; }
+  .trust span { color:#5B4F86; font-size:13.5px; font-weight:600;
+    display:inline-flex; align-items:center; gap:7px; }
+  .trust span i { color:#5B5CF0; font-weight:800; font-style:normal; }
+  @media (max-width:760px){ h1{font-size:40px;} .sub{font-size:17px;} }
+</style></head>
+<body>
+  <div class="hero">
+    <spline-viewer loading-anim-type="none"
+      url="https://prod.spline.design/nCXAoqaZqHSCRuf9/scene.splinecode"></spline-viewer>
+    <div class="fade"></div>
+    <div class="content">
+      <div class="pill">🤖 <b>Multi-Agent Recruiting System</b> · Human-in-the-Loop</div>
+      <h1>Recruiting <span class="accent">AI</span></h1>
+      <div class="sub">Strukturierte Bewerbungsanalyse für kleine und mittlere Unternehmen.</div>
+      <div class="sub2">Lebensläufe analysieren, Qualifikationen prüfen und
         Informationslücken erkennen &ndash; in Sekunden statt Stunden.</div>
-        <div class="cta-row">
-            <span class="cta-primary">Stellenprofil analysieren</span>
-            <span class="cta-secondary">Bewerbungen hochladen</span>
-        </div>
-        <div class="hero-trust">
-            <span><i>✓</i> Multi-Agent Recruiting System</span>
-            <span><i>✓</i> Human-in-the-Loop</span>
-            <span><i>✓</i> Transparente Qualifikationsprüfung</span>
-            <span><i>✓</i> Keine automatischen Personalentscheidungen</span>
-        </div>
+      <div class="ctas">
+        <span class="cta-primary">Stellenprofil analysieren</span>
+        <span class="cta-secondary">Bewerbungen hochladen</span>
+      </div>
+      <div class="trust">
+        <span><i>✓</i> Multi-Agent Recruiting System</span>
+        <span><i>✓</i> Human-in-the-Loop</span>
+        <span><i>✓</i> Transparente Qualifikationsprüfung</span>
+        <span><i>✓</i> Keine automatischen Personalentscheidungen</span>
+      </div>
     </div>
-    """,
-    unsafe_allow_html=True,
-)
+  </div>
+  <script type="module"
+    src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
+</body></html>
+"""
+
+st.iframe(_HERO_HTML, height=560)
+
+# ---- CTA-Section mit Three.js Wireframe-Globus (isolierter iframe) ----
+
+_GLOBE_HTML = """
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:100%; height:100%; overflow:hidden;
+    font-family:'Inter',-apple-system,Segoe UI,Roboto,sans-serif; }
+  .band { position:relative; width:100%; height:100%; border-radius:24px; overflow:hidden;
+    background:
+      radial-gradient(720px 420px at 80% 50%, rgba(111,110,255,0.22), transparent 60%),
+      linear-gradient(135deg, #1b1147 0%, #251a66 55%, #2c2080 100%);
+    border:1px solid rgba(255,255,255,0.12);
+    box-shadow:0 16px 44px rgba(32,20,92,0.18); }
+  #c { position:absolute; inset:0; z-index:0; display:block; }
+  .copy { position:absolute; z-index:2; left:48px; top:50%;
+    transform:translateY(-50%); max-width:460px; }
+  .copy h2 { font-size:30px; font-weight:800; line-height:1.15;
+    letter-spacing:-0.02em; color:#fff; margin-bottom:12px; }
+  .copy p { color:#C9C6F2; font-size:15px; line-height:1.6; margin-bottom:22px; }
+  .copy .b { display:inline-flex; gap:12px; flex-wrap:wrap; }
+  .btn1 { background:#6F6EFF; color:#fff; font-weight:700; font-size:14px;
+    padding:12px 24px; border-radius:999px; box-shadow:0 12px 28px rgba(111,110,255,0.45); }
+  .btn2 { background:rgba(255,255,255,0.10); color:#fff; font-weight:700; font-size:14px;
+    padding:12px 24px; border-radius:999px; border:1px solid rgba(255,255,255,0.30); }
+  @media (max-width:760px){ .copy{left:24px;max-width:60%} .copy h2{font-size:22px} }
+</style></head>
+<body>
+  <div class="band">
+    <canvas id="c"></canvas>
+    <div class="copy">
+      <h2>Transparente Bewerbungsanalyse &ndash; in Sekunden.</h2>
+      <p>Recruiting AI strukturiert Bewerbungsunterlagen automatisch:
+        nachvollziehbar, fair und ohne automatische Personalentscheidung.</p>
+      <div class="b">
+        <span class="btn1">Stellenprofil analysieren</span>
+        <span class="btn2">Bewerbungen hochladen</span>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+  (function(){
+    if(!window.THREE){return;}
+    var canvas=document.getElementById('c'); var band=canvas.parentElement;
+    var renderer=new THREE.WebGLRenderer({canvas:canvas,alpha:true,antialias:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    var scene=new THREE.Scene();
+    var camera=new THREE.PerspectiveCamera(45,1,0.1,100); camera.position.set(0,0,6.2);
+    var group=new THREE.Group(); group.position.x=1.7; group.rotation.z=0.32; group.rotation.x=0.16;
+    scene.add(group);
+    var R=1.65;
+    // wireframe globe
+    var wire=new THREE.LineSegments(
+      new THREE.WireframeGeometry(new THREE.SphereGeometry(R,30,20)),
+      new THREE.LineBasicMaterial({color:0x8E8CFF,transparent:true,opacity:0.32}));
+    group.add(wire);
+    // surface dots (fibonacci sphere)
+    var N=440, pos=[], ga=Math.PI*(3-Math.sqrt(5)), i;
+    for(i=0;i<N;i++){var y=1-(i/(N-1))*2; var rr=Math.sqrt(1-y*y); var th=ga*i;
+      pos.push(Math.cos(th)*rr*R, y*R, Math.sin(th)*rr*R);}
+    var dg=new THREE.BufferGeometry();
+    dg.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
+    var dots=new THREE.Points(dg, new THREE.PointsMaterial(
+      {color:0xCDCBFF,size:0.045,transparent:true,opacity:0.9}));
+    group.add(dots);
+    // connection arcs
+    function sp(){var u=Math.random(),v=Math.random();var th=2*Math.PI*u;var ph=Math.acos(2*v-1);
+      return new THREE.Vector3(R*Math.sin(ph)*Math.cos(th),R*Math.cos(ph),R*Math.sin(ph)*Math.sin(th));}
+    for(var k=0;k<16;k++){var a=sp(),b=sp();
+      var mid=a.clone().add(b).multiplyScalar(0.5).setLength(R*1.42);
+      var curve=new THREE.QuadraticBezierCurve3(a,mid,b);
+      var g=new THREE.BufferGeometry().setFromPoints(curve.getPoints(42));
+      group.add(new THREE.Line(g, new THREE.LineBasicMaterial(
+        {color:0x6F6EFF,transparent:true,opacity:0.5})));}
+    // Saturn-style rings
+    function ring(r0,r1,op){var rg=new THREE.RingGeometry(r0,r1,90);
+      var m=new THREE.MeshBasicMaterial({color:0x9B9AFF,side:THREE.DoubleSide,
+        transparent:true,opacity:op});
+      var mesh=new THREE.Mesh(rg,m); mesh.rotation.x=Math.PI/2; return mesh;}
+    var rings=new THREE.Group();
+    rings.add(ring(2.25,2.38,0.55)); rings.add(ring(2.55,2.62,0.32));
+    rings.add(ring(2.80,2.84,0.20));
+    rings.rotation.x=0.52; group.add(rings);
+    function size(){var w=band.clientWidth,h=band.clientHeight;
+      renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix();}
+    size(); window.addEventListener('resize',size);
+    function loop(){requestAnimationFrame(loop);
+      group.rotation.y+=0.0016; dots.rotation.y-=0.0006;
+      renderer.render(scene,camera);}
+    loop();
+  })();
+  </script>
+</body></html>
+"""
+
+st.iframe(_GLOBE_HTML, height=340)
 
 # ---- KPI-Karten (echte Daten aus der App) ----
 
