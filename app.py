@@ -1673,8 +1673,8 @@ def render_cv_summary(cv_data: dict) -> None:
 # ---------------------------------------------------------------------------
 
 st.set_page_config(
-    page_title="KMU Recruiting Agent",
-    page_icon="👥",
+    page_title="Recruiting AI",
+    page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -1687,100 +1687,129 @@ st.set_page_config(
 st.markdown(
     """
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    html, body, [class*="css"], .stApp { font-family: 'Inter', -apple-system, sans-serif; }
     [data-testid="stAppViewContainer"], [data-testid="stMain"] {
-        background: #07172A;
+        background: #F8FAFC;
     }
     [data-testid="stHeader"] { background: transparent; }
-    .stApp { color: #F8FAFC; }
+    .stApp { color: #0F172A; }
+    .block-container { padding-top: 2.2rem; max-width: 1240px; }
     [data-testid="stSidebar"] {
-        background: #0B1220 !important;
-        border-right: 1px solid #1E3A5F;
+        background: #FFFFFF !important;
+        border-right: 1px solid #E2E8F0;
     }
-    [data-testid="stSidebar"] * { color: #F8FAFC; }
+    [data-testid="stSidebar"] * { color: #0F172A; }
     [data-testid="stSidebar"] .stTextInput input,
     [data-testid="stSidebar"] .stTextArea textarea,
-    .stTextInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] {
-        background: #10233A !important;
-        color: #F8FAFC !important;
-        border: 1px solid #1E3A5F !important;
+    .stTextInput input, .stTextArea textarea,
+    .stSelectbox div[data-baseweb="select"] {
+        background: #FFFFFF !important;
+        color: #0F172A !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 10px !important;
+    }
+    .stTextInput input:focus, .stTextArea textarea:focus {
+        border-color: #2563EB !important;
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.12) !important;
     }
     [data-testid="stFileUploaderDropzone"] {
-        background: #10233A !important;
-        border: 1px dashed #1E3A5F !important;
-        color: #94A3B8 !important;
+        background: #F8FAFC !important;
+        border: 1.5px dashed #CBD5E1 !important;
+        color: #64748B !important;
+        border-radius: 12px !important;
     }
-    h1, h2, h3, h4, h5, h6 { color: #F8FAFC !important; }
-    [data-testid="stCaptionContainer"] { color: #94A3B8 !important; }
+    h1, h2, h3, h4, h5, h6 { color: #0F172A !important; letter-spacing: -0.01em; }
+    [data-testid="stCaptionContainer"] { color: #64748B !important; }
+    p, span, label, li { color: #334155; }
+    /* Buttons */
     .stButton > button, .stDownloadButton > button,
     [data-testid="stFormSubmitButton"] > button {
-        background: #14B8A6 !important;
-        color: #07172A !important;
+        background: #2563EB !important;
+        color: #FFFFFF !important;
         border: none !important;
-        border-radius: 8px !important;
+        border-radius: 10px !important;
         font-weight: 600 !important;
-        padding: 8px 18px !important;
+        padding: 9px 18px !important;
+        box-shadow: 0 1px 2px rgba(15,23,42,0.08) !important;
+        transition: background .15s ease, transform .05s ease;
     }
-    .stButton > button:hover { background: #0F9181 !important; }
+    .stButton > button:hover,
+    [data-testid="stFormSubmitButton"] > button:hover { background: #1E3A8A !important; }
+    .stButton > button:active { transform: translateY(1px); }
     .stButton > button:disabled {
-        background: #1E3A5F !important;
+        background: #E2E8F0 !important;
         color: #94A3B8 !important;
+        box-shadow: none !important;
     }
+    /* Tabs */
     [data-testid="stTabs"] [role="tablist"] {
-        background: #0F1F35;
-        border: 1px solid #1E3A5F;
-        border-radius: 10px;
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
         padding: 6px;
         gap: 4px;
         flex-wrap: wrap;
     }
     [data-testid="stTabs"] [role="tab"] {
-        color: #94A3B8 !important;
+        color: #64748B !important;
         background: transparent !important;
-        border-radius: 6px !important;
-        padding: 8px 14px !important;
-        font-weight: 500 !important;
+        border-radius: 8px !important;
+        padding: 8px 16px !important;
+        font-weight: 600 !important;
     }
     [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
-        background: #0F9181 !important;
-        color: #F8FAFC !important;
+        background: #EFF6FF !important;
+        color: #1E3A8A !important;
     }
+    /* Expander + dataframe + bordered containers */
     [data-testid="stExpander"] {
-        background: #0F1F35;
-        border: 1px solid #1E3A5F;
-        border-radius: 10px;
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
     }
-    [data-testid="stExpander"] summary { color: #F8FAFC !important; }
+    [data-testid="stExpander"] summary { color: #0F172A !important; }
     [data-testid="stDataFrame"] {
-        background: #0F1F35;
-        border: 1px solid #1E3A5F;
-        border-radius: 10px;
-        padding: 8px;
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 6px;
     }
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+    }
+    /* Generic card + section titles */
     .kmu-card {
-        background: #0F1F35;
-        border: 1px solid #1E3A5F;
-        border-radius: 14px;
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 16px;
         padding: 22px 24px;
         margin-bottom: 18px;
+        box-shadow: 0 1px 3px rgba(15,23,42,0.04);
     }
     .kmu-card-title {
-        color: #F8FAFC;
-        font-weight: 600;
-        font-size: 17px;
+        color: #0F172A;
+        font-weight: 700;
+        font-size: 18px;
         margin-bottom: 14px;
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
-    .kmu-card-title small { color: #94A3B8; font-weight: 400; font-size: 13px; }
+    .kmu-card-title small { color: #64748B; font-weight: 400; font-size: 13px; }
+    /* KPI cards */
     .kpi-card {
-        background: #0F1F35;
-        border: 1px solid #1E3A5F;
-        border-radius: 14px;
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 16px;
         padding: 20px 22px;
         position: relative;
         overflow: hidden;
-        min-height: 130px;
+        min-height: 132px;
+        box-shadow: 0 1px 3px rgba(15,23,42,0.04);
     }
     .kpi-card::before {
         content: "";
@@ -1788,184 +1817,209 @@ st.markdown(
         top: 0; left: 0; right: 0;
         height: 4px;
     }
-    .kpi-card.teal::before { background: #14B8A6; }
+    .kpi-icon {
+        width: 40px; height: 40px; border-radius: 10px;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 19px; margin-bottom: 12px;
+    }
+    .kpi-card.teal::before { background: #2563EB; }
     .kpi-card.orange::before { background: #F59E0B; }
-    .kpi-card.blue::before { background: #3B82F6; }
+    .kpi-card.blue::before { background: #1E3A8A; }
     .kpi-card.green::before { background: #10B981; }
     .kpi-card.red::before { background: #EF4444; }
+    .kpi-card.teal .kpi-icon { background: #EFF6FF; }
+    .kpi-card.orange .kpi-icon { background: #FEF3C7; }
+    .kpi-card.blue .kpi-icon { background: #E0E7FF; }
+    .kpi-card.green .kpi-icon { background: #D1FAE5; }
     .kpi-value {
         font-size: 34px;
-        font-weight: 700;
-        line-height: 1.2;
-        margin-top: 4px;
+        font-weight: 800;
+        line-height: 1.1;
+        color: #0F172A;
     }
-    .kpi-value.teal { color: #14B8A6; }
-    .kpi-value.orange { color: #F59E0B; }
-    .kpi-value.blue { color: #3B82F6; }
-    .kpi-value.green { color: #10B981; }
-    .kpi-value.red { color: #EF4444; }
+    .kpi-value.teal, .kpi-value.blue { color: #1E3A8A; }
+    .kpi-value.orange { color: #B45309; }
+    .kpi-value.green { color: #047857; }
+    .kpi-value.red { color: #B91C1C; }
     .kpi-label {
-        color: #94A3B8;
+        color: #64748B;
         font-size: 13px;
-        margin-top: 10px;
+        margin-top: 8px;
         line-height: 1.4;
+        font-weight: 500;
     }
-    .kmu-topbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: #0F1F35;
-        border: 1px solid #1E3A5F;
-        border-radius: 12px;
-        padding: 12px 22px;
+    /* App header (top navigation) */
+    .app-header {
+        display: flex; justify-content: space-between; align-items: center;
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 16px;
+        padding: 14px 24px;
         margin-bottom: 22px;
+        box-shadow: 0 1px 3px rgba(15,23,42,0.04);
     }
-    .kmu-topbar-left { font-size: 22px; color: #94A3B8; }
-    .kmu-topbar-right {
-        display: flex; align-items: center; gap: 18px; color: #94A3B8;
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; color: #1E3A8A; }
+    .brand .brand-mark {
+        width: 30px; height: 30px; border-radius: 9px;
+        background: linear-gradient(135deg,#2563EB,#1E3A8A);
+        color: #fff; display: inline-flex; align-items: center; justify-content: center;
+        font-size: 16px;
     }
-    .kmu-topbar-icon { position: relative; font-size: 18px; cursor: default; }
-    .kmu-topbar-icon .badge {
-        position: absolute; top: -8px; right: -8px;
-        background: #EF4444; color: white;
-        border-radius: 50%;
-        width: 16px; height: 16px;
-        font-size: 10px;
-        display: flex; align-items: center; justify-content: center;
-        font-weight: 700;
+    .app-nav { display: flex; gap: 6px; }
+    .app-nav span {
+        color: #475569; font-size: 14px; font-weight: 600;
+        padding: 8px 14px; border-radius: 9px;
     }
+    .app-nav span.active { background: #EFF6FF; color: #1E3A8A; }
+    .app-user { display: flex; align-items: center; gap: 10px; color: #475569; font-size: 14px; font-weight: 600; }
+    .app-avatar {
+        width: 34px; height: 34px; border-radius: 50%;
+        background: linear-gradient(135deg,#2563EB,#1E3A8A); color: #fff;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 13px;
+    }
+    /* Hero */
+    .hero {
+        background: linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 60%);
+        border: 1px solid #E2E8F0;
+        border-radius: 20px;
+        padding: 40px 44px;
+        margin-bottom: 24px;
+    }
+    .hero h1 { font-size: 40px !important; font-weight: 800; margin: 0 0 10px 0; letter-spacing: -0.02em; }
+    .hero .sub { color: #475569; font-size: 17px; font-weight: 500; max-width: 640px; }
+    .hero .sub2 { color: #64748B; font-size: 14px; margin-top: 6px; max-width: 640px; }
+    .hero .cta-row { display: flex; gap: 12px; margin-top: 22px; }
+    .cta-primary {
+        background: #2563EB; color: #fff !important; font-weight: 600;
+        padding: 11px 22px; border-radius: 11px; font-size: 14px;
+        box-shadow: 0 4px 12px rgba(37,99,235,0.25);
+    }
+    .cta-secondary {
+        background: #FFFFFF; color: #1E3A8A !important; font-weight: 600;
+        padding: 11px 22px; border-radius: 11px; font-size: 14px;
+        border: 1px solid #CBD5E1;
+    }
+    /* Upload tiles */
+    .upload-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+    .upload-ic {
+        width: 42px; height: 42px; border-radius: 12px;
+        display: inline-flex; align-items: center; justify-content: center; font-size: 20px;
+        background: #EFF6FF;
+    }
+    .upload-ic.green { background: #D1FAE5; }
+    .upload-title { font-weight: 700; font-size: 16px; color: #0F172A; }
+    .upload-desc { color: #64748B; font-size: 13px; margin-bottom: 8px; }
+    /* Candidate cards */
+    .cand-name { font-weight: 700; font-size: 16px; color: #0F172A; }
+    .cand-role { color: #64748B; font-size: 13px; margin-top: 2px; }
+    .cand-metric { font-size: 22px; font-weight: 800; color: #1E3A8A; }
+    .cand-metric-label { font-size: 11px; color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+    /* Headline / topbar legacy aliases (kept for compatibility) */
+    .kmu-topbar { display: none; }
+    .dashboard-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 18px; }
+    .dashboard-header h1 { font-size: 28px !important; margin: 0 !important; font-weight: 800; }
+    .dashboard-header .subtitle { color: #64748B; font-size: 14px; margin-top: 4px; }
     .kmu-avatar {
-        background: #14B8A6; color: #07172A;
+        background: linear-gradient(135deg,#2563EB,#1E3A8A); color: #fff;
         width: 32px; height: 32px; border-radius: 50%;
         display: inline-flex; align-items: center; justify-content: center;
         font-weight: 700; font-size: 13px;
     }
-    .dashboard-header {
-        display: flex; justify-content: space-between; align-items: flex-end;
-        margin-bottom: 20px;
-    }
-    .dashboard-header h1 { font-size: 30px !important; margin: 0 !important; font-weight: 700; }
-    .dashboard-header .subtitle { color: #94A3B8; font-size: 14px; margin-top: 4px; }
-    .kmu-quote {
-        background: #0F1F35;
-        border: 1px solid #1E3A5F;
-        border-radius: 14px;
-        padding: 22px 28px;
-        margin-bottom: 22px;
-        display: flex; gap: 18px; align-items: flex-start;
-    }
-    .kmu-quote-mark {
-        color: #14B8A6; font-size: 44px; line-height: 0.8;
-        font-family: Georgia, serif;
-    }
-    .kmu-quote-body { flex: 1; }
-    .kmu-quote-text { font-style: italic; color: #F8FAFC; font-size: 16px; line-height: 1.5; }
-    .kmu-quote-source { color: #14B8A6; font-size: 13px; margin-top: 14px; }
-    .kmu-disclaimer {
-        background: rgba(20, 184, 166, 0.08);
-        border: 1px solid #14B8A6;
-        border-left: 4px solid #14B8A6;
-        border-radius: 8px;
-        padding: 12px 18px;
-        color: #94A3B8;
-        font-size: 13px;
-        margin-bottom: 20px;
-        line-height: 1.5;
-    }
-    .kmu-disclaimer strong { color: #F8FAFC; }
+    /* Badges */
     .kmu-badge {
         display: inline-block;
         padding: 3px 10px;
-        border-radius: 12px;
+        border-radius: 999px;
         font-size: 11px;
         font-weight: 600;
+        margin: 1px 0;
     }
-    .kmu-badge-ok { background: rgba(16, 185, 129, 0.16); color: #10B981; }
-    .kmu-badge-warn { background: rgba(245, 158, 11, 0.16); color: #F59E0B; }
-    .kmu-badge-err { background: rgba(239, 68, 68, 0.16); color: #EF4444; }
-    .kmu-badge-info { background: rgba(59, 130, 246, 0.16); color: #3B82F6; }
+    .kmu-badge-ok { background: #D1FAE5; color: #047857; }
+    .kmu-badge-warn { background: #FEF3C7; color: #B45309; }
+    .kmu-badge-err { background: #FEE2E2; color: #B91C1C; }
+    .kmu-badge-info { background: #EFF6FF; color: #1D4ED8; }
+    .kmu-badge-muted { background: #F1F5F9; color: #64748B; }
+    /* Listen (Letzte Bewerbungen) */
     .kmu-list-item {
         display: flex; justify-content: space-between; align-items: center;
         padding: 12px 0;
-        border-bottom: 1px solid #1E3A5F;
+        border-bottom: 1px solid #E2E8F0;
         gap: 12px;
     }
     .kmu-list-item:last-child { border-bottom: none; }
     .kmu-list-avatar {
-        width: 36px; height: 36px; border-radius: 50%;
-        background: #0F9181; color: #07172A;
+        width: 38px; height: 38px; border-radius: 50%;
+        background: linear-gradient(135deg,#2563EB,#1E3A8A); color: #fff;
         display: inline-flex; align-items: center; justify-content: center;
         font-weight: 700; font-size: 13px; flex-shrink: 0;
     }
-    .kmu-list-name { font-weight: 600; color: #F8FAFC; font-size: 14px; }
-    .kmu-list-file { color: #94A3B8; font-size: 12px; margin-top: 2px; }
+    .kmu-list-name { font-weight: 600; color: #0F172A; font-size: 14px; }
+    .kmu-list-file { color: #64748B; font-size: 12px; margin-top: 2px; }
     .kmu-logo {
-        font-size: 17px; font-weight: 700; color: #14B8A6;
-        padding: 4px 8px 18px 8px;
+        font-size: 17px; font-weight: 800; color: #1E3A8A;
+        padding: 4px 8px 12px 8px;
     }
-    .kmu-nav-section {
-        color: #94A3B8; font-size: 11px; font-weight: 700;
-        letter-spacing: 1.5px; text-transform: uppercase;
-        margin: 16px 8px 6px 8px;
-    }
-    .kmu-nav-item {
-        display: flex; align-items: center; gap: 10px;
-        padding: 9px 12px; border-radius: 8px;
-        color: #94A3B8; font-size: 14px; margin: 2px 4px;
-    }
-    .kmu-nav-item.active {
-        background: #0F9181; color: #F8FAFC; font-weight: 600;
-    }
-    .kmu-nav-item .badge-num {
-        margin-left: auto;
-        background: #14B8A6; color: #07172A;
-        padding: 1px 7px; border-radius: 10px;
-        font-size: 11px; font-weight: 700;
-    }
+    /* Donut legend (kept) */
     .donut-wrap { display: flex; align-items: center; gap: 24px; }
     .donut-legend { font-size: 13px; flex: 1; }
     .donut-legend-row {
         display: flex; align-items: center; gap: 8px;
-        padding: 6px 0; color: #F8FAFC;
+        padding: 6px 0; color: #334155;
     }
     .donut-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
-    .donut-count { margin-left: auto; color: #94A3B8; font-weight: 600; }
+    .donut-count { margin-left: auto; color: #64748B; font-weight: 600; }
+    /* Question rows */
     .question-row {
-        background: #10233A;
-        border: 1px solid #1E3A5F;
-        border-radius: 8px;
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 10px;
         padding: 10px 14px;
         margin-bottom: 8px;
-        color: #F8FAFC;
+        color: #0F172A;
         font-size: 14px;
     }
     .question-row.reviewed { border-left: 4px solid #10B981; }
-    /* Zentrale Upload-/Start-Card (st.container(border=True)) */
-    [data-testid="stVerticalBlockBorderWrapper"] {
-        background: #0F1F35;
-        border: 1px solid #1E3A5F !important;
-        border-radius: 14px;
-    }
-    /* Dezente Human-in-the-Loop-Infozeile an der Navigation */
+    /* HiL line */
     .hil-line {
-        color: #94A3B8;
-        font-size: 12px;
-        padding: 8px 14px;
-        margin: 4px 0 10px 0;
-        border-left: 3px solid #14B8A6;
-        background: rgba(20, 184, 166, 0.06);
-        border-radius: 6px;
+        color: #475569;
+        font-size: 13px;
+        padding: 10px 16px;
+        margin: 4px 0 14px 0;
+        border-left: 3px solid #2563EB;
+        background: #EFF6FF;
+        border-radius: 8px;
+        font-weight: 500;
     }
-    /* Abdeckungsgrad-Anzeige (neutral, keine Bewertung) */
+    /* Coverage box */
     .coverage-box {
-        background: #10233A;
-        border: 1px solid #1E3A5F;
-        border-radius: 10px;
+        background: #EFF6FF;
+        border: 1px solid #DBEAFE;
+        border-radius: 12px;
         padding: 14px 18px;
         margin: 6px 0 4px 0;
+        text-align: center;
     }
-    .coverage-value { font-size: 26px; font-weight: 700; color: #14B8A6; }
-    .coverage-label { color: #94A3B8; font-size: 12px; margin-top: 4px; }
+    .coverage-value { font-size: 26px; font-weight: 800; color: #1E3A8A; }
+    .coverage-label { color: #64748B; font-size: 12px; margin-top: 4px; }
+    /* Timeline (Audit Log) */
+    .timeline { position: relative; margin: 6px 0 0 6px; padding-left: 22px; }
+    .timeline::before {
+        content: ""; position: absolute; left: 5px; top: 4px; bottom: 4px;
+        width: 2px; background: #E2E8F0;
+    }
+    .tl-item { position: relative; padding: 0 0 18px 4px; }
+    .tl-dot {
+        position: absolute; left: -22px; top: 3px;
+        width: 12px; height: 12px; border-radius: 50%;
+        background: #2563EB; border: 2px solid #fff;
+        box-shadow: 0 0 0 2px #DBEAFE;
+    }
+    .tl-time { color: #94A3B8; font-size: 12px; font-weight: 600; }
+    .tl-action { color: #0F172A; font-weight: 600; font-size: 14px; }
+    .tl-target { color: #64748B; font-size: 13px; }
+    .section-title { font-size: 20px; font-weight: 800; color: #0F172A; margin: 6px 0 2px 0; }
+    .section-sub { color: #64748B; font-size: 14px; margin-bottom: 16px; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -2068,10 +2122,10 @@ if "_coverage_logged" not in st.session_state:
 
 with st.sidebar:
     st.markdown(
-        '<div class="kmu-logo">👥 KMU Recruiting Agent</div>',
+        '<div class="kmu-logo">🤖 Recruiting AI</div>',
         unsafe_allow_html=True,
     )
-    st.caption("Demo-Version · KMU Recruiting Agent")
+    st.caption("Strukturierte Bewerbungsanalyse für KMU")
     st.divider()
     st.button("⚙️ Einstellungen", use_container_width=True)
     st.button("❔ Hilfe & Support", use_container_width=True)
@@ -2081,41 +2135,42 @@ with st.sidebar:
 # Topbar + Dashboard-Header
 # ---------------------------------------------------------------------------
 
+# ---- App-Header (Top-Navigation) ----
+
 st.markdown(
     """
-    <div class="kmu-topbar">
-        <div class="kmu-topbar-left">☰</div>
-        <div class="kmu-topbar-right">
-            <div class="kmu-topbar-icon">🔔<span class="badge">3</span></div>
-            <div class="kmu-topbar-icon">❔</div>
-            <span class="kmu-avatar">GF</span>
-            <span>Geschäftsführer ▾</span>
+    <div class="app-header">
+        <div class="brand"><span class="brand-mark">🤖</span> Recruiting AI</div>
+        <div class="app-nav">
+            <span class="active">Dashboard</span>
+            <span>Kandidaten</span>
+            <span>Stellenprofile</span>
+            <span>Audit Log</span>
         </div>
+        <div class="app-user"><span class="app-avatar">GF</span> Geschäftsführer ▾</div>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-header_left, header_right = st.columns([4, 1])
-with header_left:
-    st.markdown(
-        """
-        <div class="dashboard-header">
-            <div>
-                <h1>Dashboard</h1>
-                <div class="subtitle">Übersicht Ihrer Bewerbungen und Analysen</div>
-            </div>
+# ---- Hero ----
+
+st.markdown(
+    """
+    <div class="hero">
+        <h1>Recruiting AI</h1>
+        <div class="sub">Strukturierte Bewerbungsanalyse für kleine und mittlere
+        Unternehmen.</div>
+        <div class="sub2">Lebensläufe analysieren, Qualifikationen prüfen und
+        Informationslücken erkennen.</div>
+        <div class="cta-row">
+            <span class="cta-primary">Stelle analysieren</span>
+            <span class="cta-secondary">Bewerbungen hochladen</span>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
-with header_right:
-    st.markdown("<div style='height: 18px'></div>", unsafe_allow_html=True)
-    st.button(
-        "⬆ Bewerbungen hochladen",
-        use_container_width=True,
-        help="Stellenprofil & Lebensläufe lädst du unten im Bereich „Stellenprofil & Bewerbungen“ hoch.",
-    )
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 # ---- KPI-Karten (echte Daten aus der App) ----
 
@@ -2129,19 +2184,31 @@ total_questions = sum(
     len((c.get("followups") or {}).get("questions") or [])
     for c in st.session_state.candidates
 )
-buckets = {"vollständig": 0, "informationslücken": 0, "unvollständig": 0}
-for c in st.session_state.candidates:
-    buckets[quality_bucket(c.get("quality"))] += 1
-complete_count = buckets["vollständig"]
-gap_count = buckets["informationslücken"] + buckets["unvollständig"]
+# Gefundene Anforderungen (Summe über alle Kandidaten, bestehende Funktion)
+total_found = 0
+if st.session_state.job_profile:
+    for c in st.session_state.candidates:
+        total_found += status_counts(
+            evaluate_candidate_requirements(
+                st.session_state.job_profile, c["data"]
+            )
+        )["Gefunden"]
+
+st.markdown(
+    '<div class="dashboard-header"><div><h1>Dashboard</h1>'
+    '<div class="subtitle">Übersicht Ihrer Bewerbungen und Analysen</div>'
+    "</div></div>",
+    unsafe_allow_html=True,
+)
 
 kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 with kpi1:
     st.markdown(
         f"""
         <div class="kpi-card teal">
+            <div class="kpi-icon">📄</div>
             <div class="kpi-value teal">{total_candidates}</div>
-            <div class="kpi-label">analysierte Bewerbungen</div>
+            <div class="kpi-label">Analysierte Bewerbungen</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -2149,9 +2216,10 @@ with kpi1:
 with kpi2:
     st.markdown(
         f"""
-        <div class="kpi-card orange">
-            <div class="kpi-value orange">{total_gaps}</div>
-            <div class="kpi-label">erkannte Informationslücken (Datenqualität)</div>
+        <div class="kpi-card blue">
+            <div class="kpi-icon">✅</div>
+            <div class="kpi-value blue">{total_found}</div>
+            <div class="kpi-label">Gefundene Anforderungen</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -2159,9 +2227,10 @@ with kpi2:
 with kpi3:
     st.markdown(
         f"""
-        <div class="kpi-card blue">
-            <div class="kpi-value blue">{total_questions}</div>
-            <div class="kpi-label">vorbereitete Rückfragen (warten auf Freigabe)</div>
+        <div class="kpi-card orange">
+            <div class="kpi-icon">🔍</div>
+            <div class="kpi-value orange">{total_gaps}</div>
+            <div class="kpi-label">Informationslücken</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -2170,8 +2239,9 @@ with kpi4:
     st.markdown(
         f"""
         <div class="kpi-card green">
-            <div class="kpi-value green">{complete_count} / {gap_count}</div>
-            <div class="kpi-label">vollständig / mit Informationslücken</div>
+            <div class="kpi-icon">💬</div>
+            <div class="kpi-value green">{total_questions}</div>
+            <div class="kpi-label">Vorbereitete Rückfragen</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -2236,7 +2306,13 @@ with st.container(border=True):
     up_left, up_right = st.columns(2)
 
     with up_left:
-        st.markdown("**Stellenprofil eingeben**")
+        st.markdown(
+            '<div class="upload-head"><span class="upload-ic">📋</span>'
+            '<div><div class="upload-title">Stellenprofil</div>'
+            '<div class="upload-desc">Anforderungen aus der Stellenanzeige '
+            "strukturieren.</div></div></div>",
+            unsafe_allow_html=True,
+        )
         job_url = st.text_input(
             "Stellen-URL (optional, derzeit deaktiviert)",
             placeholder="https://… (in dieser Demo nicht aktiv)",
@@ -2306,7 +2382,13 @@ with st.container(border=True):
             st.rerun()
 
     with up_right:
-        st.markdown("**Lebensläufe hochladen (PDF)**")
+        st.markdown(
+            '<div class="upload-head"><span class="upload-ic green">📎</span>'
+            '<div><div class="upload-title">Bewerbungen</div>'
+            '<div class="upload-desc">PDF-Lebensläufe hochladen und '
+            "analysieren.</div></div></div>",
+            unsafe_allow_html=True,
+        )
         uploaded = st.file_uploader(
             "PDF-Dateien",
             type=["pdf"],
@@ -2587,22 +2669,87 @@ with main_tab_candidates:
                     job_profile_state, _c["data"]
                 )
                 log_coverage_once(_c, _cov, job_profile_state)
-        df = candidates_to_dataframe(filtered, job_profile_state)
-        st.dataframe(df, use_container_width=True, hide_index=True)
-        if job_profile_state:
-            st.caption("„Abgleich“ = nur fachliche Anforderungen, keine Sortierung.")
-
-        options = [
-            f"{c['data'].get('name') or '(ohne Name)'} – {c['filename']}"
-            for c in filtered
-        ]
+        # Moderne Kandidaten-Karten (statt Tabelle)
+        options = filtered
         if options:
-            idx = st.selectbox(
-                "Kandidat öffnen",
-                range(len(options)),
-                format_func=lambda i: options[i],
+            fnames = [c["filename"] for c in filtered]
+            if st.session_state.get("_open_cand") not in fnames:
+                st.session_state._open_cand = fnames[0]
+
+            for _c in filtered:
+                _d = _c["data"]
+                _name = _d.get("name") or "(ohne Name)"
+                _role = ""
+                if _d.get("experience"):
+                    _role = _d["experience"][0].get("role", "")
+                _q = _c.get("quality") or {}
+                _has_gaps = bool(
+                    _q.get("missing_information") or _q.get("unclear_information")
+                )
+                _badge_cls = "kmu-badge-warn" if _has_gaps else "kmu-badge-ok"
+                _badge_lbl = (
+                    "Informationslücken" if _has_gaps else "Analyse abgeschlossen"
+                )
+                if job_profile_state:
+                    _rc = status_counts(
+                        evaluate_candidate_requirements(job_profile_state, _d)
+                    )
+                    _tot = (
+                        _rc["Gefunden"]
+                        + _rc["Teilweise gefunden"]
+                        + _rc["Nicht gefunden"]
+                    )
+                    _metric = f"{_rc['Gefunden']} / {_tot}" if _tot else "—"
+                else:
+                    _metric = "—"
+                _skills = _d.get("skills") or []
+                _skills_txt = ", ".join(_skills[:4]) + (
+                    f" +{len(_skills) - 4}" if len(_skills) > 4 else ""
+                )
+                _is_open = _c["filename"] == st.session_state._open_cand
+                with st.container(border=True):
+                    cc = st.columns([3, 1.3, 3, 1.5])
+                    with cc[0]:
+                        st.markdown(
+                            f'<div class="kmu-list-avatar" style="float:left;'
+                            f'margin-right:10px">{initials_for(_name)}</div>'
+                            f'<div class="cand-name">{_name}</div>'
+                            f'<div class="cand-role">{_role or _c["filename"]}</div>',
+                            unsafe_allow_html=True,
+                        )
+                    with cc[1]:
+                        st.markdown(
+                            f'<div class="cand-metric">{_metric}</div>'
+                            '<div class="cand-metric-label">Abgleich</div>',
+                            unsafe_allow_html=True,
+                        )
+                    with cc[2]:
+                        st.markdown(
+                            '<div class="cand-metric-label">Skills gefunden</div>'
+                            f'<div style="color:#334155;font-size:13px;'
+                            f'margin:2px 0 6px">{_skills_txt or "—"}</div>'
+                            f'<span class="kmu-badge {_badge_cls}">{_badge_lbl}</span>',
+                            unsafe_allow_html=True,
+                        )
+                    with cc[3]:
+                        if st.button(
+                            "Profil geöffnet" if _is_open else "Profil öffnen",
+                            key=f"open_{_c['filename']}",
+                            disabled=_is_open,
+                            use_container_width=True,
+                        ):
+                            st.session_state._open_cand = _c["filename"]
+                            st.rerun()
+
+            st.markdown(
+                '<div class="section-title">Kandidatenprofil</div>',
+                unsafe_allow_html=True,
             )
-            selected = filtered[idx]
+            selected = next(
+                c
+                for c in filtered
+                if c["filename"] == st.session_state._open_cand
+            )
             cv_data = selected["data"]
             quality = selected.get("quality") or {}
             followups_q = (selected.get("followups") or {}).get(
@@ -2652,54 +2799,64 @@ with main_tab_candidates:
                     else:
                         st.caption("Kein Stellenprofil hinterlegt.")
 
-                # Kurze Badge-Reihen
-                skills = cv_data.get("skills") or []
-                if skills:
-                    badges = " ".join(
-                        f'<span class="kmu-badge kmu-badge-info">{s}</span>'
-                        for s in skills[:12]
-                    )
-                    more = (
-                        f' <span class="kmu-badge kmu-badge-info">+{len(skills) - 12}</span>'
-                        if len(skills) > 12
-                        else ""
-                    )
-                    st.markdown(
-                        f"**Skills** {badges}{more}",
-                        unsafe_allow_html=True,
-                    )
-                else:
-                    st.markdown(f"**Skills:** {NICHT_GEFUNDEN}")
+                st.divider()
+                col_left, col_right = st.columns(2)
 
-                lang_text = _short_languages(cv_data)
-                st.markdown(f"**Sprachen:** {lang_text}")
-
-                certs = cv_data.get("certificates") or []
-                st.markdown(
-                    f"**Zertifikate:** {', '.join(certs) if certs else NICHT_GEFUNDEN}"
-                )
-
-                # Berufserfahrung + Ausbildung als kurze Stichpunkte
-                exp = cv_data.get("experience") or []
-                if exp:
+                with col_left:
+                    # Berufserfahrung
                     st.markdown("**Berufserfahrung**")
-                    for e in exp[:5]:
-                        line = (
-                            f"- {e.get('role') or '?'} @ "
-                            f"{e.get('company') or '?'}"
-                        )
-                        if e.get("period"):
-                            line += f" · {e['period']}"
-                        st.markdown(line)
-                edu = cv_data.get("education") or []
-                if edu:
+                    exp = cv_data.get("experience") or []
+                    if exp:
+                        for e in exp[:5]:
+                            line = (
+                                f"- {e.get('role') or '?'} @ "
+                                f"{e.get('company') or '?'}"
+                            )
+                            if e.get("period"):
+                                line += f" · {e['period']}"
+                            st.markdown(line)
+                    else:
+                        st.caption(NICHT_GEFUNDEN)
+                    # Ausbildung
                     st.markdown("**Ausbildung**")
-                    for e in edu[:3]:
-                        st.markdown(
-                            f"- {e.get('degree') or '?'}, "
-                            f"{e.get('institution') or '?'}"
-                            + (f" · {e['period']}" if e.get('period') else "")
+                    edu = cv_data.get("education") or []
+                    if edu:
+                        for e in edu[:3]:
+                            st.markdown(
+                                f"- {e.get('degree') or '?'}, "
+                                f"{e.get('institution') or '?'}"
+                                + (f" · {e['period']}" if e.get('period') else "")
+                            )
+                    else:
+                        st.caption(NICHT_GEFUNDEN)
+
+                with col_right:
+                    # Skills als Badges
+                    skills = cv_data.get("skills") or []
+                    if skills:
+                        badges = " ".join(
+                            f'<span class="kmu-badge kmu-badge-info">{s}</span>'
+                            for s in skills[:12]
                         )
+                        more = (
+                            f' <span class="kmu-badge kmu-badge-info">+{len(skills) - 12}</span>'
+                            if len(skills) > 12
+                            else ""
+                        )
+                        st.markdown(
+                            f"**Skills**<br>{badges}{more}",
+                            unsafe_allow_html=True,
+                        )
+                    else:
+                        st.markdown(f"**Skills:** {NICHT_GEFUNDEN}")
+                    # Sprachen
+                    st.markdown(f"**Sprachen:** {_short_languages(cv_data)}")
+                    # Zertifikate
+                    certs = cv_data.get("certificates") or []
+                    st.markdown(
+                        f"**Zertifikate:** "
+                        f"{', '.join(certs) if certs else NICHT_GEFUNDEN}"
+                    )
 
                 # ---- Gefundene Anforderungen (fachlich prüfbar) ----
                 STATUS_ICON_MAP = {
@@ -2864,11 +3021,34 @@ with main_tab_audit:
     st.caption(f"Autonomie-Stufe: {AUTONOMY_LEVEL}")
     log_entries = load_audit_log()
     if log_entries:
-        st.dataframe(
-            pd.DataFrame(log_entries),
-            use_container_width=True,
-            hide_index=True,
+        # Timeline / Activity-Feed (neueste zuerst)
+        tl_items = []
+        for entry in log_entries[-40:][::-1]:
+            ts = entry.get("timestamp", "")
+            # Uhrzeit aus ISO-Timestamp extrahieren (HH:MM), Fallback ts
+            t_disp = ts
+            if "T" in ts:
+                t_disp = ts.split("T", 1)[1][:5]
+            action = entry.get("action", "")
+            target = entry.get("target", "")
+            result = entry.get("result_type", "")
+            sub = " · ".join(x for x in [target, result] if x)
+            tl_items.append(
+                f'<div class="tl-item"><div class="tl-dot"></div>'
+                f'<div class="tl-time">{t_disp}</div>'
+                f'<div class="tl-action">{action}</div>'
+                f'<div class="tl-target">{sub}</div></div>'
+            )
+        st.markdown(
+            '<div class="timeline">' + "".join(tl_items) + "</div>",
+            unsafe_allow_html=True,
         )
+        with st.expander("Tabellenansicht"):
+            st.dataframe(
+                pd.DataFrame(log_entries),
+                use_container_width=True,
+                hide_index=True,
+            )
     else:
         st.info("Audit-Log ist leer.")
 
