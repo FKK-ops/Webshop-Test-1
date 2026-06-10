@@ -2231,113 +2231,154 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ---- Hero (zweispaltig: Text links · Spline-3D rechts) ----
-
-# Linke Spalte: Headline, Subheadline, Beschreibung, CTAs, Trust-Badges
-_HERO_LEFT_HTML = """
+# ---- Hero (eine einheitliche Fläche: Text links · CSS-Glass-Roboter rechts)
+# Inline gerendert (kein iframe, kein Spline-Modul) → verschmilzt nativ mit
+# dem Hero-Hintergrund. Keine Fehlermeldung, keine Card, kein Kasten.
+_HERO_HTML = """
 <style>
-  .rh { padding: 22px 8px 8px 2px; font-family:'Inter',-apple-system,sans-serif; }
+  .rhero { display:grid; grid-template-columns:1fr 1fr; align-items:center;
+    gap:24px; min-height:620px; padding:36px 48px; border-radius:28px;
+    overflow:visible; font-family:'Inter',-apple-system,sans-serif;
+    background:
+      radial-gradient(1000px 460px at 20% -10%, rgba(111,110,255,0.20), transparent 62%),
+      radial-gradient(760px 420px at 96% 12%, rgba(91,92,240,0.16), transparent 60%),
+      radial-gradient(620px 420px at 4% 98%, rgba(20,184,166,0.10), transparent 62%),
+      linear-gradient(160deg, #F4F3FF 0%, #FAF9FF 56%, #FFFFFF 100%);
+    border:1px solid rgba(255,255,255,0.7);
+    box-shadow:0 16px 44px rgba(32,20,92,0.10); }
   .rh-pill { display:inline-flex; align-items:center; gap:8px;
     background:rgba(255,255,255,0.82); border:1px solid #E6E3F7;
     color:#5B5CF0; font-weight:600; font-size:13px;
-    padding:7px 16px; border-radius:999px; margin-bottom:22px;
+    padding:7px 16px; border-radius:999px; margin-bottom:20px;
     box-shadow:0 2px 12px rgba(32,20,92,0.07); }
   .rh-pill b { color:#20145C; }
-  .rh h1 { font-size:54px !important; font-weight:800; line-height:1.05;
+  .rhero h1 { font-size:54px !important; font-weight:800; line-height:1.05;
     letter-spacing:-0.03em; color:#20145C !important; margin:0 0 16px; }
-  .rh h1 .accent { background:linear-gradient(120deg,#5B5CF0,#6F6EFF);
+  .rhero h1 .accent { background:linear-gradient(120deg,#5B5CF0,#6F6EFF);
     -webkit-background-clip:text; background-clip:text;
     -webkit-text-fill-color:transparent; }
-  .rh .sub { color:#2E2459; font-size:20px; font-weight:600; max-width:520px;
+  .rhero .sub { color:#2E2459; font-size:20px; font-weight:600; max-width:520px;
     margin-bottom:10px; }
-  .rh .desc { color:#6B6391; font-size:16px; line-height:1.6; max-width:540px;
+  .rhero .desc { color:#6B6391; font-size:16px; line-height:1.6; max-width:540px;
     margin-bottom:26px; }
-  .rh .ctas { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:26px; }
-  .rh .cta1 { background:#20145C; color:#fff !important; font-weight:700;
+  .rhero .ctas { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:26px; }
+  .rhero .cta1 { background:#20145C; color:#fff !important; font-weight:700;
     font-size:15px; padding:14px 28px; border-radius:999px;
     box-shadow:0 12px 26px rgba(32,20,92,0.30); }
-  .rh .cta2 { background:rgba(255,255,255,0.92); color:#20145C !important;
+  .rhero .cta2 { background:rgba(255,255,255,0.92); color:#20145C !important;
     font-weight:700; font-size:15px; padding:14px 28px; border-radius:999px;
     border:1.6px solid #20145C; }
-  .rh .trust { display:grid; grid-template-columns:1fr 1fr; gap:10px 22px;
+  .rhero .trust { display:grid; grid-template-columns:1fr 1fr; gap:10px 22px;
     max-width:560px; }
-  .rh .trust div { color:#5B4F86; font-size:13.5px; font-weight:600;
+  .rhero .trust div { color:#5B4F86; font-size:13.5px; font-weight:600;
     display:flex; align-items:center; gap:8px; }
-  .rh .trust div i { color:#5B5CF0; font-weight:800; font-style:normal; }
-  @media (max-width:900px){ .rh h1 { font-size:40px !important; } }
+  .rhero .trust div i { color:#5B5CF0; font-weight:800; font-style:normal; }
+  /* --- CSS-Glass-Roboter (rechts, frei schwebend, transparent) --- */
+  .robo-stage { display:flex; align-items:center; justify-content:center;
+    height:560px; overflow:visible; background:transparent; position:relative; }
+  .robo-glow { position:absolute; width:460px; height:460px; border-radius:50%;
+    background:radial-gradient(closest-side, rgba(111,110,255,0.26), transparent 70%);
+    filter:blur(8px); z-index:0; }
+  .robo-shadow { position:absolute; bottom:34px; width:210px; height:26px;
+    border-radius:50%; z-index:0;
+    background:radial-gradient(closest-side, rgba(32,20,92,0.22), transparent 72%);
+    filter:blur(3px); animation:shadowPulse 5.5s ease-in-out infinite; }
+  .robo { position:relative; width:280px; height:360px; z-index:1;
+    animation:floatY 5.5s ease-in-out infinite; }
+  .antenna { position:absolute; left:50%; top:6px; transform:translateX(-50%);
+    width:5px; height:34px; border-radius:4px;
+    background:linear-gradient(#9B9AFF,#5B5CF0); }
+  .bulb { position:absolute; left:50%; top:-8px; transform:translateX(-50%);
+    width:17px; height:17px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff, #6F6EFF 60%, #5B5CF0);
+    box-shadow:0 0 18px rgba(111,110,255,0.9);
+    animation:pulse 2.4s ease-in-out infinite; }
+  .head { position:absolute; left:50%; top:32px; transform:translateX(-50%);
+    width:208px; height:150px; border-radius:38px;
+    background:linear-gradient(160deg,#FFFFFF 0%,#ECEAFF 46%,#CFCCFF 100%);
+    border:1px solid rgba(255,255,255,0.85);
+    box-shadow: inset 0 6px 16px rgba(255,255,255,0.9),
+      inset 0 -16px 32px rgba(91,92,240,0.25), 0 26px 54px rgba(32,20,92,0.20); }
+  .visor { position:absolute; left:50%; top:36px; transform:translateX(-50%);
+    width:158px; height:78px; border-radius:42px; display:flex;
+    align-items:center; justify-content:center; gap:28px;
+    background:linear-gradient(160deg,#241A66,#3B3094);
+    box-shadow: inset 0 4px 12px rgba(0,0,0,0.35),
+      inset 0 -5px 12px rgba(143,140,255,0.45); }
+  .eye { width:22px; height:22px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff, #8E8CFF 55%, #5B5CF0);
+    box-shadow:0 0 14px rgba(143,140,255,0.95);
+    animation:blink 5s infinite; }
+  .body { position:absolute; left:50%; top:182px; transform:translateX(-50%);
+    width:176px; height:140px; border-radius:34px 34px 30px 30px;
+    background:linear-gradient(160deg,#FFFFFF,#DEDBFF 60%,#BDBAFF);
+    border:1px solid rgba(255,255,255,0.85);
+    box-shadow: inset 0 6px 16px rgba(255,255,255,0.9),
+      inset 0 -16px 30px rgba(91,92,240,0.25), 0 26px 54px rgba(32,20,92,0.18); }
+  .chest { position:absolute; left:50%; top:30px; transform:translateX(-50%);
+    width:62px; height:62px; border-radius:18px; display:flex;
+    align-items:center; justify-content:center;
+    background:linear-gradient(160deg,#6F6EFF,#5B5CF0);
+    box-shadow:0 0 22px rgba(111,110,255,0.6), inset 0 3px 8px rgba(255,255,255,0.5);
+    animation:pulse 2.8s ease-in-out infinite; }
+  .chest::after { content:""; width:22px; height:22px; border-radius:6px;
+    background:rgba(255,255,255,0.92); }
+  .arm { position:absolute; top:200px; width:26px; height:96px; border-radius:16px;
+    background:linear-gradient(160deg,#EDEBFF,#CBC8FF);
+    box-shadow:0 12px 24px rgba(32,20,92,0.16); }
+  .arm.left { left:6px; transform-origin:top center;
+    animation:wave 3.6s ease-in-out infinite; }
+  .arm.right { right:6px; transform:rotate(-8deg); }
+  @keyframes floatY { 0%,100%{transform:translateY(-12px)} 50%{transform:translateY(12px)} }
+  @keyframes pulse { 0%,100%{opacity:.75} 50%{opacity:1} }
+  @keyframes blink { 0%,92%,100%{transform:scaleY(1)} 95%{transform:scaleY(0.12)} }
+  @keyframes wave { 0%,100%{transform:rotate(10deg)} 50%{transform:rotate(-6deg)} }
+  @keyframes shadowPulse { 0%,100%{transform:scale(0.9); opacity:.7}
+    50%{transform:scale(1.1); opacity:.45} }
+  @media (max-width:980px){
+    .rhero { grid-template-columns:1fr; min-height:auto; padding:30px 26px; }
+    .rhero h1 { font-size:40px !important; }
+    .robo-stage { height:420px; }
+  }
 </style>
-<div class="rh">
-  <div class="rh-pill">🤖 <b>Multi-Agent Recruiting System</b> · Human-in-the-Loop</div>
-  <h1>Recruiting <span class="accent">AI</span></h1>
-  <div class="sub">Strukturierte Bewerbungsanalyse für kleine und mittlere
-    Unternehmen.</div>
-  <div class="desc">Lebensläufe analysieren, Qualifikationen prüfen und
-    Informationslücken erkennen &ndash; in Sekunden statt stundenlanger
-    manueller Sichtung.</div>
-  <div class="ctas">
-    <span class="cta1">Stellenprofil analysieren</span>
-    <span class="cta2">Bewerbungen hochladen</span>
+<div class="rhero">
+  <div class="rhero-left">
+    <div class="rh-pill">🤖 <b>Multi-Agent Recruiting System</b> · Human-in-the-Loop</div>
+    <h1>Recruiting <span class="accent">AI</span></h1>
+    <div class="sub">Strukturierte Bewerbungsanalyse für kleine und mittlere
+      Unternehmen.</div>
+    <div class="desc">Lebensläufe analysieren, Qualifikationen prüfen und
+      Informationslücken erkennen &ndash; in Sekunden statt stundenlanger
+      manueller Sichtung.</div>
+    <div class="ctas">
+      <span class="cta1">Stellenprofil analysieren</span>
+      <span class="cta2">Bewerbungen hochladen</span>
+    </div>
+    <div class="trust">
+      <div><i>✓</i> Multi-Agent Recruiting System</div>
+      <div><i>✓</i> Human-in-the-Loop</div>
+      <div><i>✓</i> Transparente Qualifikationsprüfung</div>
+      <div><i>✓</i> Keine automatischen Personalentscheidungen</div>
+    </div>
   </div>
-  <div class="trust">
-    <div><i>✓</i> Multi-Agent Recruiting System</div>
-    <div><i>✓</i> Human-in-the-Loop</div>
-    <div><i>✓</i> Transparente Qualifikationsprüfung</div>
-    <div><i>✓</i> Keine automatischen Personalentscheidungen</div>
+  <div class="robo-stage">
+    <div class="robo-glow"></div>
+    <div class="robo-shadow"></div>
+    <div class="robo">
+      <div class="antenna"></div>
+      <div class="bulb"></div>
+      <div class="head">
+        <div class="visor"><span class="eye"></span><span class="eye"></span></div>
+      </div>
+      <div class="body"><div class="chest"></div></div>
+      <div class="arm left"></div>
+      <div class="arm right"></div>
+    </div>
   </div>
 </div>
 """
 
-# Rechte Spalte: interaktiver Spline-Roboter (Maskottchen), horizontal/
-# vertikal zentriert, feste Höhe, transparenter Wrapper, kein Container/
-# Rahmen/Kreis, KEINE absolute Positionierung. Roboter schwebt frei.
-# Kein Orb-Fallback mehr: lädt der Roboter nicht, erscheint nur Text.
-_SPLINE_HTML = """
-<!DOCTYPE html><html><head><meta charset="utf-8">
-<style>
-  html, body { margin:0; height:100%; background:transparent; overflow:hidden;
-    font-family:'Inter',-apple-system,sans-serif; }
-  .wrap { display:flex; align-items:center; justify-content:center;
-    width:100%; height:100%; position:relative;
-    background:transparent; border:none; box-shadow:none; overflow:hidden; }
-  spline-viewer { width:100%; height:100%; background:transparent !important; }
-  .fallback { display:none; align-items:center; justify-content:center;
-    width:100%; height:100%; color:#6B6391; font-size:15px; font-weight:600;
-    text-align:center; padding:0 24px; }
-</style></head>
-<body>
-  <div class="wrap">
-    <spline-viewer id="sv" loading-anim-type="none" style="background:transparent"
-      url="https://prod.spline.design/oiWrxoCBrGOIbosk/scene.splinecode"></spline-viewer>
-    <div id="fb" class="fallback">Roboter konnte nicht geladen werden.</div>
-  </div>
-  <script type="module"
-    src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
-  <script>
-    (function(){
-      var loaded=false;
-      var sv=document.getElementById('sv');
-      var fb=document.getElementById('fb');
-      function showFallback(){ if(sv){sv.style.display='none';} fb.style.display='flex'; }
-      if(sv){
-        sv.addEventListener('load', function(){ loaded=true; });
-        sv.addEventListener('error', showFallback);
-      }
-      window.addEventListener('error', function(e){
-        if(!loaded && e && e.target && e.target.tagName==='SCRIPT'){ showFallback(); }
-      }, true);
-      setTimeout(function(){ if(!loaded){ showFallback(); } }, 9000);
-    })();
-  </script>
-</body></html>
-"""
-
-hero_left, hero_right = st.columns(
-    [1.1, 1], gap="large", vertical_alignment="center"
-)
-with hero_left:
-    st.markdown(_HERO_LEFT_HTML, unsafe_allow_html=True)
-with hero_right:
-    components.html(_SPLINE_HTML, height=600)
+st.markdown(_HERO_HTML, unsafe_allow_html=True)
 
 # ---- CTA-Section mit Three.js Wireframe-Globus (isolierter iframe) ----
 
