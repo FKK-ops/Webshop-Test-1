@@ -1879,26 +1879,70 @@ st.markdown(
         font-weight: 700; font-size: 13px;
     }
     /* Hero */
+    /* ---- Hero (BigMarker-Stil) ---- */
     .hero {
-        background: linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 60%);
-        border: 1px solid #E2E8F0;
-        border-radius: 20px;
-        padding: 40px 44px;
-        margin-bottom: 24px;
+        position: relative;
+        text-align: center;
+        background:
+            radial-gradient(1100px 460px at 50% -8%, rgba(111,110,255,0.18), transparent 62%),
+            radial-gradient(800px 380px at 88% 8%, rgba(91,92,240,0.10), transparent 60%),
+            linear-gradient(180deg, #F3F2FF 0%, #FAF9FF 46%, #FFFFFF 100%);
+        border: 1px solid #ECE9FB;
+        border-radius: 28px;
+        padding: 58px 40px 50px;
+        margin-bottom: 26px;
+        overflow: hidden;
     }
-    .hero h1 { font-size: 40px !important; font-weight: 800; margin: 0 0 10px 0; letter-spacing: -0.02em; }
-    .hero .sub { color: #475569; font-size: 17px; font-weight: 500; max-width: 640px; }
-    .hero .sub2 { color: #64748B; font-size: 14px; margin-top: 6px; max-width: 640px; }
-    .hero .cta-row { display: flex; gap: 12px; margin-top: 22px; }
+    .hero-pill {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: #FFFFFF; border: 1px solid #E6E3F7;
+        color: #5B5CF0; font-weight: 600; font-size: 13px;
+        padding: 7px 16px; border-radius: 999px; margin-bottom: 24px;
+        box-shadow: 0 2px 12px rgba(32,20,92,0.07);
+    }
+    .hero-pill b { color: #20145C; }
+    .hero h1 {
+        font-size: 58px !important; font-weight: 800; line-height: 1.04;
+        letter-spacing: -0.03em; color: #20145C !important;
+        margin: 0 auto 18px; max-width: 920px;
+    }
+    .hero h1 .accent {
+        background: linear-gradient(120deg, #5B5CF0, #6F6EFF);
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .hero .sub {
+        color: #2E2459; font-size: 20px; font-weight: 600;
+        max-width: 720px; margin: 0 auto 8px;
+    }
+    .hero .sub2 {
+        color: #6B6391; font-size: 16px; line-height: 1.6;
+        max-width: 680px; margin: 0 auto;
+    }
+    .hero .cta-row {
+        display: flex; gap: 14px; justify-content: center;
+        margin: 28px 0 24px; flex-wrap: wrap;
+    }
     .cta-primary {
-        background: #2563EB; color: #fff !important; font-weight: 600;
-        padding: 11px 22px; border-radius: 11px; font-size: 14px;
-        box-shadow: 0 4px 12px rgba(37,99,235,0.25);
+        background: #20145C; color: #fff !important; font-weight: 700;
+        padding: 14px 30px; border-radius: 999px; font-size: 15px;
+        box-shadow: 0 12px 26px rgba(32,20,92,0.30);
     }
     .cta-secondary {
-        background: #FFFFFF; color: #1E3A8A !important; font-weight: 600;
-        padding: 11px 22px; border-radius: 11px; font-size: 14px;
-        border: 1px solid #CBD5E1;
+        background: #FFFFFF; color: #20145C !important; font-weight: 700;
+        padding: 14px 30px; border-radius: 999px; font-size: 15px;
+        border: 1.6px solid #20145C;
+    }
+    .hero-trust {
+        display: flex; gap: 12px 28px; justify-content: center;
+        flex-wrap: wrap; margin-top: 8px;
+    }
+    .hero-trust span {
+        color: #5B4F86; font-size: 13.5px; font-weight: 600;
+        display: inline-flex; align-items: center; gap: 7px;
+    }
+    .hero-trust span i {
+        color: #5B5CF0; font-weight: 800; font-style: normal;
     }
     /* Upload tiles */
     .upload-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
@@ -2158,14 +2202,21 @@ st.markdown(
 st.markdown(
     """
     <div class="hero">
-        <h1>Recruiting AI</h1>
+        <div class="hero-pill">🤖 <b>Multi-Agent Recruiting System</b> · Human-in-the-Loop</div>
+        <h1>Recruiting <span class="accent">AI</span></h1>
         <div class="sub">Strukturierte Bewerbungsanalyse für kleine und mittlere
         Unternehmen.</div>
         <div class="sub2">Lebensläufe analysieren, Qualifikationen prüfen und
-        Informationslücken erkennen.</div>
+        Informationslücken erkennen &ndash; in Sekunden statt Stunden.</div>
         <div class="cta-row">
-            <span class="cta-primary">Stelle analysieren</span>
+            <span class="cta-primary">Stellenprofil analysieren</span>
             <span class="cta-secondary">Bewerbungen hochladen</span>
+        </div>
+        <div class="hero-trust">
+            <span><i>✓</i> Multi-Agent Recruiting System</span>
+            <span><i>✓</i> Human-in-the-Loop</span>
+            <span><i>✓</i> Transparente Qualifikationsprüfung</span>
+            <span><i>✓</i> Keine automatischen Personalentscheidungen</span>
         </div>
     </div>
     """,
