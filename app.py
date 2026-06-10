@@ -2287,22 +2287,38 @@ _HERO_LEFT_HTML = """
 </div>
 """
 
-# Rechte Spalte: NUR der neue Spline-Roboter. Transparenter Wrapper,
-# keine Card, kein Rahmen, keine CSS-Orb, kein Fallback, keine Fehlermeldung.
+# Rechte Spalte: NUR der neue Spline-Roboter.
+# - Weiche radiale Fade-Maske → keine sichtbaren Kanten, verschmilzt
+#   mit dem hellen Hero-Hintergrund (kein iframe-Look, kein Kasten).
+# - 180°-Rotation gegen die „auf-dem-Kopf"-Darstellung der Spline-Szene.
+# - Pointer-Events bleiben aktiv → Roboter ist weiterhin interaktiv.
+# HINWEIS: Stimmt die Ausrichtung mit rotate(180deg) nicht vollständig
+# (z. B. Kamera-Höhe), muss das in der Spline-Szene selbst korrigiert
+# werden — wir zeigen hier aber keine alte Blase/Orb als Ersatz.
 _SPLINE_HTML = """
 <!DOCTYPE html><html><head><meta charset="utf-8">
 <style>
   html, body { margin:0; height:100%; background:transparent; overflow:hidden;
     font-family:'Inter',-apple-system,sans-serif; }
-  .wrap { display:flex; align-items:center; justify-content:center;
-    width:100%; height:100%;
-    background:transparent; border:none; box-shadow:none; overflow:visible; }
-  spline-viewer { width:100%; height:100%; background:transparent !important; }
+  .spline-hero-wrap {
+    position:relative; width:100%; height:100%;
+    background:transparent; border:none; box-shadow:none; overflow:hidden;
+    border-radius:32px;
+    -webkit-mask-image:radial-gradient(circle at center, black 55%, transparent 78%);
+    mask-image:radial-gradient(circle at center, black 55%, transparent 78%);
+  }
+  /* Ausrichtungs-Fix: Spline-Szene 180° drehen */
+  .rotor { position:absolute; inset:0;
+    transform:rotate(180deg); transform-origin:center center; }
+  spline-viewer { width:100%; height:100%; background:transparent !important;
+    display:block; border:none; }
 </style></head>
 <body>
-  <div class="wrap">
-    <spline-viewer loading-anim-type="none" style="background:transparent"
-      url="https://prod.spline.design/oiWrxoCBrGOIbosk/scene.splinecode"></spline-viewer>
+  <div class="spline-hero-wrap">
+    <div class="rotor">
+      <spline-viewer loading-anim-type="none" style="background:transparent"
+        url="https://prod.spline.design/oiWrxoCBrGOIbosk/scene.splinecode"></spline-viewer>
+    </div>
   </div>
   <script type="module"
     src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
