@@ -37,6 +37,7 @@ import anthropic
 import pandas as pd
 import pdfplumber
 import streamlit as st
+import streamlit.components.v1 as components
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
@@ -2230,88 +2231,90 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ---- Hero (Spline 3D-Hintergrund + Text-Overlay, in isoliertem iframe) ----
+# ---- Hero (zweispaltig: Text links · Spline-3D rechts) ----
 
-_HERO_HTML = """
-<!DOCTYPE html><html><head><meta charset="utf-8">
+# Linke Spalte: Text, CTAs, Trust-Badges (scoped Styles, klasse .rh*)
+_HERO_LEFT_HTML = """
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  html,body { width:100%; height:100%; overflow:hidden;
-    font-family:'Inter',-apple-system,Segoe UI,Roboto,sans-serif; }
-  .hero {
-    position:relative; width:100%; height:100%; border-radius:28px;
-    overflow:hidden; text-align:center;
-    background:
-      radial-gradient(1100px 460px at 50% -10%, rgba(111,110,255,0.30), transparent 62%),
-      radial-gradient(800px 380px at 90% 6%, rgba(91,92,240,0.18), transparent 60%),
-      radial-gradient(700px 420px at 8% 90%, rgba(20,184,166,0.16), transparent 62%),
-      linear-gradient(180deg, #F3F2FF 0%, #FAF9FF 50%, #FFFFFF 100%);
-    border:1px solid rgba(255,255,255,0.7);
-    box-shadow:0 16px 44px rgba(32,20,92,0.10);
-  }
-  /* Spline scene fills the hero, sits behind the text */
-  spline-viewer { position:absolute; inset:0; width:100%; height:100%;
-    z-index:0; opacity:0.95; }
-  /* gradient fade so the 3D scene melts into the page */
-  .fade { position:absolute; inset:0; z-index:1; pointer-events:none;
-    background:
-      linear-gradient(180deg, rgba(243,242,255,0.0) 38%, rgba(250,249,255,0.55) 78%, #FFFFFF 100%),
-      radial-gradient(900px 520px at 50% 38%, rgba(255,255,255,0.55), transparent 70%); }
-  .content { position:absolute; inset:0; z-index:2; display:flex;
-    flex-direction:column; align-items:center; justify-content:center;
-    padding:40px 28px; pointer-events:none; }
-  .pill { display:inline-flex; align-items:center; gap:8px;
-    background:rgba(255,255,255,0.78); backdrop-filter:blur(8px);
-    border:1px solid #E6E3F7; color:#5B5CF0; font-weight:600; font-size:13px;
+  .rh { padding: 28px 8px 12px 2px; font-family:'Inter',-apple-system,sans-serif; }
+  .rh-pill { display:inline-flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,0.78); border:1px solid #E6E3F7;
+    color:#5B5CF0; font-weight:600; font-size:13px;
     padding:7px 16px; border-radius:999px; margin-bottom:22px;
     box-shadow:0 2px 12px rgba(32,20,92,0.07); }
-  .pill b { color:#20145C; }
-  h1 { font-size:58px; font-weight:800; line-height:1.04; letter-spacing:-0.03em;
-    color:#20145C; margin-bottom:16px; max-width:920px; }
-  h1 .accent { background:linear-gradient(120deg,#5B5CF0,#6F6EFF);
-    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
-  .sub { color:#2E2459; font-size:20px; font-weight:600; max-width:720px; margin-bottom:8px; }
-  .sub2 { color:#6B6391; font-size:16px; line-height:1.6; max-width:680px; }
-  .ctas { display:flex; gap:14px; justify-content:center; margin:26px 0 22px; flex-wrap:wrap; }
-  .cta-primary { background:#20145C; color:#fff; font-weight:700; font-size:15px;
-    padding:14px 30px; border-radius:999px; box-shadow:0 12px 26px rgba(32,20,92,0.30); }
-  .cta-secondary { background:rgba(255,255,255,0.9); color:#20145C; font-weight:700; font-size:15px;
-    padding:14px 30px; border-radius:999px; border:1.6px solid #20145C; }
-  .trust { display:flex; gap:12px 28px; justify-content:center; flex-wrap:wrap; }
-  .trust span { color:#5B4F86; font-size:13.5px; font-weight:600;
-    display:inline-flex; align-items:center; gap:7px; }
-  .trust span i { color:#5B5CF0; font-weight:800; font-style:normal; }
-  @media (max-width:760px){ h1{font-size:40px;} .sub{font-size:17px;} }
+  .rh-pill b { color:#20145C; }
+  .rh h1 { font-size:56px !important; font-weight:800; line-height:1.04;
+    letter-spacing:-0.03em; color:#20145C !important; margin:0 0 16px; }
+  .rh h1 .accent { background:linear-gradient(120deg,#5B5CF0,#6F6EFF);
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent; }
+  .rh .sub { color:#2E2459; font-size:20px; font-weight:600; max-width:520px;
+    margin-bottom:10px; }
+  .rh .desc { color:#6B6391; font-size:16px; line-height:1.6; max-width:540px;
+    margin-bottom:26px; }
+  .rh .ctas { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:26px; }
+  .rh .cta1 { background:#20145C; color:#fff !important; font-weight:700;
+    font-size:15px; padding:14px 28px; border-radius:999px;
+    box-shadow:0 12px 26px rgba(32,20,92,0.30); }
+  .rh .cta2 { background:rgba(255,255,255,0.92); color:#20145C !important;
+    font-weight:700; font-size:15px; padding:14px 28px; border-radius:999px;
+    border:1.6px solid #20145C; }
+  .rh .trust { display:grid; grid-template-columns:1fr 1fr; gap:10px 22px;
+    max-width:560px; }
+  .rh .trust div { color:#5B4F86; font-size:13.5px; font-weight:600;
+    display:flex; align-items:center; gap:8px; }
+  .rh .trust div i { color:#5B5CF0; font-weight:800; font-style:normal; }
+  @media (max-width:900px){ .rh h1 { font-size:40px !important; } }
+</style>
+<div class="rh">
+  <div class="rh-pill">🤖 <b>Multi-Agent Recruiting System</b> · Human-in-the-Loop</div>
+  <h1>Recruiting <span class="accent">AI</span></h1>
+  <div class="sub">Strukturierte Bewerbungsanalyse für kleine und mittlere
+    Unternehmen.</div>
+  <div class="desc">Lebensläufe analysieren, Qualifikationen prüfen und
+    Informationslücken erkennen &ndash; in Sekunden statt stundenlanger
+    manueller Sichtung.</div>
+  <div class="ctas">
+    <span class="cta1">Stellenprofil analysieren</span>
+    <span class="cta2">Bewerbungen hochladen</span>
+  </div>
+  <div class="trust">
+    <div><i>✓</i> Multi-Agent Recruiting System</div>
+    <div><i>✓</i> Human-in-the-Loop</div>
+    <div><i>✓</i> Transparente Qualifikationsprüfung</div>
+    <div><i>✓</i> Keine automatischen Personalentscheidungen</div>
+  </div>
+</div>
+"""
+
+# Rechte Spalte: interaktive Spline-3D-Szene (eigener iframe via components.html)
+_SPLINE_HTML = """
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+  html,body { margin:0; height:100%; overflow:hidden; background:transparent; }
+  .stage { position:relative; width:100%; height:100%;
+    border-radius:24px; overflow:hidden;
+    background:
+      radial-gradient(520px 420px at 60% 40%, rgba(111,110,255,0.18), transparent 65%),
+      radial-gradient(420px 360px at 30% 80%, rgba(20,184,166,0.12), transparent 65%),
+      linear-gradient(160deg, #F6F4FF 0%, #FBFAFF 60%, #FFFFFF 100%); }
+  spline-viewer { width:100%; height:100%; }
 </style></head>
 <body>
-  <div class="hero">
+  <div class="stage">
     <spline-viewer loading-anim-type="none"
       url="https://prod.spline.design/nCXAoqaZqHSCRuf9/scene.splinecode"></spline-viewer>
-    <div class="fade"></div>
-    <div class="content">
-      <div class="pill">🤖 <b>Multi-Agent Recruiting System</b> · Human-in-the-Loop</div>
-      <h1>Recruiting <span class="accent">AI</span></h1>
-      <div class="sub">Strukturierte Bewerbungsanalyse für kleine und mittlere Unternehmen.</div>
-      <div class="sub2">Lebensläufe analysieren, Qualifikationen prüfen und
-        Informationslücken erkennen &ndash; in Sekunden statt Stunden.</div>
-      <div class="ctas">
-        <span class="cta-primary">Stellenprofil analysieren</span>
-        <span class="cta-secondary">Bewerbungen hochladen</span>
-      </div>
-      <div class="trust">
-        <span><i>✓</i> Multi-Agent Recruiting System</span>
-        <span><i>✓</i> Human-in-the-Loop</span>
-        <span><i>✓</i> Transparente Qualifikationsprüfung</span>
-        <span><i>✓</i> Keine automatischen Personalentscheidungen</span>
-      </div>
-    </div>
   </div>
   <script type="module"
     src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
 </body></html>
 """
 
-st.iframe(_HERO_HTML, height=560)
+hero_left, hero_right = st.columns([1.05, 1], gap="large")
+with hero_left:
+    st.markdown(_HERO_LEFT_HTML, unsafe_allow_html=True)
+with hero_right:
+    components.html(_SPLINE_HTML, height=520)
 
 # ---- CTA-Section mit Three.js Wireframe-Globus (isolierter iframe) ----
 
@@ -2409,7 +2412,7 @@ _GLOBE_HTML = """
 </body></html>
 """
 
-st.iframe(_GLOBE_HTML, height=340)
+components.html(_GLOBE_HTML, height=340)
 
 # ---- KPI-Karten (echte Daten aus der App) ----
 
