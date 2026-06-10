@@ -2290,11 +2290,8 @@ _HERO_LEFT_HTML = """
 # Rechte Spalte: NUR der neue Spline-Roboter.
 # - Weiche radiale Fade-Maske → keine sichtbaren Kanten, verschmilzt
 #   mit dem hellen Hero-Hintergrund (kein iframe-Look, kein Kasten).
-# - 180°-Rotation gegen die „auf-dem-Kopf"-Darstellung der Spline-Szene.
+# - KEINE CSS-Rotation: Roboter wird in nativer Ausrichtung gezeigt.
 # - Pointer-Events bleiben aktiv → Roboter ist weiterhin interaktiv.
-# HINWEIS: Stimmt die Ausrichtung mit rotate(180deg) nicht vollständig
-# (z. B. Kamera-Höhe), muss das in der Spline-Szene selbst korrigiert
-# werden — wir zeigen hier aber keine alte Blase/Orb als Ersatz.
 _SPLINE_HTML = """
 <!DOCTYPE html><html><head><meta charset="utf-8">
 <style>
@@ -2307,18 +2304,13 @@ _SPLINE_HTML = """
     -webkit-mask-image:radial-gradient(circle at center, black 55%, transparent 78%);
     mask-image:radial-gradient(circle at center, black 55%, transparent 78%);
   }
-  /* Ausrichtungs-Fix: Spline-Szene 180° drehen */
-  .rotor { position:absolute; inset:0;
-    transform:rotate(180deg); transform-origin:center center; }
   spline-viewer { width:100%; height:100%; background:transparent !important;
     display:block; border:none; }
 </style></head>
 <body>
   <div class="spline-hero-wrap">
-    <div class="rotor">
-      <spline-viewer loading-anim-type="none" style="background:transparent"
-        url="https://prod.spline.design/oiWrxoCBrGOIbosk/scene.splinecode"></spline-viewer>
-    </div>
+    <spline-viewer loading-anim-type="none" style="background:transparent"
+      url="https://prod.spline.design/oiWrxoCBrGOIbosk/scene.splinecode"></spline-viewer>
   </div>
   <script type="module"
     src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
