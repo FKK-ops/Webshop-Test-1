@@ -1689,12 +1689,29 @@ st.markdown(
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     html, body, [class*="css"], .stApp { font-family: 'Inter', -apple-system, sans-serif; }
-    [data-testid="stAppViewContainer"], [data-testid="stMain"] {
-        background: #F8FAFC;
+    /* ---- Ambient background: blurred glow circles + noise overlay ---- */
+    [data-testid="stAppViewContainer"] {
+        position: relative;
+        background-color: #F5F4FF;
+        background-image:
+            radial-gradient(640px 560px at 6% -4%, rgba(111,110,255,0.34), transparent 60%),
+            radial-gradient(600px 520px at 98% 0%, rgba(91,92,240,0.28), transparent 60%),
+            radial-gradient(720px 620px at 88% 86%, rgba(236,72,153,0.20), transparent 62%),
+            radial-gradient(700px 620px at 0% 96%, rgba(20,184,166,0.20), transparent 62%),
+            radial-gradient(900px 720px at 50% 46%, rgba(255,255,255,0.55), transparent 72%);
+        background-attachment: fixed;
     }
+    /* fine grain noise texture, sits above the glows, below the content */
+    [data-testid="stAppViewContainer"]::before {
+        content: "";
+        position: fixed; inset: 0; z-index: 0; pointer-events: none;
+        opacity: 0.045;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    [data-testid="stMain"] { background: transparent; }
     [data-testid="stHeader"] { background: transparent; }
     .stApp { color: #0F172A; }
-    .block-container { padding-top: 2.2rem; max-width: 1240px; }
+    .block-container { padding-top: 2.2rem; max-width: 1240px; position: relative; z-index: 1; }
     [data-testid="stSidebar"] {
         background: #FFFFFF !important;
         border-right: 1px solid #E2E8F0;
@@ -1762,33 +1779,42 @@ st.markdown(
         background: #EFF6FF !important;
         color: #1E3A8A !important;
     }
-    /* Expander + dataframe + bordered containers */
+    /* Expander + dataframe + bordered containers (glassmorphism) */
     [data-testid="stExpander"] {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
+        background: rgba(255,255,255,0.66);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255,255,255,0.65);
+        border-radius: 14px;
+        box-shadow: 0 6px 24px rgba(32,20,92,0.06);
     }
     [data-testid="stExpander"] summary { color: #0F172A !important; }
     [data-testid="stDataFrame"] {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
+        background: rgba(255,255,255,0.72);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.65);
+        border-radius: 14px;
         padding: 6px;
     }
     [data-testid="stVerticalBlockBorderWrapper"] {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 16px;
-        box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+        background: rgba(255,255,255,0.66) !important;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255,255,255,0.7) !important;
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(32,20,92,0.08);
     }
-    /* Generic card + section titles */
+    /* Generic card + section titles (glassmorphism) */
     .kmu-card {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 16px;
+        background: rgba(255,255,255,0.66);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255,255,255,0.7);
+        border-radius: 18px;
         padding: 22px 24px;
         margin-bottom: 18px;
-        box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+        box-shadow: 0 10px 30px rgba(32,20,92,0.08);
     }
     .kmu-card-title {
         color: #0F172A;
@@ -1800,16 +1826,18 @@ st.markdown(
         align-items: center;
     }
     .kmu-card-title small { color: #64748B; font-weight: 400; font-size: 13px; }
-    /* KPI cards */
+    /* KPI cards (glassmorphism) */
     .kpi-card {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 16px;
+        background: rgba(255,255,255,0.62);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255,255,255,0.7);
+        border-radius: 18px;
         padding: 20px 22px;
         position: relative;
         overflow: hidden;
         min-height: 132px;
-        box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+        box-shadow: 0 10px 30px rgba(32,20,92,0.08);
     }
     .kpi-card::before {
         content: "";
@@ -1848,15 +1876,17 @@ st.markdown(
         line-height: 1.4;
         font-weight: 500;
     }
-    /* App header (top navigation) */
+    /* App header (top navigation, glassmorphism) */
     .app-header {
         display: flex; justify-content: space-between; align-items: center;
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 16px;
+        background: rgba(255,255,255,0.62);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255,255,255,0.7);
+        border-radius: 18px;
         padding: 14px 24px;
         margin-bottom: 22px;
-        box-shadow: 0 1px 3px rgba(15,23,42,0.04);
+        box-shadow: 0 10px 30px rgba(32,20,92,0.08);
     }
     .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; color: #1E3A8A; }
     .brand .brand-mark {
@@ -1884,14 +1914,17 @@ st.markdown(
         position: relative;
         text-align: center;
         background:
-            radial-gradient(1100px 460px at 50% -8%, rgba(111,110,255,0.18), transparent 62%),
-            radial-gradient(800px 380px at 88% 8%, rgba(91,92,240,0.10), transparent 60%),
-            linear-gradient(180deg, #F3F2FF 0%, #FAF9FF 46%, #FFFFFF 100%);
-        border: 1px solid #ECE9FB;
+            radial-gradient(1100px 460px at 50% -8%, rgba(111,110,255,0.22), transparent 62%),
+            radial-gradient(800px 380px at 88% 8%, rgba(91,92,240,0.14), transparent 60%),
+            rgba(255,255,255,0.55);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border: 1px solid rgba(255,255,255,0.7);
         border-radius: 28px;
         padding: 58px 40px 50px;
         margin-bottom: 26px;
         overflow: hidden;
+        box-shadow: 0 16px 44px rgba(32,20,92,0.10);
     }
     .hero-pill {
         display: inline-flex; align-items: center; gap: 8px;
