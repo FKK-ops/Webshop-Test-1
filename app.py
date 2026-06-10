@@ -2287,10 +2287,9 @@ _HERO_LEFT_HTML = """
 </div>
 """
 
-# Rechte Spalte: Spline-3D, horizontal/vertikal zentriert, feste Höhe,
-# transparenter Wrapper, KEINE absolute Positionierung. Dahinter eine
-# dezente CSS-Glass-Orb als Fallback (kein leerer/dunkler Bereich, falls
-# die Szene transparent ist oder nicht lädt).
+# Rechte Spalte: interaktiver Spline-Roboter (Maskottchen), horizontal/
+# vertikal zentriert, feste Höhe, transparenter Wrapper, kein Container/
+# Rahmen/Kreis, KEINE absolute Positionierung. Roboter schwebt frei.
 _SPLINE_HTML = """
 <!DOCTYPE html><html><head><meta charset="utf-8">
 <style>
@@ -2299,28 +2298,12 @@ _SPLINE_HTML = """
   .wrap { display:flex; align-items:center; justify-content:center;
     width:100%; height:100%; position:relative;
     background:transparent; border:none; box-shadow:none; overflow:hidden; }
-  /* Glass-Orb Fallback (violett-blau, transparent, leichte Animation) */
-  .orb { position:absolute; width:340px; height:340px; border-radius:50%;
-    z-index:0; filter:blur(2px);
-    background:
-      radial-gradient(60% 60% at 35% 30%, rgba(255,255,255,0.85), transparent 60%),
-      radial-gradient(120% 120% at 70% 75%, #6F6EFF 0%, #5B5CF0 42%, #8E8CFF 75%, #C9C6FF 100%);
-    box-shadow: 0 30px 70px rgba(91,92,240,0.35),
-      inset 0 -22px 50px rgba(32,20,92,0.30),
-      inset 0 18px 40px rgba(255,255,255,0.55);
-    animation: floaty 6s ease-in-out infinite; }
-  .orb::after { content:""; position:absolute; inset:0; border-radius:50%;
-    background:radial-gradient(40% 30% at 30% 22%, rgba(255,255,255,0.9), transparent 60%); }
-  @keyframes floaty { 0%,100%{ transform:translateY(-10px) } 50%{ transform:translateY(10px) } }
-  /* Spline liegt über der Orb; falls weiß/opak, deckt es die Orb ab */
-  spline-viewer { position:relative; z-index:1; width:100%; height:100%;
-    background:transparent !important; }
+  spline-viewer { width:100%; height:100%; background:transparent !important; }
 </style></head>
 <body>
   <div class="wrap">
-    <div class="orb"></div>
     <spline-viewer loading-anim-type="none" style="background:transparent"
-      url="https://prod.spline.design/nCXAoqaZqHSCRuf9/scene.splinecode"></spline-viewer>
+      url="https://prod.spline.design/oiWrxoCBrGOIbosk/scene.splinecode"></spline-viewer>
   </div>
   <script type="module"
     src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
