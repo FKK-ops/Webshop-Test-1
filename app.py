@@ -2098,6 +2098,39 @@ st.markdown(
     .tl-target { color: #64748B; font-size: 13px; }
     .section-title { font-size: 20px; font-weight: 800; color: #0F172A; margin: 6px 0 2px 0; }
     .section-sub { color: #64748B; font-size: 14px; margin-bottom: 16px; }
+    /* ---- Microinteractions (Premium-SaaS) ---- */
+    @keyframes fadeUpG { from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); } }
+    .kmu-card, .kpi-card,
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .kpi-card:hover, .kmu-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 18px 42px rgba(111,110,255,0.18);
+    }
+    .stButton > button:hover,
+    [data-testid="stFormSubmitButton"] > button:hover {
+        box-shadow: 0 8px 22px rgba(37,99,235,0.40) !important;
+    }
+    .kmu-badge { animation: fadeUpG .45s ease both; }
+    [data-testid="stSpinner"] { color: #6F6EFF; }
+    /* ---- AI Activity Feed ---- */
+    .feed-item { display: flex; align-items: center; gap: 11px;
+        padding: 9px 2px; border-bottom: 1px solid #EEF0F6;
+        animation: fadeUpG .5s ease both; }
+    .feed-item:last-child { border-bottom: none; }
+    .feed-ic { width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 14px; background: linear-gradient(145deg,#EFF1FF,#E4E1FF); }
+    .feed-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .feed-body b { color: #111827; font-size: 13px; font-weight: 600;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feed-body small { color: #94A3B8; font-size: 11.5px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feed-time { color: #94A3B8; font-size: 11.5px; font-weight: 600;
+        flex-shrink: 0; }
+    .kmu-card-title small { color: #14B8A6; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -2231,99 +2264,217 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ---- Hero (zweispaltig: Text links · Spline-Roboter rechts) ----
+# ---- Hero (Premium-SaaS: animierter Gradient, Glas-Card, CSS-AI-Visual) ----
+# Spline war über mehrere Iterationen instabil (Ausrichtung/Ladefehler) —
+# gemäß Vorgabe ersetzt durch ein stabiles, rein CSS-animiertes AI-Visual.
+# Kein iframe im Hero, keine schwarzen Kästen, keine kaputte Grafik.
 
-# Linke Spalte: Headline, Subheadline, Beschreibung, CTAs, Trust-Badges
-_HERO_LEFT_HTML = """
+_HERO_HTML = """
 <style>
-  .rh { padding: 22px 8px 8px 2px; font-family:'Inter',-apple-system,sans-serif; }
-  .rh-pill { display:inline-flex; align-items:center; gap:8px;
-    background:rgba(255,255,255,0.82); border:1px solid #E6E3F7;
-    color:#5B5CF0; font-weight:600; font-size:13px;
-    padding:7px 16px; border-radius:999px; margin-bottom:22px;
-    box-shadow:0 2px 12px rgba(32,20,92,0.07); }
-  .rh-pill b { color:#20145C; }
-  .rh h1 { font-size:54px !important; font-weight:800; line-height:1.05;
-    letter-spacing:-0.03em; color:#20145C !important; margin:0 0 16px; }
-  .rh h1 .accent { background:linear-gradient(120deg,#5B5CF0,#6F6EFF);
+  .hero-x { position:relative; display:grid; grid-template-columns:1.1fr 1fr;
+    align-items:center; gap:28px; min-height:560px; padding:48px 52px;
+    border-radius:30px; overflow:hidden;
+    font-family:'Inter',-apple-system,sans-serif;
+    background:linear-gradient(120deg,#F4F3FF,#EEF4FF 35%,#F0FDFB 70%,#F6F3FF);
+    background-size:300% 300%; animation:heroShift 16s ease infinite;
+    border:1px solid rgba(255,255,255,0.75);
+    box-shadow:0 20px 50px rgba(32,20,92,0.10); }
+  @keyframes heroShift { 0%,100%{background-position:0% 50%}
+    50%{background-position:100% 50%} }
+  /* Glow-Partikel */
+  .hero-x .p { position:absolute; border-radius:50%; pointer-events:none;
+    filter:blur(2px); opacity:.5; animation:drift 9s ease-in-out infinite; }
+  .hero-x .p1 { width:10px; height:10px; left:12%; top:18%;
+    background:#6F6EFF; animation-delay:0s; }
+  .hero-x .p2 { width:7px; height:7px; left:46%; top:10%;
+    background:#14B8A6; animation-delay:1.6s; }
+  .hero-x .p3 { width:12px; height:12px; left:70%; top:78%;
+    background:#2563EB; animation-delay:3.1s; }
+  .hero-x .p4 { width:6px; height:6px; left:30%; top:84%;
+    background:#6F6EFF; animation-delay:4.4s; }
+  .hero-x .p5 { width:9px; height:9px; left:88%; top:26%;
+    background:#8E8CFF; animation-delay:2.2s; }
+  @keyframes drift { 0%,100%{transform:translateY(-14px)}
+    50%{transform:translateY(14px)} }
+  /* Glas-Card um den Textblock */
+  .hero-glass { position:relative; z-index:2;
+    background:rgba(255,255,255,0.62); backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,0.8); border-radius:24px;
+    padding:34px 36px; box-shadow:0 14px 38px rgba(32,20,92,0.08);
+    animation:fadeUp .7s ease both; }
+  @keyframes fadeUp { from{opacity:0; transform:translateY(14px)}
+    to{opacity:1; transform:translateY(0)} }
+  .hx-pill { display:inline-flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,0.85); border:1px solid #E6E3F7;
+    color:#6F6EFF; font-weight:600; font-size:12.5px;
+    padding:6px 14px; border-radius:999px; margin-bottom:18px;
+    box-shadow:0 2px 10px rgba(32,20,92,0.06); }
+  .hx-pill b { color:#20145C; }
+  .hero-x h1 { font-size:46px !important; font-weight:800; line-height:1.08;
+    letter-spacing:-0.03em; color:#20145C !important; margin:0 0 14px; }
+  .hero-x h1 .accent { background:linear-gradient(120deg,#2563EB,#6F6EFF,#14B8A6);
     -webkit-background-clip:text; background-clip:text;
     -webkit-text-fill-color:transparent; }
-  .rh .sub { color:#2E2459; font-size:20px; font-weight:600; max-width:520px;
-    margin-bottom:10px; }
-  .rh .desc { color:#6B6391; font-size:16px; line-height:1.6; max-width:540px;
-    margin-bottom:26px; }
-  .rh .ctas { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:26px; }
-  .rh .cta1 { background:#20145C; color:#fff !important; font-weight:700;
-    font-size:15px; padding:14px 28px; border-radius:999px;
-    box-shadow:0 12px 26px rgba(32,20,92,0.30); }
-  .rh .cta2 { background:rgba(255,255,255,0.92); color:#20145C !important;
-    font-weight:700; font-size:15px; padding:14px 28px; border-radius:999px;
-    border:1.6px solid #20145C; }
-  .rh .trust { display:grid; grid-template-columns:1fr 1fr; gap:10px 22px;
-    max-width:560px; }
-  .rh .trust div { color:#5B4F86; font-size:13.5px; font-weight:600;
-    display:flex; align-items:center; gap:8px; }
-  .rh .trust div i { color:#5B5CF0; font-weight:800; font-style:normal; }
-  @media (max-width:900px){ .rh h1 { font-size:40px !important; } }
+  .hero-x .sub { color:#3A3270; font-size:17px; font-weight:500; line-height:1.55;
+    max-width:520px; margin-bottom:24px; }
+  .hero-x .ctas { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
+  .hero-x .cta1 { background:#20145C; color:#fff !important; font-weight:700;
+    font-size:14.5px; padding:13px 26px; border-radius:999px;
+    box-shadow:0 10px 24px rgba(32,20,92,0.28); transition:all .2s ease; }
+  .hero-x .cta1:hover { box-shadow:0 14px 32px rgba(111,110,255,0.45);
+    transform:translateY(-2px); }
+  .hero-x .cta2 { background:rgba(255,255,255,0.92); color:#20145C !important;
+    font-weight:700; font-size:14.5px; padding:13px 26px; border-radius:999px;
+    border:1.5px solid #20145C; transition:all .2s ease; }
+  .hero-x .cta2:hover { transform:translateY(-2px); }
+  .hero-x .trust { display:flex; gap:8px 20px; flex-wrap:wrap; }
+  .hero-x .trust span { color:#5B4F86; font-size:12.5px; font-weight:600;
+    display:inline-flex; align-items:center; gap:6px;
+    animation:fadeUp .8s ease both; }
+  .hero-x .trust span:nth-child(2){animation-delay:.1s}
+  .hero-x .trust span:nth-child(3){animation-delay:.2s}
+  .hero-x .trust span:nth-child(4){animation-delay:.3s}
+  .hero-x .trust i { color:#14B8A6; font-weight:800; font-style:normal; }
+  .hero-x .hil { margin-top:18px; color:#6B6391; font-size:12.5px; }
+  /* ---- CSS-AI-Visual rechts: orbitende Agenten um einen Kern ---- */
+  .ai-stage { position:relative; height:430px; display:flex;
+    align-items:center; justify-content:center; z-index:1; }
+  .ai-glow { position:absolute; width:430px; height:430px; border-radius:50%;
+    background:radial-gradient(closest-side, rgba(111,110,255,0.25), transparent 70%);
+    filter:blur(6px); animation:pulseGlow 5s ease-in-out infinite; }
+  @keyframes pulseGlow { 0%,100%{opacity:.7; transform:scale(.96)}
+    50%{opacity:1; transform:scale(1.04)} }
+  .ai-core { position:relative; width:128px; height:128px; border-radius:36px;
+    display:flex; align-items:center; justify-content:center; font-size:50px;
+    background:linear-gradient(145deg,#FFFFFF,#ECEAFF 55%,#D9D6FF);
+    border:1px solid rgba(255,255,255,0.9); z-index:2;
+    box-shadow:0 24px 54px rgba(32,20,92,0.22),
+      inset 0 4px 14px rgba(255,255,255,0.9),
+      inset 0 -12px 26px rgba(111,110,255,0.22);
+    animation:coreFloat 6s ease-in-out infinite; }
+  @keyframes coreFloat { 0%,100%{transform:translateY(-8px)}
+    50%{transform:translateY(8px)} }
+  .orbit { position:absolute; border:1.5px dashed rgba(111,110,255,0.30);
+    border-radius:50%; }
+  .orbit.o1 { width:250px; height:250px; animation:spin 22s linear infinite; }
+  .orbit.o2 { width:380px; height:380px; animation:spinRev 34s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  @keyframes spinRev { to{transform:rotate(-360deg)} }
+  .sat { position:absolute; top:-23px; left:50%; margin-left:-23px;
+    width:46px; height:46px; border-radius:14px; display:flex;
+    align-items:center; justify-content:center; font-size:21px;
+    background:rgba(255,255,255,0.92); border:1px solid #E6E3F7;
+    box-shadow:0 10px 24px rgba(32,20,92,0.16); }
+  .orbit.o1 .sat { animation:spinRev 22s linear infinite; }
+  .orbit.o2 .sat { animation:spin 34s linear infinite; }
+  .orbit.o2 .sat.s2 { top:auto; bottom:-23px; }
+  @media (max-width:980px){
+    .hero-x { grid-template-columns:1fr; padding:32px 26px; min-height:auto; }
+    .hero-x h1 { font-size:36px !important; }
+    .ai-stage { height:300px; }
+  }
 </style>
-<div class="rh">
-  <div class="rh-pill">🤖 <b>Multi-Agent Recruiting System</b> · Human-in-the-Loop</div>
-  <h1>Recruiting <span class="accent">AI</span></h1>
-  <div class="sub">Strukturierte Bewerbungsanalyse für kleine und mittlere
-    Unternehmen.</div>
-  <div class="desc">Lebensläufe analysieren, Qualifikationen prüfen und
-    Informationslücken erkennen &ndash; in Sekunden statt stundenlanger
-    manueller Sichtung.</div>
-  <div class="ctas">
-    <span class="cta1">Stellenprofil analysieren</span>
-    <span class="cta2">Bewerbungen hochladen</span>
+<div class="hero-x">
+  <span class="p p1"></span><span class="p p2"></span><span class="p p3"></span>
+  <span class="p p4"></span><span class="p p5"></span>
+  <div class="hero-glass">
+    <div class="hx-pill">🤖 <b>Recruiting AI</b> · AI Workspace für Geschäftsführer</div>
+    <h1>Recruiting ohne <span class="accent">stundenlanges Lebenslauflesen</span>.</h1>
+    <div class="sub">Recruiting AI strukturiert Bewerbungen, prüft fachliche
+      Anforderungen und erkennt Informationslücken &ndash; ohne automatische
+      Personalentscheidung.</div>
+    <div class="ctas">
+      <span class="cta1">Stellenprofil analysieren</span>
+      <span class="cta2">Bewerbungen hochladen</span>
+    </div>
+    <div class="trust">
+      <span><i>✓</i> Multi-Agent Workflow</span>
+      <span><i>✓</i> Human-in-the-Loop</span>
+      <span><i>✓</i> Auditierbar</span>
+      <span><i>✓</i> Keine automatische Entscheidung</span>
+    </div>
+    <div class="hil">Der Agent strukturiert Informationen.
+      Die Entscheidung trifft der Geschäftsführer.</div>
   </div>
-  <div class="trust">
-    <div><i>✓</i> Multi-Agent Recruiting System</div>
-    <div><i>✓</i> Human-in-the-Loop</div>
-    <div><i>✓</i> Transparente Qualifikationsprüfung</div>
-    <div><i>✓</i> Keine automatischen Personalentscheidungen</div>
+  <div class="ai-stage">
+    <div class="ai-glow"></div>
+    <div class="orbit o1"><div class="sat">📄</div></div>
+    <div class="orbit o2"><div class="sat">🔍</div><div class="sat s2">💬</div></div>
+    <div class="ai-core">🤖</div>
   </div>
 </div>
 """
 
-# Rechte Spalte: NUR der neue Spline-Roboter.
-# - Weiche radiale Fade-Maske → keine sichtbaren Kanten, verschmilzt
-#   mit dem hellen Hero-Hintergrund (kein iframe-Look, kein Kasten).
-# - KEINE CSS-Rotation: Roboter wird in nativer Ausrichtung gezeigt.
-# - Pointer-Events bleiben aktiv → Roboter ist weiterhin interaktiv.
-_SPLINE_HTML = """
-<!DOCTYPE html><html><head><meta charset="utf-8">
+st.markdown(_HERO_HTML, unsafe_allow_html=True)
+
+# ---- AI-Workflow-Sektion (7 Schritte, animierte Premium-Cards) ----
+
+_WORKFLOW_HTML = """
 <style>
-  html, body { margin:0; height:100%; background:transparent; overflow:hidden;
-    font-family:'Inter',-apple-system,sans-serif; }
-  .spline-hero-wrap {
-    position:relative; width:100%; height:100%;
-    background:transparent; border:none; box-shadow:none; overflow:hidden;
-    border-radius:32px;
-    -webkit-mask-image:radial-gradient(circle at center, black 55%, transparent 78%);
-    mask-image:radial-gradient(circle at center, black 55%, transparent 78%);
-  }
-  spline-viewer { width:100%; height:100%; background:transparent !important;
-    display:block; border:none; }
-</style></head>
-<body>
-  <div class="spline-hero-wrap">
-    <spline-viewer loading-anim-type="none" style="background:transparent"
-      url="https://prod.spline.design/oiWrxoCBrGOIbosk/scene.splinecode"></spline-viewer>
+  .wf { margin:26px 0 8px; font-family:'Inter',-apple-system,sans-serif; }
+  .wf-title { font-size:22px; font-weight:800; color:#20145C; margin-bottom:4px; }
+  .wf-sub { color:#64748B; font-size:14px; margin-bottom:18px; }
+  .wf-row { display:grid; grid-template-columns:repeat(7, 1fr); gap:10px;
+    align-items:stretch; }
+  .wf-step { position:relative; background:rgba(255,255,255,0.82);
+    backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,0.8); border-radius:16px;
+    padding:16px 12px 14px; text-align:center;
+    box-shadow:0 8px 24px rgba(32,20,92,0.07);
+    transition:transform .2s ease, box-shadow .2s ease;
+    animation:fadeUp .6s ease both; }
+  .wf-step:nth-child(2){animation-delay:.05s} .wf-step:nth-child(3){animation-delay:.1s}
+  .wf-step:nth-child(4){animation-delay:.15s} .wf-step:nth-child(5){animation-delay:.2s}
+  .wf-step:nth-child(6){animation-delay:.25s} .wf-step:nth-child(7){animation-delay:.3s}
+  .wf-step:hover { transform:translateY(-4px);
+    box-shadow:0 16px 36px rgba(111,110,255,0.22); }
+  .wf-step::after { content:"→"; position:absolute; right:-13px; top:50%;
+    transform:translateY(-50%); color:#6F6EFF; font-weight:800; font-size:15px;
+    z-index:2; animation:pulseArrow 2.4s ease-in-out infinite; }
+  .wf-step:last-child::after { content:""; }
+  @keyframes pulseArrow { 0%,100%{opacity:.45} 50%{opacity:1} }
+  .wf-ic { width:38px; height:38px; border-radius:11px; margin:0 auto 9px;
+    display:flex; align-items:center; justify-content:center; font-size:18px;
+    background:linear-gradient(145deg,#EFF1FF,#E4E1FF); }
+  .wf-step.gz .wf-ic { background:linear-gradient(145deg,#D8F7F0,#C2F0E6); }
+  .wf-name { font-size:13px; font-weight:700; color:#111827; margin-bottom:4px; }
+  .wf-desc { font-size:11.5px; color:#64748B; line-height:1.45; }
+  @media (max-width:1100px){ .wf-row { grid-template-columns:repeat(4,1fr); }
+    .wf-step:nth-child(4)::after{content:""} }
+  @media (max-width:700px){ .wf-row { grid-template-columns:repeat(2,1fr); }
+    .wf-step::after{content:""} }
+</style>
+<div class="wf">
+  <div class="wf-title">So arbeitet Recruiting AI</div>
+  <div class="wf-sub">Vom Stellenprofil zur Entscheidungsgrundlage — der Mensch entscheidet.</div>
+  <div class="wf-row">
+    <div class="wf-step"><div class="wf-ic">📤</div>
+      <div class="wf-name">Stelle hochladen</div>
+      <div class="wf-desc">Stellenanzeige einfügen.</div></div>
+    <div class="wf-step"><div class="wf-ic">📋</div>
+      <div class="wf-name">Stellenprofil-Agent</div>
+      <div class="wf-desc">Extrahiert prüfbare Anforderungen.</div></div>
+    <div class="wf-step"><div class="wf-ic">📄</div>
+      <div class="wf-name">CV-Agent</div>
+      <div class="wf-desc">Strukturiert jeden Lebenslauf.</div></div>
+    <div class="wf-step"><div class="wf-ic">🔍</div>
+      <div class="wf-name">Anforderungsabgleich</div>
+      <div class="wf-desc">Gefunden, teilweise, nicht gefunden.</div></div>
+    <div class="wf-step"><div class="wf-ic">🧩</div>
+      <div class="wf-name">Informationslücken</div>
+      <div class="wf-desc">Erkennt fehlende Angaben.</div></div>
+    <div class="wf-step"><div class="wf-ic">💬</div>
+      <div class="wf-name">Rückfragen</div>
+      <div class="wf-desc">Formuliert höfliche Rückfragen.</div></div>
+    <div class="wf-step gz"><div class="wf-ic">👤</div>
+      <div class="wf-name">Geschäftsführer entscheidet</div>
+      <div class="wf-desc">Der Mensch entscheidet.</div></div>
   </div>
-  <script type="module"
-    src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
-</body></html>
+</div>
 """
 
-hero_left, hero_right = st.columns(
-    [1.1, 1], gap="large", vertical_alignment="center"
-)
-with hero_left:
-    st.markdown(_HERO_LEFT_HTML, unsafe_allow_html=True)
-with hero_right:
-    components.html(_SPLINE_HTML, height=600)
+st.markdown(_WORKFLOW_HTML, unsafe_allow_html=True)
 
 # ---- CTA-Section mit Three.js Wireframe-Globus (isolierter iframe) ----
 
@@ -2481,7 +2632,7 @@ with kpi3:
         <div class="kpi-card orange">
             <div class="kpi-icon">🔍</div>
             <div class="kpi-value orange">{total_gaps}</div>
-            <div class="kpi-label">Informationslücken</div>
+            <div class="kpi-label">Klärungsbedarf</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -2498,45 +2649,100 @@ with kpi4:
         unsafe_allow_html=True,
     )
 
-# ---- Letzte Bewerbungen (kompakte Liste, echte Daten oder Platzhalter-Hinweis) ----
+# ---- Dashboard-Grid: Letzte Bewerbungen | AI Activity Feed ----
+# Der Activity Feed ist eine rein optische Zusammenfassung der letzten
+# Audit-Log-Einträge — das Audit Log selbst bleibt unverändert.
 
-if st.session_state.candidates:
-    with st.container(border=True):
-        st.markdown(
-            '<div class="kmu-card-title">Letzte Bewerbungen</div>',
-            unsafe_allow_html=True,
-        )
-        for c in st.session_state.candidates[-5:][::-1]:
-            cv = c["data"]
-            q = c.get("quality") or {}
-            has_gaps = bool(
-                q.get("missing_information") or q.get("unclear_information")
-            )
-            badge_cls = "kmu-badge-warn" if has_gaps else "kmu-badge-ok"
-            badge_lbl = (
-                "Informationslücken" if has_gaps else "Analyse abgeschlossen"
-            )
-            name = cv.get("name") or "(ohne Name)"
-            first_role = ""
-            if cv.get("experience"):
-                first_role = cv["experience"][0].get("role", "")
+_ACTIVITY_ICONS = [
+    ("Stellenprofil analysiert", "📋"),
+    ("fachlich prüfbare", "✅"),
+    ("nicht automatisch prüfbare", "🧩"),
+    ("PDF hochgeladen", "📤"),
+    ("Text extrahiert", "📄"),
+    ("CV analysiert", "🤖"),
+    ("Informationslücken", "🔍"),
+    ("Rückfragen erzeugt", "💬"),
+    ("Rückfrage", "💬"),
+    ("Anforderungen abgeglichen", "⚖️"),
+    ("Klärungspunkte", "🧩"),
+    ("Abdeckungsgrad", "⚖️"),
+    ("Feedback", "📝"),
+]
+
+
+def _activity_icon(action: str) -> str:
+    for key, icon in _ACTIVITY_ICONS:
+        if key.lower() in (action or "").lower():
+            return icon
+    return "•"
+
+
+dash_left, dash_right = st.columns([1.25, 1], gap="medium")
+
+with dash_left:
+    if st.session_state.candidates:
+        with st.container(border=True):
             st.markdown(
-                f"""
-                <div class="kmu-list-item">
-                    <div class="kmu-list-avatar">{initials_for(name)}</div>
-                    <div style="flex:1">
-                        <div class="kmu-list-name">{name}</div>
-                        <div class="kmu-list-file">{first_role or c['filename']}</div>
-                    </div>
-                    <span class="kmu-badge {badge_cls}">● {badge_lbl}</span>
-                </div>
-                """,
+                '<div class="kmu-card-title">Letzte Bewerbungen</div>',
                 unsafe_allow_html=True,
             )
-else:
-    st.caption(
-        "Noch keine Bewerbungen analysiert. Lade oben Lebensläufe hoch."
-    )
+            for c in st.session_state.candidates[-5:][::-1]:
+                cv = c["data"]
+                q = c.get("quality") or {}
+                has_gaps = bool(
+                    q.get("missing_information") or q.get("unclear_information")
+                )
+                badge_cls = "kmu-badge-warn" if has_gaps else "kmu-badge-ok"
+                badge_lbl = (
+                    "Klärungsbedarf" if has_gaps else "Analyse abgeschlossen"
+                )
+                name = cv.get("name") or "(ohne Name)"
+                first_role = ""
+                if cv.get("experience"):
+                    first_role = cv["experience"][0].get("role", "")
+                st.markdown(
+                    f"""
+                    <div class="kmu-list-item">
+                        <div class="kmu-list-avatar">{initials_for(name)}</div>
+                        <div style="flex:1">
+                            <div class="kmu-list-name">{name}</div>
+                            <div class="kmu-list-file">{first_role or c['filename']}</div>
+                        </div>
+                        <span class="kmu-badge {badge_cls}">● {badge_lbl}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+    else:
+        st.caption(
+            "Noch keine Bewerbungen analysiert. Lade unten Lebensläufe hoch."
+        )
+
+with dash_right:
+    _recent_log = load_audit_log()[-7:][::-1]
+    with st.container(border=True):
+        st.markdown(
+            '<div class="kmu-card-title">AI Activity '
+            '<small>● live</small></div>',
+            unsafe_allow_html=True,
+        )
+        if _recent_log:
+            feed_rows = []
+            for i, entry in enumerate(_recent_log):
+                ts = entry.get("timestamp", "")
+                t_disp = ts.split("T", 1)[1][:5] if "T" in ts else ts
+                action = entry.get("action", "")
+                target = entry.get("target", "")
+                feed_rows.append(
+                    f'<div class="feed-item" style="animation-delay:{i * 0.06}s">'
+                    f'<span class="feed-ic">{_activity_icon(action)}</span>'
+                    f'<span class="feed-body"><b>{action}</b>'
+                    f'<small>{target}</small></span>'
+                    f'<span class="feed-time">{t_disp}</span></div>'
+                )
+            st.markdown("".join(feed_rows), unsafe_allow_html=True)
+        else:
+            st.caption("Noch keine Agent-Aktivität.")
 
 
 # ---------------------------------------------------------------------------
@@ -2560,8 +2766,8 @@ with st.container(border=True):
         st.markdown(
             '<div class="upload-head"><span class="upload-ic">📋</span>'
             '<div><div class="upload-title">Stellenprofil</div>'
-            '<div class="upload-desc">Anforderungen aus der Stellenanzeige '
-            "strukturieren.</div></div></div>",
+            '<div class="upload-desc">Laden Sie die Stellenanzeige hoch '
+            "oder fügen Sie sie ein.</div></div></div>",
             unsafe_allow_html=True,
         )
         job_url = st.text_input(
@@ -2584,7 +2790,8 @@ with st.container(border=True):
             label_visibility="collapsed",
         )
         if st.button(
-            "Stellenprofil analysieren", disabled=not job_text.strip()
+            "Stelle analysieren", type="primary",
+            disabled=not job_text.strip(),
         ):
             with st.spinner("Strukturiere Stellenprofil ..."):
                 try:
@@ -2636,8 +2843,8 @@ with st.container(border=True):
         st.markdown(
             '<div class="upload-head"><span class="upload-ic green">📎</span>'
             '<div><div class="upload-title">Bewerbungen</div>'
-            '<div class="upload-desc">PDF-Lebensläufe hochladen und '
-            "analysieren.</div></div></div>",
+            '<div class="upload-desc">Laden Sie mehrere Lebensläufe '
+            "als PDF hoch.</div></div></div>",
             unsafe_allow_html=True,
         )
         uploaded = st.file_uploader(
@@ -2648,7 +2855,7 @@ with st.container(border=True):
         )
 
         if st.button(
-            "Extraktion starten", type="primary", disabled=not uploaded
+            "Bewerbungen analysieren", type="primary", disabled=not uploaded
         ):
             prior_feedback = feedback_block(load_feedback())
             new_files = [
@@ -2803,9 +3010,8 @@ with st.container(border=True):
 # ---------------------------------------------------------------------------
 
 st.markdown(
-    '<div class="hil-line">Der Agent bewertet keine Bewerber. '
-    "Er zeigt nur nachweisbare Informationen. "
-    "Die Entscheidung trifft der Geschäftsführer."
+    '<div class="hil-line">Der Agent strukturiert Informationen. '
+    "Der Mensch entscheidet."
     "</div>",
     unsafe_allow_html=True,
 )
@@ -2939,7 +3145,7 @@ with main_tab_candidates:
                 )
                 _badge_cls = "kmu-badge-warn" if _has_gaps else "kmu-badge-ok"
                 _badge_lbl = (
-                    "Informationslücken" if _has_gaps else "Analyse abgeschlossen"
+                    "Klärungsbedarf" if _has_gaps else "Analyse abgeschlossen"
                 )
                 if job_profile_state:
                     _rc = status_counts(
@@ -2954,9 +3160,17 @@ with main_tab_candidates:
                 else:
                     _metric = "—"
                 _skills = _d.get("skills") or []
-                _skills_txt = ", ".join(_skills[:4]) + (
-                    f" +{len(_skills) - 4}" if len(_skills) > 4 else ""
+                _skill_badges = " ".join(
+                    f'<span class="kmu-badge kmu-badge-info">{s}</span>'
+                    for s in _skills[:4]
+                ) + (
+                    f' <span class="kmu-badge kmu-badge-muted">+{len(_skills) - 4}</span>'
+                    if len(_skills) > 4
+                    else ""
                 )
+                _klaer_n = len(
+                    _q.get("missing_information") or []
+                ) + len(_q.get("unclear_information") or [])
                 _is_open = _c["filename"] == st.session_state._open_cand
                 with st.container(border=True):
                     cc = st.columns([3, 1.3, 3, 1.5])
@@ -2971,15 +3185,19 @@ with main_tab_candidates:
                     with cc[1]:
                         st.markdown(
                             f'<div class="cand-metric">{_metric}</div>'
-                            '<div class="cand-metric-label">Abgleich</div>',
+                            '<div class="cand-metric-label">Anforderungen gefunden</div>',
                             unsafe_allow_html=True,
                         )
                     with cc[2]:
+                        _status_badge = (
+                            f'<span class="kmu-badge kmu-badge-warn">'
+                            f"🧩 Klärungsbedarf: {_klaer_n}</span>"
+                            if _klaer_n
+                            else f'<span class="kmu-badge {_badge_cls}">{_badge_lbl}</span>'
+                        )
                         st.markdown(
-                            '<div class="cand-metric-label">Skills gefunden</div>'
-                            f'<div style="color:#334155;font-size:13px;'
-                            f'margin:2px 0 6px">{_skills_txt or "—"}</div>'
-                            f'<span class="kmu-badge {_badge_cls}">{_badge_lbl}</span>',
+                            f'<div style="margin:2px 0 6px">{_skill_badges or "—"}</div>'
+                            f"{_status_badge}",
                             unsafe_allow_html=True,
                         )
                     with cc[3]:
@@ -3041,7 +3259,7 @@ with main_tab_candidates:
                             <div class="coverage-box">
                                 <div class="coverage-value">{req_counts['Gefunden']} / {req_total}</div>
                                 <div class="coverage-label">
-                                    fachlich gefunden
+                                    Anforderungen gefunden
                                 </div>
                             </div>
                             """,
@@ -3304,7 +3522,6 @@ with main_tab_audit:
         st.info("Audit-Log ist leer.")
 
 st.caption(
-    "Die KI trifft keine Personalentscheidung. Sie strukturiert objektive "
-    "Informationen und macht Bewerbungen vergleichbar. Der Geschäftsführer "
-    "prüft und entscheidet final."
+    "Der Mensch entscheidet. Recruiting AI strukturiert Informationen — "
+    "die Entscheidung trifft der Geschäftsführer."
 )
