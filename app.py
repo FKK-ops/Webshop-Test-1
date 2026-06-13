@@ -1677,7 +1677,7 @@ st.set_page_config(
     page_title="Recruiting AI",
     page_icon="🤖",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 
@@ -1688,449 +1688,383 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-    html, body, [class*="css"], .stApp { font-family: 'Inter', -apple-system, sans-serif; }
-    /* ---- Ambient background: blurred glow circles + noise overlay ---- */
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Familjen+Grotesk:wght@400;500;600;700&display=swap');
+
+    :root{
+        --paper:#F4F1EA; --paper-2:#ECE6D9; --card:#FFFDF8;
+        --ink:#17202A; --ink-2:#33414E; --muted:#6E6A5F; --soft:#8C8675;
+        --line:#E5DECF; --line-2:#EFE9DC;
+        --accent:#BE5B2A; --accent-d:#A14A1F; --accent-soft:#F4E7DA;
+        --display:'Fraunces',Georgia,'Times New Roman',serif;
+        --sans:'Familjen Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+        --ok:#1F7A4D; --warn:#B45309; --err:#B3261E; --info:#1D4ED8;
+    }
+
+    html, body, [class*="css"], .stApp, p, span, label, li, div, input, textarea, button {
+        font-family: var(--sans);
+    }
+    .stApp { color: var(--ink); }
+
+    /* ---- Background: warm paper with very soft grain ---- */
     [data-testid="stAppViewContainer"] {
         position: relative;
-        background-color: #F5F4FF;
+        background-color: var(--paper);
         background-image:
-            radial-gradient(640px 560px at 6% -4%, rgba(111,110,255,0.34), transparent 60%),
-            radial-gradient(600px 520px at 98% 0%, rgba(91,92,240,0.28), transparent 60%),
-            radial-gradient(720px 620px at 88% 86%, rgba(236,72,153,0.20), transparent 62%),
-            radial-gradient(700px 620px at 0% 96%, rgba(20,184,166,0.20), transparent 62%),
-            radial-gradient(900px 720px at 50% 46%, rgba(255,255,255,0.55), transparent 72%);
+            radial-gradient(900px 520px at 100% -6%, rgba(190,91,42,0.05), transparent 60%),
+            radial-gradient(820px 520px at -6% 4%, rgba(23,32,42,0.045), transparent 62%);
         background-attachment: fixed;
     }
-    /* fine grain noise texture, sits above the glows, below the content */
     [data-testid="stAppViewContainer"]::before {
-        content: "";
-        position: fixed; inset: 0; z-index: 0; pointer-events: none;
-        opacity: 0.045;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+        opacity: 0.05;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     }
     [data-testid="stMain"] { background: transparent; }
     [data-testid="stHeader"] { background: transparent; }
-    .stApp { color: #0F172A; }
-    .block-container { padding-top: 2.2rem; max-width: 1240px; position: relative; z-index: 1; }
-    [data-testid="stSidebar"] {
-        background: #FFFFFF !important;
-        border-right: 1px solid #E2E8F0;
-    }
-    [data-testid="stSidebar"] * { color: #0F172A; }
-    [data-testid="stSidebar"] .stTextInput input,
-    [data-testid="stSidebar"] .stTextArea textarea,
+    .block-container { padding-top: 1.4rem; max-width: 1180px; position: relative; z-index: 1; }
+
+    /* ---- Sidebar ---- */
+    [data-testid="stSidebar"] { background: var(--card) !important; border-right: 1px solid var(--line); }
+    [data-testid="stSidebar"] * { color: var(--ink); }
+
+    /* ---- Headings / text ---- */
+    h1, h2, h3, h4, h5, h6 { color: var(--ink) !important; font-family: var(--sans); letter-spacing: -0.012em; font-weight: 700; }
+    [data-testid="stCaptionContainer"] { color: var(--muted) !important; }
+    p, span, label, li { color: var(--ink-2); }
+    a { color: var(--accent); text-decoration: none; }
+
+    /* ---- Inputs ---- */
     .stTextInput input, .stTextArea textarea,
     .stSelectbox div[data-baseweb="select"] {
-        background: #FFFFFF !important;
-        color: #0F172A !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 10px !important;
+        background: var(--card) !important; color: var(--ink) !important;
+        border: 1px solid var(--line) !important; border-radius: 10px !important;
+        font-family: var(--sans) !important;
     }
     .stTextInput input:focus, .stTextArea textarea:focus {
-        border-color: #2563EB !important;
-        box-shadow: 0 0 0 3px rgba(37,99,235,0.12) !important;
+        border-color: var(--accent) !important;
+        box-shadow: 0 0 0 3px rgba(190,91,42,0.14) !important;
     }
     [data-testid="stFileUploaderDropzone"] {
-        background: #F8FAFC !important;
-        border: 1.5px dashed #CBD5E1 !important;
-        color: #64748B !important;
-        border-radius: 12px !important;
+        background: var(--paper-2) !important; border: 1.4px dashed #C9BFA9 !important;
+        color: var(--muted) !important; border-radius: 12px !important;
     }
-    h1, h2, h3, h4, h5, h6 { color: #0F172A !important; letter-spacing: -0.01em; }
-    [data-testid="stCaptionContainer"] { color: #64748B !important; }
-    p, span, label, li { color: #334155; }
-    /* Buttons */
+
+    /* ---- Buttons: default = ghost ink, primary = solid ink ---- */
     .stButton > button, .stDownloadButton > button,
     [data-testid="stFormSubmitButton"] > button {
-        background: #2563EB !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        border-radius: 10px !important;
-        font-weight: 600 !important;
-        padding: 9px 18px !important;
-        box-shadow: 0 1px 2px rgba(15,23,42,0.08) !important;
-        transition: background .15s ease, transform .05s ease;
+        font-family: var(--sans) !important; font-weight: 600 !important;
+        border-radius: 10px !important; padding: 9px 18px !important;
+        transition: all .16s ease; letter-spacing: .01em;
     }
-    .stButton > button:hover,
-    [data-testid="stFormSubmitButton"] > button:hover { background: #1E3A8A !important; }
-    .stButton > button:active { transform: translateY(1px); }
-    .stButton > button:disabled {
-        background: #E2E8F0 !important;
-        color: #94A3B8 !important;
-        box-shadow: none !important;
+    .stButton > button {
+        background: transparent !important; color: var(--ink) !important;
+        border: 1.4px solid var(--ink) !important; box-shadow: none !important;
     }
-    /* Tabs */
+    .stButton > button:hover { background: var(--ink) !important; color: var(--paper) !important; transform: translateY(-1px); }
+    .stButton > button[kind="primary"],
+    [data-testid="baseButton-primary"],
+    [data-testid="stFormSubmitButton"] > button,
+    .stDownloadButton > button {
+        background: var(--ink) !important; color: #F7F2E8 !important;
+        border: 1.4px solid var(--ink) !important;
+    }
+    .stButton > button[kind="primary"]:hover,
+    [data-testid="baseButton-primary"]:hover,
+    [data-testid="stFormSubmitButton"] > button:hover {
+        background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important;
+    }
+    .stButton > button:disabled { opacity: .45 !important; transform: none !important; }
+
+    /* ---- Tabs ---- */
     [data-testid="stTabs"] [role="tablist"] {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 6px;
-        gap: 4px;
-        flex-wrap: wrap;
+        background: var(--card); border: 1px solid var(--line);
+        border-radius: 12px; padding: 6px; gap: 4px; flex-wrap: wrap;
     }
     [data-testid="stTabs"] [role="tab"] {
-        color: #64748B !important;
-        background: transparent !important;
-        border-radius: 8px !important;
-        padding: 8px 16px !important;
-        font-weight: 600 !important;
+        color: var(--muted) !important; background: transparent !important;
+        border-radius: 8px !important; padding: 8px 16px !important; font-weight: 600 !important;
     }
     [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
-        background: #EFF6FF !important;
-        color: #1E3A8A !important;
+        background: var(--accent-soft) !important; color: var(--accent-d) !important;
     }
-    /* Expander + dataframe + bordered containers (glassmorphism) */
+
+    /* ---- Cards / expanders / dataframe ---- */
     [data-testid="stExpander"] {
-        background: rgba(255,255,255,0.66);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
-        border: 1px solid rgba(255,255,255,0.65);
-        border-radius: 14px;
-        box-shadow: 0 6px 24px rgba(32,20,92,0.06);
+        background: var(--card); border: 1px solid var(--line);
+        border-radius: 14px; box-shadow: 0 6px 22px rgba(23,32,42,0.05);
     }
-    [data-testid="stExpander"] summary { color: #0F172A !important; }
+    [data-testid="stExpander"] summary { color: var(--ink) !important; }
     [data-testid="stDataFrame"] {
-        background: rgba(255,255,255,0.72);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255,255,255,0.65);
-        border-radius: 14px;
-        padding: 6px;
+        background: var(--card); border: 1px solid var(--line);
+        border-radius: 14px; padding: 6px;
     }
     [data-testid="stVerticalBlockBorderWrapper"] {
-        background: rgba(255,255,255,0.66) !important;
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255,255,255,0.7) !important;
-        border-radius: 18px;
-        box-shadow: 0 10px 30px rgba(32,20,92,0.08);
+        background: var(--card) !important; border: 1px solid var(--line) !important;
+        border-radius: 18px; box-shadow: 0 10px 30px rgba(23,32,42,0.06);
     }
-    /* Generic card + section titles (glassmorphism) */
+    [data-testid="stSpinner"] { color: var(--accent); }
+
+    /* ---- Generic cards / titles ---- */
     .kmu-card {
-        background: rgba(255,255,255,0.66);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255,255,255,0.7);
-        border-radius: 18px;
-        padding: 22px 24px;
-        margin-bottom: 18px;
-        box-shadow: 0 10px 30px rgba(32,20,92,0.08);
+        background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+        padding: 22px 24px; margin-bottom: 18px; box-shadow: 0 10px 30px rgba(23,32,42,0.06);
     }
     .kmu-card-title {
-        color: #0F172A;
-        font-weight: 700;
-        font-size: 18px;
-        margin-bottom: 14px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        color: var(--ink); font-weight: 700; font-size: 18px; margin-bottom: 14px;
+        display: flex; justify-content: space-between; align-items: center;
     }
-    .kmu-card-title small { color: #64748B; font-weight: 400; font-size: 13px; }
-    /* KPI cards (glassmorphism) */
+    .kmu-card-title small { color: var(--accent); font-weight: 600; font-size: 13px; }
+
+    /* ---- KPI cards ---- */
     .kpi-card {
-        background: rgba(255,255,255,0.62);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255,255,255,0.7);
-        border-radius: 18px;
-        padding: 20px 22px;
-        position: relative;
-        overflow: hidden;
-        min-height: 132px;
-        box-shadow: 0 10px 30px rgba(32,20,92,0.08);
+        background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+        padding: 20px 22px; position: relative; overflow: hidden; min-height: 132px;
+        box-shadow: 0 10px 30px rgba(23,32,42,0.06);
     }
-    .kpi-card::before {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 4px;
-    }
+    .kpi-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
     .kpi-icon {
-        width: 40px; height: 40px; border-radius: 10px;
-        display: inline-flex; align-items: center; justify-content: center;
-        font-size: 19px; margin-bottom: 12px;
+        width: 40px; height: 40px; border-radius: 11px; display: inline-flex;
+        align-items: center; justify-content: center; font-size: 19px; margin-bottom: 12px;
     }
-    .kpi-card.teal::before { background: #2563EB; }
-    .kpi-card.orange::before { background: #F59E0B; }
-    .kpi-card.blue::before { background: #1E3A8A; }
-    .kpi-card.green::before { background: #10B981; }
-    .kpi-card.red::before { background: #EF4444; }
-    .kpi-card.teal .kpi-icon { background: #EFF6FF; }
-    .kpi-card.orange .kpi-icon { background: #FEF3C7; }
-    .kpi-card.blue .kpi-icon { background: #E0E7FF; }
-    .kpi-card.green .kpi-icon { background: #D1FAE5; }
-    .kpi-value {
-        font-size: 34px;
-        font-weight: 800;
-        line-height: 1.1;
-        color: #0F172A;
+    .kpi-card.teal::before { background: var(--ink); }
+    .kpi-card.orange::before { background: var(--warn); }
+    .kpi-card.blue::before { background: var(--info); }
+    .kpi-card.green::before { background: var(--ok); }
+    .kpi-card.red::before { background: var(--err); }
+    .kpi-card.teal .kpi-icon { background: #E9EAEC; }
+    .kpi-card.orange .kpi-icon { background: #FBEAD3; }
+    .kpi-card.blue .kpi-icon { background: #E2E8FB; }
+    .kpi-card.green .kpi-icon { background: #DCEFE4; }
+    .kpi-value { font-size: 34px; font-weight: 800; line-height: 1.1; color: var(--ink); font-family: var(--display); }
+    .kpi-value.teal { color: var(--ink); }
+    .kpi-value.blue { color: var(--info); }
+    .kpi-value.orange { color: var(--warn); }
+    .kpi-value.green { color: var(--ok); }
+    .kpi-value.red { color: var(--err); }
+    .kpi-label { color: var(--muted); font-size: 13px; margin-top: 8px; line-height: 1.4; font-weight: 500; }
+
+    /* ---- Dashboard header ---- */
+    .dashboard-header { display: flex; justify-content: space-between; align-items: flex-end; margin: 6px 0 18px; }
+    .dashboard-header h1 { font-size: 30px !important; margin: 0 !important; font-weight: 800; font-family: var(--display); letter-spacing: -0.01em; }
+    .dashboard-header .subtitle { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    .kmu-avatar, .app-avatar {
+        background: var(--ink); color: var(--paper); width: 34px; height: 34px; border-radius: 50%;
+        display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
     }
-    .kpi-value.teal, .kpi-value.blue { color: #1E3A8A; }
-    .kpi-value.orange { color: #B45309; }
-    .kpi-value.green { color: #047857; }
-    .kpi-value.red { color: #B91C1C; }
-    .kpi-label {
-        color: #64748B;
-        font-size: 13px;
-        margin-top: 8px;
-        line-height: 1.4;
-        font-weight: 500;
-    }
-    /* App header (top navigation, glassmorphism) */
-    .app-header {
-        display: flex; justify-content: space-between; align-items: center;
-        background: rgba(255,255,255,0.62);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255,255,255,0.7);
-        border-radius: 18px;
-        padding: 14px 24px;
-        margin-bottom: 22px;
-        box-shadow: 0 10px 30px rgba(32,20,92,0.08);
-    }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; color: #1E3A8A; }
-    .brand .brand-mark {
-        width: 30px; height: 30px; border-radius: 9px;
-        background: linear-gradient(135deg,#2563EB,#1E3A8A);
-        color: #fff; display: inline-flex; align-items: center; justify-content: center;
-        font-size: 16px;
-    }
-    .app-nav { display: flex; gap: 6px; }
-    .app-nav span {
-        color: #475569; font-size: 14px; font-weight: 600;
-        padding: 8px 14px; border-radius: 9px;
-    }
-    .app-nav span.active { background: #EFF6FF; color: #1E3A8A; }
-    .app-user { display: flex; align-items: center; gap: 10px; color: #475569; font-size: 14px; font-weight: 600; }
-    .app-avatar {
-        width: 34px; height: 34px; border-radius: 50%;
-        background: linear-gradient(135deg,#2563EB,#1E3A8A); color: #fff;
-        display: inline-flex; align-items: center; justify-content: center;
-        font-weight: 700; font-size: 13px;
-    }
-    /* Hero */
-    /* ---- Hero (BigMarker-Stil) ---- */
-    .hero {
-        position: relative;
-        text-align: center;
-        background:
-            radial-gradient(1100px 460px at 50% -8%, rgba(111,110,255,0.22), transparent 62%),
-            radial-gradient(800px 380px at 88% 8%, rgba(91,92,240,0.14), transparent 60%),
-            rgba(255,255,255,0.55);
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-        border: 1px solid rgba(255,255,255,0.7);
-        border-radius: 28px;
-        padding: 58px 40px 50px;
-        margin-bottom: 26px;
-        overflow: hidden;
-        box-shadow: 0 16px 44px rgba(32,20,92,0.10);
-    }
-    .hero-pill {
-        display: inline-flex; align-items: center; gap: 8px;
-        background: #FFFFFF; border: 1px solid #E6E3F7;
-        color: #5B5CF0; font-weight: 600; font-size: 13px;
-        padding: 7px 16px; border-radius: 999px; margin-bottom: 24px;
-        box-shadow: 0 2px 12px rgba(32,20,92,0.07);
-    }
-    .hero-pill b { color: #20145C; }
-    .hero h1 {
-        font-size: 58px !important; font-weight: 800; line-height: 1.04;
-        letter-spacing: -0.03em; color: #20145C !important;
-        margin: 0 auto 18px; max-width: 920px;
-    }
-    .hero h1 .accent {
-        background: linear-gradient(120deg, #5B5CF0, #6F6EFF);
-        -webkit-background-clip: text; background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    .hero .sub {
-        color: #2E2459; font-size: 20px; font-weight: 600;
-        max-width: 720px; margin: 0 auto 8px;
-    }
-    .hero .sub2 {
-        color: #6B6391; font-size: 16px; line-height: 1.6;
-        max-width: 680px; margin: 0 auto;
-    }
-    .hero .cta-row {
-        display: flex; gap: 14px; justify-content: center;
-        margin: 28px 0 24px; flex-wrap: wrap;
-    }
-    .cta-primary {
-        background: #20145C; color: #fff !important; font-weight: 700;
-        padding: 14px 30px; border-radius: 999px; font-size: 15px;
-        box-shadow: 0 12px 26px rgba(32,20,92,0.30);
-    }
-    .cta-secondary {
-        background: #FFFFFF; color: #20145C !important; font-weight: 700;
-        padding: 14px 30px; border-radius: 999px; font-size: 15px;
-        border: 1.6px solid #20145C;
-    }
-    .hero-trust {
-        display: flex; gap: 12px 28px; justify-content: center;
-        flex-wrap: wrap; margin-top: 8px;
-    }
-    .hero-trust span {
-        color: #5B4F86; font-size: 13.5px; font-weight: 600;
-        display: inline-flex; align-items: center; gap: 7px;
-    }
-    .hero-trust span i {
-        color: #5B5CF0; font-weight: 800; font-style: normal;
-    }
-    /* Upload tiles */
-    .upload-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
-    .upload-ic {
-        width: 42px; height: 42px; border-radius: 12px;
-        display: inline-flex; align-items: center; justify-content: center; font-size: 20px;
-        background: #EFF6FF;
-    }
-    .upload-ic.green { background: #D1FAE5; }
-    .upload-title { font-weight: 700; font-size: 16px; color: #0F172A; }
-    .upload-desc { color: #64748B; font-size: 13px; margin-bottom: 8px; }
-    /* Candidate cards */
-    .cand-name { font-weight: 700; font-size: 16px; color: #0F172A; }
-    .cand-role { color: #64748B; font-size: 13px; margin-top: 2px; }
-    .cand-metric { font-size: 22px; font-weight: 800; color: #1E3A8A; }
-    .cand-metric-label { font-size: 11px; color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
-    /* Headline / topbar legacy aliases (kept for compatibility) */
     .kmu-topbar { display: none; }
-    .dashboard-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 18px; }
-    .dashboard-header h1 { font-size: 28px !important; margin: 0 !important; font-weight: 800; }
-    .dashboard-header .subtitle { color: #64748B; font-size: 14px; margin-top: 4px; }
-    .kmu-avatar {
-        background: linear-gradient(135deg,#2563EB,#1E3A8A); color: #fff;
-        width: 32px; height: 32px; border-radius: 50%;
-        display: inline-flex; align-items: center; justify-content: center;
-        font-weight: 700; font-size: 13px;
-    }
-    /* Badges */
-    .kmu-badge {
-        display: inline-block;
-        padding: 3px 10px;
-        border-radius: 999px;
-        font-size: 11px;
-        font-weight: 600;
-        margin: 1px 0;
-    }
-    .kmu-badge-ok { background: #D1FAE5; color: #047857; }
-    .kmu-badge-warn { background: #FEF3C7; color: #B45309; }
-    .kmu-badge-err { background: #FEE2E2; color: #B91C1C; }
-    .kmu-badge-info { background: #EFF6FF; color: #1D4ED8; }
-    .kmu-badge-muted { background: #F1F5F9; color: #64748B; }
-    /* Listen (Letzte Bewerbungen) */
-    .kmu-list-item {
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 12px 0;
-        border-bottom: 1px solid #E2E8F0;
-        gap: 12px;
-    }
+
+    /* ---- Badges ---- */
+    .kmu-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; margin: 1px 0; }
+    .kmu-badge-ok { background: #DCEFE4; color: var(--ok); }
+    .kmu-badge-warn { background: #FBEAD3; color: var(--warn); }
+    .kmu-badge-err { background: #F7DEDC; color: var(--err); }
+    .kmu-badge-info { background: var(--accent-soft); color: var(--accent-d); }
+    .kmu-badge-muted { background: #ECE6D9; color: var(--muted); }
+
+    /* ---- Lists ---- */
+    .kmu-list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line-2); gap: 12px; }
     .kmu-list-item:last-child { border-bottom: none; }
-    .kmu-list-avatar {
-        width: 38px; height: 38px; border-radius: 50%;
-        background: linear-gradient(135deg,#2563EB,#1E3A8A); color: #fff;
-        display: inline-flex; align-items: center; justify-content: center;
-        font-weight: 700; font-size: 13px; flex-shrink: 0;
-    }
-    .kmu-list-name { font-weight: 600; color: #0F172A; font-size: 14px; }
-    .kmu-list-file { color: #64748B; font-size: 12px; margin-top: 2px; }
-    .kmu-logo {
-        font-size: 17px; font-weight: 800; color: #1E3A8A;
-        padding: 4px 8px 12px 8px;
-    }
-    /* Donut legend (kept) */
+    .kmu-list-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--ink); color: var(--paper); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+    .kmu-list-name { font-weight: 600; color: var(--ink); font-size: 14px; }
+    .kmu-list-file { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .kmu-logo { font-size: 17px; font-weight: 800; color: var(--ink); padding: 4px 8px 12px 8px; font-family: var(--display); }
+
+    /* ---- Donut legend ---- */
     .donut-wrap { display: flex; align-items: center; gap: 24px; }
     .donut-legend { font-size: 13px; flex: 1; }
-    .donut-legend-row {
-        display: flex; align-items: center; gap: 8px;
-        padding: 6px 0; color: #334155;
-    }
+    .donut-legend-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; color: var(--ink-2); }
     .donut-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
-    .donut-count { margin-left: auto; color: #64748B; font-weight: 600; }
-    /* Question rows */
-    .question-row {
-        background: #F8FAFC;
-        border: 1px solid #E2E8F0;
-        border-radius: 10px;
-        padding: 10px 14px;
-        margin-bottom: 8px;
-        color: #0F172A;
-        font-size: 14px;
-    }
-    .question-row.reviewed { border-left: 4px solid #10B981; }
-    /* HiL line */
-    .hil-line {
-        color: #475569;
-        font-size: 13px;
-        padding: 10px 16px;
-        margin: 4px 0 14px 0;
-        border-left: 3px solid #2563EB;
-        background: #EFF6FF;
-        border-radius: 8px;
-        font-weight: 500;
-    }
-    /* Coverage box */
-    .coverage-box {
-        background: #EFF6FF;
-        border: 1px solid #DBEAFE;
-        border-radius: 12px;
-        padding: 14px 18px;
-        margin: 6px 0 4px 0;
-        text-align: center;
-    }
-    .coverage-value { font-size: 26px; font-weight: 800; color: #1E3A8A; }
-    .coverage-label { color: #64748B; font-size: 12px; margin-top: 4px; }
-    /* Timeline (Audit Log) */
+    .donut-count { margin-left: auto; color: var(--muted); font-weight: 600; }
+
+    /* ---- Question rows ---- */
+    .question-row { background: var(--paper-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; color: var(--ink); font-size: 14px; }
+    .question-row.reviewed { border-left: 4px solid var(--ok); }
+
+    /* ---- HiL line ---- */
+    .hil-line { color: var(--ink-2); font-size: 13px; padding: 10px 16px; margin: 4px 0 14px 0; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 8px; font-weight: 500; }
+
+    /* ---- Coverage box ---- */
+    .coverage-box { background: var(--accent-soft); border: 1px solid #EBD8C6; border-radius: 12px; padding: 14px 18px; margin: 6px 0 4px 0; text-align: center; }
+    .coverage-value { font-size: 26px; font-weight: 800; color: var(--accent-d); font-family: var(--display); }
+    .coverage-label { color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+    /* ---- Timeline (Audit) ---- */
     .timeline { position: relative; margin: 6px 0 0 6px; padding-left: 22px; }
-    .timeline::before {
-        content: ""; position: absolute; left: 5px; top: 4px; bottom: 4px;
-        width: 2px; background: #E2E8F0;
-    }
+    .timeline::before { content: ""; position: absolute; left: 5px; top: 4px; bottom: 4px; width: 2px; background: var(--line); }
     .tl-item { position: relative; padding: 0 0 18px 4px; }
-    .tl-dot {
-        position: absolute; left: -22px; top: 3px;
-        width: 12px; height: 12px; border-radius: 50%;
-        background: #2563EB; border: 2px solid #fff;
-        box-shadow: 0 0 0 2px #DBEAFE;
-    }
-    .tl-time { color: #94A3B8; font-size: 12px; font-weight: 600; }
-    .tl-action { color: #0F172A; font-weight: 600; font-size: 14px; }
-    .tl-target { color: #64748B; font-size: 13px; }
-    .section-title { font-size: 20px; font-weight: 800; color: #0F172A; margin: 6px 0 2px 0; }
-    .section-sub { color: #64748B; font-size: 14px; margin-bottom: 16px; }
-    /* ---- Microinteractions (Premium-SaaS) ---- */
-    @keyframes fadeUpG { from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); } }
-    .kmu-card, .kpi-card,
-    [data-testid="stVerticalBlockBorderWrapper"] {
-        transition: transform .2s ease, box-shadow .2s ease;
-    }
-    .kpi-card:hover, .kmu-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 18px 42px rgba(111,110,255,0.18);
-    }
-    .stButton > button:hover,
-    [data-testid="stFormSubmitButton"] > button:hover {
-        box-shadow: 0 8px 22px rgba(37,99,235,0.40) !important;
-    }
-    .kmu-badge { animation: fadeUpG .45s ease both; }
-    [data-testid="stSpinner"] { color: #6F6EFF; }
-    /* ---- AI Activity Feed ---- */
-    .feed-item { display: flex; align-items: center; gap: 11px;
-        padding: 9px 2px; border-bottom: 1px solid #EEF0F6;
-        animation: fadeUpG .5s ease both; }
+    .tl-dot { position: absolute; left: -22px; top: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid var(--card); box-shadow: 0 0 0 2px var(--accent-soft); }
+    .tl-time { color: var(--soft); font-size: 12px; font-weight: 600; }
+    .tl-action { color: var(--ink); font-weight: 600; font-size: 14px; }
+    .tl-target { color: var(--muted); font-size: 13px; }
+    .section-title { font-size: 20px; font-weight: 800; color: var(--ink); margin: 6px 0 2px 0; font-family: var(--display); }
+    .section-sub { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+
+    /* ---- Upload tiles ---- */
+    .upload-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+    .upload-ic { width: 42px; height: 42px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; background: var(--accent-soft); }
+    .upload-ic.green { background: #DCEFE4; }
+    .upload-title { font-weight: 700; font-size: 16px; color: var(--ink); }
+    .upload-desc { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+
+    /* ---- Candidate cards ---- */
+    .cand-name { font-weight: 700; font-size: 16px; color: var(--ink); }
+    .cand-role { color: var(--muted); font-size: 13px; margin-top: 2px; }
+    .cand-metric { font-size: 22px; font-weight: 800; color: var(--accent-d); font-family: var(--display); }
+    .cand-metric-label { font-size: 11px; color: var(--soft); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+
+    /* ---- Activity feed ---- */
+    .feed-item { display: flex; align-items: center; gap: 11px; padding: 9px 2px; border-bottom: 1px solid var(--line-2); animation: fadeUpG .5s ease both; }
     .feed-item:last-child { border-bottom: none; }
-    .feed-ic { width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
-        display: inline-flex; align-items: center; justify-content: center;
-        font-size: 14px; background: linear-gradient(145deg,#EFF1FF,#E4E1FF); }
+    .feed-ic { width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; background: var(--accent-soft); }
     .feed-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-    .feed-body b { color: #111827; font-size: 13px; font-weight: 600;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .feed-body small { color: #94A3B8; font-size: 11.5px;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .feed-time { color: #94A3B8; font-size: 11.5px; font-weight: 600;
-        flex-shrink: 0; }
-    .kmu-card-title small { color: #14B8A6; }
+    .feed-body b { color: var(--ink); font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feed-body small { color: var(--soft); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feed-time { color: var(--soft); font-size: 11.5px; font-weight: 600; flex-shrink: 0; }
+
+    /* ---- Microinteractions ---- */
+    @keyframes fadeUpG { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .kmu-card, .kpi-card, [data-testid="stVerticalBlockBorderWrapper"] { transition: transform .2s ease, box-shadow .2s ease; }
+    .kpi-card:hover, .kmu-card:hover { transform: translateY(-4px); box-shadow: 0 18px 42px rgba(23,32,42,0.12); }
+    .kmu-badge { animation: fadeUpG .45s ease both; }
+
+    /* =====================================================================
+       TOP NAVIGATION (masthead) + MARKETING PAGES
+       ===================================================================== */
+    .nav-brand { display: flex; align-items: center; gap: 11px; padding-top: 4px; }
+    .nav-mark {
+        width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
+        background: var(--ink); color: var(--paper); display: inline-flex;
+        align-items: center; justify-content: center; font-size: 19px;
+        font-family: var(--display); font-weight: 700;
+    }
+    .nav-name { font-family: var(--display); font-weight: 700; font-size: 19px; color: var(--ink); line-height: 1; letter-spacing: -0.01em; }
+    .nav-name small { display: block; font-family: var(--sans); font-weight: 500; font-size: 11px; color: var(--muted); letter-spacing: .14em; text-transform: uppercase; margin-top: 3px; }
+    .nav-rule { border: none; border-top: 1px solid var(--line); margin: 4px 0 6px; }
+
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-d); }
+    .eyebrow::before { content: ""; width: 26px; height: 1.5px; background: var(--accent); display: inline-block; }
+
+    /* ---- Marketing hero (stock image, Ken-Burns) ---- */
+    .mk-hero { position: relative; border-radius: 26px; overflow: hidden; margin: 8px 0 18px; min-height: 520px; display: flex; align-items: center; box-shadow: 0 24px 60px rgba(23,32,42,0.20); border: 1px solid rgba(23,32,42,0.10); }
+    .mk-hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; transform: scale(1.06); animation: kenburns 22s ease-in-out infinite alternate; z-index: 0; }
+    @keyframes kenburns { from { transform: scale(1.04) translate(0,0); } to { transform: scale(1.14) translate(-2%, -2%); } }
+    .mk-hero-ov { position: absolute; inset: 0; z-index: 1; background: linear-gradient(105deg, rgba(18,22,28,0.90) 0%, rgba(18,22,28,0.72) 42%, rgba(18,22,28,0.22) 78%, rgba(18,22,28,0.05) 100%); }
+    .mk-hero-in { position: relative; z-index: 2; padding: 56px 56px; max-width: 760px; }
+    .mk-eyebrow { color: #E8B58C; }
+    .mk-eyebrow::before { background: #E8B58C; }
+    .mk-h1 { font-family: var(--display); font-weight: 600; font-size: 56px; line-height: 1.04; letter-spacing: -0.02em; color: #FBF7EF; margin: 16px 0 18px; }
+    .mk-h1 em { font-style: italic; color: #F0C49B; }
+    .mk-sub { color: #E7E2D7; font-size: 18px; line-height: 1.6; max-width: 560px; font-weight: 400; }
+    .mk-meta { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 26px; }
+    .mk-meta span { color: #EDE7DA; font-size: 13.5px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; }
+    .mk-meta i { color: #F0C49B; font-style: normal; font-weight: 800; }
+
+    /* ---- Section scaffolding ---- */
+    .mk-sec { margin: 40px 0; }
+    .mk-sec-head { max-width: 680px; margin-bottom: 26px; }
+    .mk-h2 { font-family: var(--display); font-weight: 600; font-size: 38px; line-height: 1.1; letter-spacing: -0.015em; color: var(--ink); margin: 12px 0 10px; }
+    .mk-lead { color: var(--muted); font-size: 17px; line-height: 1.6; }
+
+    /* ---- Logos strip ---- */
+    .logos { display: flex; flex-wrap: wrap; gap: 16px 34px; align-items: center; padding: 18px 24px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; }
+    .logos span { font-family: var(--display); font-weight: 600; font-size: 19px; color: #9A9282; letter-spacing: .02em; }
+    .logos .lab { font-family: var(--sans); font-weight: 600; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--soft); margin-right: 8px; }
+
+    /* ---- Stats band ---- */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    .stat { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 26px 22px; box-shadow: 0 8px 24px rgba(23,32,42,0.05); transition: transform .2s ease, box-shadow .2s ease; }
+    .stat:hover { transform: translateY(-4px); box-shadow: 0 16px 38px rgba(23,32,42,0.12); }
+    .stat-n { font-family: var(--display); font-weight: 700; font-size: 40px; color: var(--ink); line-height: 1; }
+    .stat-n em { color: var(--accent); font-style: normal; }
+    .stat-l { color: var(--muted); font-size: 14px; margin-top: 8px; line-height: 1.45; }
+
+    /* ---- Feature grid ---- */
+    .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .feat-card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; box-shadow: 0 10px 28px rgba(23,32,42,0.06); transition: transform .22s ease, box-shadow .22s ease; display: flex; flex-direction: column; }
+    .feat-card:hover { transform: translateY(-6px); box-shadow: 0 22px 48px rgba(23,32,42,0.14); }
+    .feat-img { height: 168px; background-size: cover; background-position: center; position: relative; }
+    .feat-img::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(18,22,28,0) 40%, rgba(18,22,28,0.28) 100%); }
+    .feat-body { padding: 20px 22px 24px; }
+    .feat-k { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-d); }
+    .feat-h { font-family: var(--display); font-weight: 600; font-size: 21px; color: var(--ink); margin: 8px 0 8px; line-height: 1.2; }
+    .feat-p { color: var(--muted); font-size: 14.5px; line-height: 1.6; }
+
+    /* ---- Showreel (cross-fade slideshow) ---- */
+    .reel { position: relative; height: 420px; border-radius: 22px; overflow: hidden; border: 1px solid rgba(23,32,42,0.10); box-shadow: 0 22px 54px rgba(23,32,42,0.18); }
+    .reel .slide { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; animation: reelFade 18s infinite; }
+    .reel .slide:nth-child(1){ animation-delay: 0s; }
+    .reel .slide:nth-child(2){ animation-delay: 6s; }
+    .reel .slide:nth-child(3){ animation-delay: 12s; }
+    @keyframes reelFade { 0%{opacity:0;transform:scale(1.05);} 6%{opacity:1;} 30%{opacity:1;transform:scale(1.1);} 36%{opacity:0;} 100%{opacity:0;} }
+    .reel-ov { position: absolute; inset: 0; z-index: 2; background: linear-gradient(0deg, rgba(18,22,28,0.66), rgba(18,22,28,0.05) 60%); display: flex; align-items: flex-end; padding: 30px 34px; }
+    .reel-ov h3 { font-family: var(--display); font-weight: 600; font-size: 26px; color: #FBF7EF; margin: 0; }
+    .reel-ov p { color: #E7E2D7; margin: 6px 0 0; font-size: 15px; }
+    .reel-dot { position: absolute; z-index: 3; top: 20px; left: 22px; display: inline-flex; align-items: center; gap: 8px; color: #FBF7EF; font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+    .reel-dot::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #E5484D; box-shadow: 0 0 0 0 rgba(229,72,77,0.6); animation: pulseDot 1.8s infinite; }
+    @keyframes pulseDot { 0%{box-shadow:0 0 0 0 rgba(229,72,77,0.5);} 70%{box-shadow:0 0 0 10px rgba(229,72,77,0);} 100%{box-shadow:0 0 0 0 rgba(229,72,77,0);} }
+
+    /* ---- Split (image + text) ---- */
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
+    .split-img { height: 380px; border-radius: 20px; background-size: cover; background-position: center; box-shadow: 0 18px 44px rgba(23,32,42,0.16); border: 1px solid rgba(23,32,42,0.08); }
+    .split ul { list-style: none; padding: 0; margin: 16px 0 0; }
+    .split li { color: var(--ink-2); font-size: 15.5px; line-height: 1.5; padding: 10px 0 10px 30px; position: relative; border-bottom: 1px solid var(--line-2); }
+    .split li::before { content: "→"; position: absolute; left: 0; top: 10px; color: var(--accent); font-weight: 800; }
+
+    /* ---- Testimonials ---- */
+    .quote-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .quote { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 26px 24px; box-shadow: 0 10px 28px rgba(23,32,42,0.06); display: flex; flex-direction: column; }
+    .quote .mark { font-family: var(--display); font-size: 46px; line-height: .4; color: var(--accent); height: 24px; }
+    .quote p { color: var(--ink-2); font-size: 15.5px; line-height: 1.6; font-style: italic; font-family: var(--display); font-weight: 400; }
+    .quote-by { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
+    .quote-av { width: 44px; height: 44px; border-radius: 50%; background-size: cover; background-position: center; flex-shrink: 0; border: 2px solid var(--accent-soft); }
+    .quote-by b { color: var(--ink); font-size: 14px; display: block; }
+    .quote-by small { color: var(--muted); font-size: 12.5px; }
+
+    /* ---- Pricing ---- */
+    .price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: stretch; }
+    .price-card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 28px 26px; display: flex; flex-direction: column; box-shadow: 0 10px 28px rgba(23,32,42,0.06); }
+    .price-card.featured { border: 1.6px solid var(--ink); box-shadow: 0 20px 48px rgba(23,32,42,0.16); position: relative; }
+    .price-tag { position: absolute; top: 18px; right: 18px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 4px 12px; border-radius: 999px; }
+    .price-k { font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent-d); }
+    .price-amt { font-family: var(--display); font-weight: 700; font-size: 44px; color: var(--ink); margin: 10px 0 2px; }
+    .price-amt small { font-family: var(--sans); font-size: 15px; font-weight: 500; color: var(--muted); }
+    .price-li { list-style: none; padding: 0; margin: 16px 0; flex: 1; }
+    .price-li li { color: var(--ink-2); font-size: 14.5px; padding: 8px 0 8px 26px; position: relative; border-bottom: 1px solid var(--line-2); }
+    .price-li li::before { content: "✓"; position: absolute; left: 0; color: var(--ok); font-weight: 800; }
+
+    /* ---- CTA band ---- */
+    .cta-band { position: relative; border-radius: 24px; overflow: hidden; padding: 50px 48px; margin: 8px 0; background: linear-gradient(120deg, #14181E 0%, #1E2731 60%, #2A3845 100%); box-shadow: 0 24px 56px rgba(23,32,42,0.22); }
+    .cta-band::after { content: ""; position: absolute; right: -60px; top: -60px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(closest-side, rgba(190,91,42,0.34), transparent 70%); }
+    .cta-h { font-family: var(--display); font-weight: 600; font-size: 34px; color: #FBF7EF; line-height: 1.12; margin: 0 0 10px; position: relative; z-index: 1; max-width: 620px; }
+    .cta-p { color: #D8D2C6; font-size: 16px; line-height: 1.6; max-width: 560px; position: relative; z-index: 1; }
+
+    /* ---- Contact ---- */
+    .contact-card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 24px 26px; box-shadow: 0 10px 28px rgba(23,32,42,0.06); }
+    .contact-row { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--line-2); }
+    .contact-row:last-child { border-bottom: none; }
+    .contact-ic { width: 40px; height: 40px; border-radius: 11px; background: var(--accent-soft); display: inline-flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .contact-row b { color: var(--ink); font-size: 14px; display: block; }
+    .contact-row small { color: var(--muted); font-size: 13px; }
+
+    /* ---- Footer ---- */
+    .mk-foot { border-top: 1px solid var(--line); margin-top: 44px; padding: 30px 4px 12px; display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 24px; }
+    .mk-foot h4 { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--soft); margin: 0 0 12px; }
+    .mk-foot a, .mk-foot p { color: var(--ink-2); font-size: 14px; line-height: 1.9; display: block; }
+    .mk-foot .brandline { font-family: var(--display); font-weight: 700; font-size: 20px; color: var(--ink); margin-bottom: 8px; }
+    .mk-foot .muted { color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .foot-legal { color: var(--soft); font-size: 12.5px; text-align: center; padding: 18px 0 6px; border-top: 1px solid var(--line-2); margin-top: 24px; }
+
+    @media (max-width: 1000px){
+        .feat-grid, .quote-grid, .price-grid, .stats { grid-template-columns: 1fr 1fr; }
+        .split { grid-template-columns: 1fr; }
+        .mk-h1 { font-size: 40px; }
+        .mk-hero-in { padding: 36px 28px; }
+        .mk-foot { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 640px){
+        .feat-grid, .quote-grid, .price-grid, .stats { grid-template-columns: 1fr; }
+        .mk-h1 { font-size: 32px; }
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -2231,223 +2165,767 @@ if "_coverage_logged" not in st.session_state:
 # Sidebar — Logo, Navigation, Eingaben, Hilfe
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Multi-Page-Router (Session-State) — reine Navigation, keine Geschäftslogik
+# ---------------------------------------------------------------------------
+
+NAV_PAGES = [
+    ("home", "Start"),
+    ("produkt", "Produkt"),
+    ("ablauf", "So funktioniert's"),
+    ("referenzen", "Referenzen"),
+    ("preise", "Preise"),
+]
+NAV_MORE = [
+    ("ueber", "Über uns"),
+    ("kontakt", "Kontakt"),
+]
+_ALL_PAGE_IDS = {p for p, _ in NAV_PAGES + NAV_MORE} | {"workspace"}
+
+if "nav_page" not in st.session_state:
+    st.session_state.nav_page = "home"
+
+
+def goto(page: str) -> None:
+    """Wechselt die sichtbare Seite (nur Navigation)."""
+    if page in _ALL_PAGE_IDS:
+        st.session_state.nav_page = page
+        st.rerun()
+
+
 with st.sidebar:
     st.markdown(
-        '<div class="kmu-logo">🤖 Recruiting AI</div>',
+        '<div class="kmu-logo">Recruiting&nbsp;AI</div>',
         unsafe_allow_html=True,
     )
-    st.caption("Strukturierte Bewerbungsanalyse für KMU")
+    st.caption("Der KI-Workspace für Geschäftsführer ohne eigenes HR-Team.")
     st.divider()
-    st.button("⚙️ Einstellungen", use_container_width=True)
-    st.button("❔ Hilfe & Support", use_container_width=True)
+    st.markdown("**Navigation**")
+    for _pid, _lbl in NAV_PAGES + NAV_MORE:
+        _active = st.session_state.nav_page == _pid
+        if st.button(
+            ("●  " if _active else "") + _lbl,
+            key=f"sb_{_pid}",
+            use_container_width=True,
+            type="primary" if _active else "secondary",
+        ):
+            goto(_pid)
+    st.divider()
+    if st.button(
+        "Workspace öffnen  →",
+        key="sb_ws",
+        type="primary",
+        use_container_width=True,
+    ):
+        goto("workspace")
+    st.caption("Der Mensch entscheidet — der Agent strukturiert.")
 
 
 # ---------------------------------------------------------------------------
-# Topbar + Dashboard-Header
+# Top-Navigation, Marketing-Seiten & Seiten-Routing
+# (rein optisch — die bestehende App-Logik bleibt unverändert)
 # ---------------------------------------------------------------------------
 
-# ---- App-Header (Top-Navigation) ----
 
-st.markdown(
-    """
-    <div class="app-header">
-        <div class="brand"><span class="brand-mark">🤖</span> Recruiting AI</div>
-        <div class="app-nav">
-            <span class="active">Dashboard</span>
-            <span>Kandidaten</span>
-            <span>Stellenprofile</span>
-            <span>Audit Log</span>
+def _img(pid: str, w: int = 1200) -> str:
+    return f"https://images.unsplash.com/{pid}?auto=format&fit=crop&w={w}&q=80"
+
+
+IMG_HERO = _img("photo-1521737604893-d14cc237f11d", 1700)
+IMG_REEL1 = _img("photo-1600880292203-757bb62b4baf", 1400)
+IMG_REEL2 = _img("photo-1497366216548-37526070297c", 1400)
+IMG_REEL3 = _img("photo-1522071820081-009f0129c71c", 1400)
+IMG_SPLIT1 = _img("photo-1573164713988-8665fc963095", 1200)
+IMG_SPLIT2 = _img("photo-1551836022-d5d88e9218df", 1200)
+IMG_ABOUT = _img("photo-1542744173-8e7e53415bb0", 1300)
+
+FEATURES = [
+    {
+        "img": _img("photo-1450101499163-c8848c66ca85"),
+        "k": "Schritt 01",
+        "h": "Stellenprofil verstehen",
+        "p": "Fügen Sie die Stellenanzeige ein. Der Agent extrahiert ausschließlich "
+        "objektiv prüfbare Anforderungen — Skills, Sprachen, Zertifikate, Erfahrung.",
+    },
+    {
+        "img": _img("photo-1486312338219-ce68d2c6f44d"),
+        "k": "Schritt 02",
+        "h": "Lebensläufe strukturieren",
+        "p": "Mehrere PDF-Bewerbungen werden gleichzeitig eingelesen und in saubere, "
+        "vergleichbare Felder überführt — inklusive Belegstellen im Original.",
+    },
+    {
+        "img": _img("photo-1460925895917-afdab827c52f"),
+        "k": "Schritt 03",
+        "h": "Anforderungen abgleichen",
+        "p": "Jede Anforderung wird transparent als gefunden, teilweise gefunden oder "
+        "nicht gefunden markiert — mit nachvollziehbarer Begründung. Kein Score.",
+    },
+    {
+        "img": _img("photo-1454165804606-c3d57bc86b40"),
+        "k": "Schritt 04",
+        "h": "Informationslücken erkennen",
+        "p": "Fehlende oder unklare Angaben werden sichtbar gemacht, statt sie zu "
+        "raten — die Grundlage für faire, fundierte Gespräche.",
+    },
+    {
+        "img": _img("photo-1521791136064-7986c2920216"),
+        "k": "Schritt 05",
+        "h": "Rückfragen vorbereiten",
+        "p": "Höfliche, präzise Rückfragen werden vorformuliert. Sie prüfen und geben "
+        "frei — es wird nichts automatisch versendet.",
+    },
+    {
+        "img": _img("photo-1600880292089-90a7e086ee0c"),
+        "k": "Schritt 06",
+        "h": "Der Mensch entscheidet",
+        "p": "Recruiting AI bewertet niemanden und erstellt kein Ranking. Die Auswahl "
+        "treffen Sie — vollständig auditierbar und DSGVO-konform gedacht.",
+    },
+]
+
+TESTIMONIALS = [
+    {
+        "av": _img("photo-1500648767791-00dcc994a43e", 200),
+        "t": "Wir bekommen täglich 40 Bewerbungen. Recruiting AI gibt uns in Minuten "
+        "eine saubere, vergleichbare Übersicht — die Entscheidung treffen wir trotzdem selbst.",
+        "by": "Markus Reinhardt",
+        "role": "Geschäftsführer, Reinhardt Bau GmbH",
+    },
+    {
+        "av": _img("photo-1494790108377-be9c29b29330", 200),
+        "t": "Endlich kein stundenlanges Lebenslauflesen mehr. Besonders die "
+        "Informationslücken-Erkennung spart uns peinliche Nachfragen im Gespräch.",
+        "by": "Sandra Kühn",
+        "role": "Inhaberin, Kühn Digital Studio",
+    },
+    {
+        "av": _img("photo-1472099645785-5658abf4ff4e", 200),
+        "t": "Transparent und nachvollziehbar. Jede Aussage hat eine Belegstelle — "
+        "das schafft Vertrauen bei uns und im Team.",
+        "by": "Daniel Vogt",
+        "role": "CEO, Vogt Logistik",
+    },
+    {
+        "av": _img("photo-1519085360753-af0119f7cbe7", 200),
+        "t": "Wir sind ein 12-Personen-Team ohne HR-Abteilung. Der Workspace fühlt "
+        "sich an wie eine zusätzliche, sehr gründliche Kollegin.",
+        "by": "Lena Brandt",
+        "role": "Gründerin, Brandt Manufaktur",
+    },
+    {
+        "av": _img("photo-1507003211169-0a1dd7228f2d", 200),
+        "t": "Die Audit-Funktion ist Gold wert. Wir können jeden Schritt der Analyse "
+        "lückenlos nachvollziehen — wichtig für Fairness und Compliance.",
+        "by": "Thomas Eder",
+        "role": "Geschäftsführer, Eder & Partner",
+    },
+    {
+        "av": _img("photo-1438761681033-6461ffad8d80", 200),
+        "t": "Keine Black Box, keine automatische Ablehnung. Genau das wollten wir: "
+        "ein Werkzeug, das uns zuarbeitet, statt für uns zu urteilen.",
+        "by": "Julia Hofmann",
+        "role": "Inhaberin, Hofmann Praxisklinik",
+    },
+]
+
+
+def render_top_nav() -> None:
+    active = st.session_state.nav_page
+    cols = st.columns([2.5, 0.9, 1.0, 1.55, 1.35, 1.15, 1.05, 1.65])
+    with cols[0]:
+        st.markdown(
+            '<div class="nav-brand"><span class="nav-mark">R</span>'
+            '<span class="nav-name">Recruiting&nbsp;AI'
+            "<small>Recruiting Intelligence</small></span></div>",
+            unsafe_allow_html=True,
+        )
+    for idx, (pid, lbl) in enumerate(NAV_PAGES):
+        with cols[1 + idx]:
+            if st.button(
+                ("●  " if active == pid else "") + lbl,
+                key=f"nav_{pid}",
+                use_container_width=True,
+            ):
+                goto(pid)
+    with cols[6]:
+        _menu = st.popover("Mehr  ▾") if hasattr(st, "popover") else st.expander("Mehr  ▾")
+        with _menu:
+            st.caption("Weitere Seiten")
+            for pid, lbl in NAV_MORE:
+                if st.button(lbl, key=f"more_{pid}", use_container_width=True):
+                    goto(pid)
+            st.divider()
+            if st.button("→ Workspace", key="more_ws", use_container_width=True):
+                goto("workspace")
+    with cols[7]:
+        if st.button(
+            "Workspace öffnen  →",
+            key="nav_ws",
+            type="primary",
+            use_container_width=True,
+        ):
+            goto("workspace")
+    st.markdown('<hr class="nav-rule">', unsafe_allow_html=True)
+
+
+# ---- Wiederverwendbare Bausteine -------------------------------------------
+
+
+def _hero(img, eyebrow, title_html, sub, meta_html):
+    st.markdown(
+        f"""
+        <div class="mk-hero">
+          <div class="mk-hero-bg" style="background-image:url('{img}')"></div>
+          <div class="mk-hero-ov"></div>
+          <div class="mk-hero-in">
+            <span class="eyebrow mk-eyebrow">{eyebrow}</span>
+            <h1 class="mk-h1">{title_html}</h1>
+            <div class="mk-sub">{sub}</div>
+            <div class="mk-meta">{meta_html}</div>
+          </div>
         </div>
-        <div class="app-user"><span class="app-avatar">GF</span> Geschäftsführer ▾</div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+        """,
+        unsafe_allow_html=True,
+    )
 
-# ---- Hero (Premium-SaaS: animierter Gradient, Glas-Card, CSS-AI-Visual) ----
-# Spline war über mehrere Iterationen instabil (Ausrichtung/Ladefehler) —
-# gemäß Vorgabe ersetzt durch ein stabiles, rein CSS-animiertes AI-Visual.
-# Kein iframe im Hero, keine schwarzen Kästen, keine kaputte Grafik.
 
-_HERO_HTML = """
-<style>
-  .hero-x { position:relative; display:grid; grid-template-columns:1.1fr 1fr;
-    align-items:center; gap:28px; min-height:560px; padding:48px 52px;
-    border-radius:30px; overflow:hidden;
-    font-family:'Inter',-apple-system,sans-serif;
-    background:linear-gradient(120deg,#F4F3FF,#EEF4FF 35%,#F0FDFB 70%,#F6F3FF);
-    background-size:300% 300%; animation:heroShift 16s ease infinite;
-    border:1px solid rgba(255,255,255,0.75);
-    box-shadow:0 20px 50px rgba(32,20,92,0.10); }
-  @keyframes heroShift { 0%,100%{background-position:0% 50%}
-    50%{background-position:100% 50%} }
-  /* Glow-Partikel */
-  .hero-x .p { position:absolute; border-radius:50%; pointer-events:none;
-    filter:blur(2px); opacity:.5; animation:drift 9s ease-in-out infinite; }
-  .hero-x .p1 { width:10px; height:10px; left:12%; top:18%;
-    background:#6F6EFF; animation-delay:0s; }
-  .hero-x .p2 { width:7px; height:7px; left:46%; top:10%;
-    background:#14B8A6; animation-delay:1.6s; }
-  .hero-x .p3 { width:12px; height:12px; left:70%; top:78%;
-    background:#2563EB; animation-delay:3.1s; }
-  .hero-x .p4 { width:6px; height:6px; left:30%; top:84%;
-    background:#6F6EFF; animation-delay:4.4s; }
-  .hero-x .p5 { width:9px; height:9px; left:88%; top:26%;
-    background:#8E8CFF; animation-delay:2.2s; }
-  @keyframes drift { 0%,100%{transform:translateY(-14px)}
-    50%{transform:translateY(14px)} }
-  /* Glas-Card um den Textblock */
-  .hero-glass { position:relative; z-index:2;
-    background:rgba(255,255,255,0.62); backdrop-filter:blur(14px);
-    -webkit-backdrop-filter:blur(14px);
-    border:1px solid rgba(255,255,255,0.8); border-radius:24px;
-    padding:34px 36px; box-shadow:0 14px 38px rgba(32,20,92,0.08);
-    animation:fadeUp .7s ease both; }
-  @keyframes fadeUp { from{opacity:0; transform:translateY(14px)}
-    to{opacity:1; transform:translateY(0)} }
-  .hx-pill { display:inline-flex; align-items:center; gap:8px;
-    background:rgba(255,255,255,0.85); border:1px solid #E6E3F7;
-    color:#6F6EFF; font-weight:600; font-size:12.5px;
-    padding:6px 14px; border-radius:999px; margin-bottom:18px;
-    box-shadow:0 2px 10px rgba(32,20,92,0.06); }
-  .hx-pill b { color:#20145C; }
-  .hero-x h1 { font-size:46px !important; font-weight:800; line-height:1.08;
-    letter-spacing:-0.03em; color:#20145C !important; margin:0 0 14px; }
-  .hero-x h1 .accent { background:linear-gradient(120deg,#2563EB,#6F6EFF,#14B8A6);
-    -webkit-background-clip:text; background-clip:text;
-    -webkit-text-fill-color:transparent; }
-  .hero-x .sub { color:#3A3270; font-size:17px; font-weight:500; line-height:1.55;
-    max-width:520px; margin-bottom:24px; }
-  .hero-x .ctas { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
-  .hero-x .cta1 { background:#20145C; color:#fff !important; font-weight:700;
-    font-size:14.5px; padding:13px 26px; border-radius:999px;
-    box-shadow:0 10px 24px rgba(32,20,92,0.28); transition:all .2s ease; }
-  .hero-x .cta1:hover { box-shadow:0 14px 32px rgba(111,110,255,0.45);
-    transform:translateY(-2px); }
-  .hero-x .cta2 { background:rgba(255,255,255,0.92); color:#20145C !important;
-    font-weight:700; font-size:14.5px; padding:13px 26px; border-radius:999px;
-    border:1.5px solid #20145C; transition:all .2s ease; }
-  .hero-x .cta2:hover { transform:translateY(-2px); }
-  .hero-x .trust { display:flex; gap:8px 20px; flex-wrap:wrap; }
-  .hero-x .trust span { color:#5B4F86; font-size:12.5px; font-weight:600;
-    display:inline-flex; align-items:center; gap:6px;
-    animation:fadeUp .8s ease both; }
-  .hero-x .trust span:nth-child(2){animation-delay:.1s}
-  .hero-x .trust span:nth-child(3){animation-delay:.2s}
-  .hero-x .trust span:nth-child(4){animation-delay:.3s}
-  .hero-x .trust i { color:#14B8A6; font-weight:800; font-style:normal; }
-  .hero-x .hil { margin-top:18px; color:#6B6391; font-size:12.5px; }
-  /* ---- CSS-AI-Visual rechts: orbitende Agenten um einen Kern ---- */
-  .ai-stage { position:relative; height:430px; display:flex;
-    align-items:center; justify-content:center; z-index:1; }
-  .ai-glow { position:absolute; width:430px; height:430px; border-radius:50%;
-    background:radial-gradient(closest-side, rgba(111,110,255,0.25), transparent 70%);
-    filter:blur(6px); animation:pulseGlow 5s ease-in-out infinite; }
-  @keyframes pulseGlow { 0%,100%{opacity:.7; transform:scale(.96)}
-    50%{opacity:1; transform:scale(1.04)} }
-  .ai-core { position:relative; width:128px; height:128px; border-radius:36px;
-    display:flex; align-items:center; justify-content:center; font-size:50px;
-    background:linear-gradient(145deg,#FFFFFF,#ECEAFF 55%,#D9D6FF);
-    border:1px solid rgba(255,255,255,0.9); z-index:2;
-    box-shadow:0 24px 54px rgba(32,20,92,0.22),
-      inset 0 4px 14px rgba(255,255,255,0.9),
-      inset 0 -12px 26px rgba(111,110,255,0.22);
-    animation:coreFloat 6s ease-in-out infinite; }
-  @keyframes coreFloat { 0%,100%{transform:translateY(-8px)}
-    50%{transform:translateY(8px)} }
-  .orbit { position:absolute; border:1.5px dashed rgba(111,110,255,0.30);
-    border-radius:50%; }
-  .orbit.o1 { width:250px; height:250px; animation:spin 22s linear infinite; }
-  .orbit.o2 { width:380px; height:380px; animation:spinRev 34s linear infinite; }
-  @keyframes spin { to{transform:rotate(360deg)} }
-  @keyframes spinRev { to{transform:rotate(-360deg)} }
-  .sat { position:absolute; top:-23px; left:50%; margin-left:-23px;
-    width:46px; height:46px; border-radius:14px; display:flex;
-    align-items:center; justify-content:center; font-size:21px;
-    background:rgba(255,255,255,0.92); border:1px solid #E6E3F7;
-    box-shadow:0 10px 24px rgba(32,20,92,0.16); }
-  .orbit.o1 .sat { animation:spinRev 22s linear infinite; }
-  .orbit.o2 .sat { animation:spin 34s linear infinite; }
-  .orbit.o2 .sat.s2 { top:auto; bottom:-23px; }
-  @media (max-width:980px){
-    .hero-x { grid-template-columns:1fr; padding:32px 26px; min-height:auto; }
-    .hero-x h1 { font-size:36px !important; }
-    .ai-stage { height:300px; }
-  }
-</style>
-<div class="hero-x">
-  <span class="p p1"></span><span class="p p2"></span><span class="p p3"></span>
-  <span class="p p4"></span><span class="p p5"></span>
-  <div class="hero-glass">
-    <div class="hx-pill">🤖 <b>Recruiting AI</b> · AI Workspace für Geschäftsführer</div>
-    <h1>Recruiting ohne <span class="accent">stundenlanges Lebenslauflesen</span>.</h1>
-    <div class="sub">Recruiting AI strukturiert Bewerbungen, prüft fachliche
-      Anforderungen und erkennt Informationslücken &ndash; ohne automatische
-      Personalentscheidung.</div>
-    <div class="ctas">
-      <span class="cta1">Stellenprofil analysieren</span>
-      <span class="cta2">Bewerbungen hochladen</span>
-    </div>
-    <div class="trust">
-      <span><i>✓</i> Multi-Agent Workflow</span>
-      <span><i>✓</i> Human-in-the-Loop</span>
-      <span><i>✓</i> Auditierbar</span>
-      <span><i>✓</i> Keine automatische Entscheidung</span>
-    </div>
-    <div class="hil">Der Agent strukturiert Informationen.
-      Die Entscheidung trifft der Geschäftsführer.</div>
-  </div>
-  <div class="ai-stage">
-    <div class="ai-glow"></div>
-    <div class="orbit o1"><div class="sat">📄</div></div>
-    <div class="orbit o2"><div class="sat">🔍</div><div class="sat s2">💬</div></div>
-    <div class="ai-core">🤖</div>
-  </div>
-</div>
-"""
+def _page_header(eyebrow, title, lead):
+    st.markdown(
+        f'<div style="margin:14px 0 30px">'
+        f'<span class="eyebrow">{eyebrow}</span>'
+        f'<div class="mk-h2" style="font-size:46px;margin-top:14px">{title}</div>'
+        f'<div class="mk-lead" style="max-width:720px;margin-top:8px">{lead}</div></div>',
+        unsafe_allow_html=True,
+    )
 
-st.markdown(_HERO_HTML, unsafe_allow_html=True)
 
-# ---- AI-Workflow-Sektion (7 Schritte, animierte Premium-Cards) ----
+def _sec_head(eyebrow, title, lead):
+    st.markdown(
+        f'<div class="mk-sec-head"><span class="eyebrow">{eyebrow}</span>'
+        f'<div class="mk-h2">{title}</div>'
+        f'<div class="mk-lead">{lead}</div></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _logos():
+    st.markdown(
+        '<div class="logos"><span class="lab">Vertraut von Unternehmen ohne HR-Team</span>'
+        "<span>Reinhardt&nbsp;Bau</span><span>Kühn&nbsp;Studio</span>"
+        "<span>Vogt&nbsp;Logistik</span><span>Brandt&nbsp;Manufaktur</span>"
+        "<span>Eder&nbsp;&amp;&nbsp;Partner</span><span>Hofmann&nbsp;Klinik</span></div>",
+        unsafe_allow_html=True,
+    )
+
+
+def _stats():
+    st.markdown(
+        """
+        <div class="stats">
+          <div class="stat"><div class="stat-n">4<em>×</em></div>
+            <div class="stat-l">spezialisierte Agenten in einem Workflow</div></div>
+          <div class="stat"><div class="stat-n">~8&nbsp;<em>Min</em></div>
+            <div class="stat-l">statt Stunden pro Bewerbungsstapel</div></div>
+          <div class="stat"><div class="stat-n">100<em>%</em></div>
+            <div class="stat-l">der Schritte auditierbar dokumentiert</div></div>
+          <div class="stat"><div class="stat-n">0</div>
+            <div class="stat-l">automatische Personalentscheidungen</div></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _feature_grid(items):
+    cards = ""
+    for it in items:
+        cards += (
+            '<div class="feat-card">'
+            f"<div class=\"feat-img\" style=\"background-image:url('{it['img']}')\"></div>"
+            f'<div class="feat-body"><div class="feat-k">{it["k"]}</div>'
+            f'<div class="feat-h">{it["h"]}</div>'
+            f'<div class="feat-p">{it["p"]}</div></div></div>'
+        )
+    st.markdown(f'<div class="feat-grid">{cards}</div>', unsafe_allow_html=True)
+
+
+def _testimonials(items):
+    cards = ""
+    for it in items:
+        cards += (
+            '<div class="quote"><div class="mark">&ldquo;</div>'
+            f'<p>{it["t"]}</p><div class="quote-by">'
+            f"<div class=\"quote-av\" style=\"background-image:url('{it['av']}')\"></div>"
+            f'<div><b>{it["by"]}</b><small>{it["role"]}</small></div></div></div>'
+        )
+    st.markdown(f'<div class="quote-grid">{cards}</div>', unsafe_allow_html=True)
+
+
+def _split(img, eyebrow, title, lead, items, img_right=True):
+    li = "".join(f"<li>{x}</li>" for x in items)
+    img_html = f"<div class=\"split-img\" style=\"background-image:url('{img}')\"></div>"
+    txt_html = (
+        f'<div><span class="eyebrow">{eyebrow}</span>'
+        f'<div class="mk-h2">{title}</div><div class="mk-lead">{lead}</div>'
+        f"<ul>{li}</ul></div>"
+    )
+    inner = (txt_html + img_html) if img_right else (img_html + txt_html)
+    st.markdown(
+        f'<div class="mk-sec"><div class="split">{inner}</div></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _reel():
+    st.markdown(
+        f"""
+        <div class="reel">
+          <span class="reel-dot">Im Einsatz</span>
+          <div class="slide" style="background-image:url('{IMG_REEL1}')"></div>
+          <div class="slide" style="background-image:url('{IMG_REEL2}')"></div>
+          <div class="slide" style="background-image:url('{IMG_REEL3}')"></div>
+          <div class="reel-ov"><div>
+            <h3>Vom PDF zur Entscheidungsgrundlage</h3>
+            <p>Vier Agenten arbeiten zusammen — Sie behalten die Kontrolle.</p>
+          </div></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _cta_band(title, text, primary_label, primary_target, key):
+    st.markdown(
+        f'<div class="cta-band"><div class="cta-h">{title}</div>'
+        f'<div class="cta-p">{text}</div></div>',
+        unsafe_allow_html=True,
+    )
+    cc = st.columns([1.5, 1.5, 3])
+    with cc[0]:
+        if st.button(
+            primary_label, key=key, type="primary", use_container_width=True
+        ):
+            goto(primary_target)
+    with cc[1]:
+        if st.button(
+            "Kontakt aufnehmen", key=key + "_k", use_container_width=True
+        ):
+            goto("kontakt")
+
+
+def _footer():
+    st.markdown(
+        """
+        <div class="mk-foot">
+          <div>
+            <div class="brandline">Recruiting&nbsp;AI</div>
+            <p class="muted">Der KI-Workspace für Geschäftsführer ohne eigenes
+            HR-Team. Wir strukturieren Bewerbungen — die Entscheidung bleibt
+            immer bei Ihnen.</p>
+          </div>
+          <div><h4>Produkt</h4><a>Funktionen</a><a>So funktioniert's</a>
+            <a>Preise</a><a>Workspace</a></div>
+          <div><h4>Unternehmen</h4><a>Über uns</a><a>Referenzen</a>
+            <a>Kontakt</a><a>Karriere</a></div>
+          <div><h4>Rechtliches</h4><a>Datenschutz</a><a>Impressum</a>
+            <a>AGB</a><a>DSGVO</a></div>
+        </div>
+        <div class="foot-legal">© 2026 Recruiting&nbsp;AI · Human-in-the-Loop ·
+        Keine automatische Personalentscheidung · Made in Germany</div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+# ---- Seiten ----------------------------------------------------------------
+
+
+def render_home():
+    _hero(
+        IMG_HERO,
+        "KI-Recruiting-Workspace",
+        "Bewerbungen verstehen.<br><em>Menschen</em> entscheiden.",
+        "Recruiting AI strukturiert eingehende Lebensläufe, prüft fachliche "
+        "Anforderungen und erkennt Informationslücken — transparent, "
+        "nachvollziehbar und ohne automatische Personalentscheidung.",
+        "<span><i>✓</i> Multi-Agent-Analyse</span>"
+        "<span><i>✓</i> Human-in-the-Loop</span>"
+        "<span><i>✓</i> Vollständig auditierbar</span>",
+    )
+    hc = st.columns([1.5, 1.6, 3])
+    with hc[0]:
+        if st.button(
+            "Kostenlos testen  →", key="home_cta1", type="primary",
+            use_container_width=True,
+        ):
+            goto("workspace")
+    with hc[1]:
+        if st.button(
+            "So funktioniert's", key="home_cta2", use_container_width=True
+        ):
+            goto("ablauf")
+
+    st.markdown('<div style="height:26px"></div>', unsafe_allow_html=True)
+    _logos()
+
+    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
+    _stats()
+
+    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
+    _sec_head(
+        "Was der Workspace leistet",
+        "Vier Agenten. Ein Ziel: Klarheit ohne Urteil.",
+        "Jeder Schritt ist nachvollziehbar belegt. Bewertet wird nicht — "
+        "strukturiert schon.",
+    )
+    _feature_grid(FEATURES[:3])
+
+    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
+    _sec_head(
+        "Der Ablauf",
+        "Vom Stellenprofil zur Entscheidungsgrundlage.",
+        "Sieben transparente Schritte — der letzte gehört immer dem Menschen.",
+    )
+    st.markdown(_WORKFLOW_HTML, unsafe_allow_html=True)
+
+    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
+    _sec_head(
+        "Stimmen aus der Praxis",
+        "Gemacht für Unternehmen ohne HR-Abteilung.",
+        "Geschäftsführerinnen und Geschäftsführer, die ihre Zeit zurückbekommen.",
+    )
+    _testimonials(TESTIMONIALS[:3])
+
+    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
+    _cta_band(
+        "Bereit, den Bewerbungsstapel in Klarheit zu verwandeln?",
+        "Starten Sie in unter einer Minute — kein Setup, keine Kreditkarte. "
+        "Sie behalten jederzeit die volle Entscheidungshoheit.",
+        "Workspace kostenlos öffnen  →",
+        "workspace",
+        "home_cta_band",
+    )
+
+
+def render_produkt():
+    _page_header(
+        "Produkt",
+        "Ein Workspace, der zuarbeitet — nicht urteilt.",
+        "Recruiting AI verbindet vier spezialisierte Agenten zu einem "
+        "durchgängigen, auditierbaren Analyse-Workflow. Sie behalten die "
+        "Kontrolle über jede Entscheidung.",
+    )
+    _feature_grid(FEATURES)
+
+    _split(
+        IMG_SPLIT1,
+        "Transparenz by Design",
+        "Jede Aussage hat eine Belegstelle.",
+        "Keine Black Box: Recruiting AI zeigt für jede strukturierte Information "
+        "die Fundstelle im Original-Lebenslauf. So bleibt jede Analyse prüfbar.",
+        [
+            "Anforderungen klar als gefunden / teilweise / nicht gefunden markiert",
+            "Belegstellen direkt aus dem Lebenslauf zitiert",
+            "Nur objektiv prüfbare Kriterien — keine Soft-Skill-Bewertung",
+            "Lückenloses Audit-Log über jeden Agentenschritt",
+        ],
+        img_right=True,
+    )
+    _split(
+        IMG_SPLIT2,
+        "Mensch im Mittelpunkt",
+        "Human-in-the-Loop, kompromisslos.",
+        "Der Agent liefert Daten — die Entscheidung treffen Sie. Es gibt kein "
+        "Ranking, keinen Score und keine automatische Ablehnung.",
+        [
+            "Keine automatische Personalentscheidung",
+            "Rückfragen werden vorbereitet, aber nie automatisch versendet",
+            "Volle Kontrolle über jeden Verarbeitungsschritt",
+            "DSGVO-konform gedacht, auf Fairness ausgelegt",
+        ],
+        img_right=False,
+    )
+    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
+    _cta_band(
+        "Sehen Sie Recruiting AI an Ihren eigenen Bewerbungen.",
+        "Laden Sie ein Stellenprofil und ein paar Lebensläufe hoch — in Minuten "
+        "haben Sie eine strukturierte, belegte Übersicht.",
+        "Jetzt ausprobieren  →",
+        "workspace",
+        "prod_cta_band",
+    )
+
+
+def render_ablauf():
+    _page_header(
+        "So funktioniert's",
+        "Vier Agenten, sieben Schritte, ein Mensch am Ende.",
+        "Recruiting AI nimmt Ihnen die Fleißarbeit ab und macht jeden Schritt "
+        "sichtbar — damit Sie schneller und sicherer entscheiden.",
+    )
+    st.markdown(_WORKFLOW_HTML, unsafe_allow_html=True)
+
+    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
+    _sec_head(
+        "Live im Einsatz",
+        "Sehen, wie aus Unterlagen Klarheit wird.",
+        "Ein dynamischer Blick in den Workspace — vom Upload bis zur Entscheidung.",
+    )
+    _reel()
+
+    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
+    _sec_head(
+        "Vernetzte Analyse",
+        "Jeder Datenpunkt ist verbunden — und nachvollziehbar.",
+        "Die Agenten teilen Kontext, ohne Entscheidungen zu treffen.",
+    )
+    components.html(_GLOBE_HTML, height=340)
+
+    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
+    _cta_band(
+        "Probieren Sie den kompletten Ablauf selbst aus.",
+        "Vom Stellenprofil bis zu vorbereiteten Rückfragen — in einem Durchgang.",
+        "Workspace öffnen  →",
+        "workspace",
+        "ablauf_cta_band",
+    )
+
+
+def render_referenzen():
+    _page_header(
+        "Referenzen",
+        "Unternehmen, die ihre Zeit zurückbekommen haben.",
+        "Vom Handwerksbetrieb bis zur Praxisklinik: Recruiting AI hilft kleinen "
+        "und mittleren Teams, Bewerbungen souverän zu strukturieren.",
+    )
+    _stats()
+    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
+    _testimonials(TESTIMONIALS)
+    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
+    _logos()
+    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
+    _cta_band(
+        "Werden Sie das nächste Team, das Stunden spart.",
+        "Testen Sie Recruiting AI mit Ihren eigenen Unterlagen — unverbindlich.",
+        "Kostenlos starten  →",
+        "workspace",
+        "ref_cta_band",
+    )
+
+
+def render_preise():
+    _page_header(
+        "Preise",
+        "Faire Preise für Teams ohne HR-Abteilung.",
+        "Transparent, monatlich kündbar, ohne versteckte Kosten. Starten Sie "
+        "kostenlos und wachsen Sie, wenn Sie mehr brauchen.",
+    )
+    st.markdown(
+        """
+        <div class="price-grid">
+          <div class="price-card">
+            <div class="price-k">Starter</div>
+            <div class="price-amt">0&nbsp;€<small>/ Monat</small></div>
+            <div class="mk-lead" style="font-size:14px">Zum Ausprobieren.</div>
+            <ul class="price-li">
+              <li>Bis zu 10 Bewerbungen / Monat</li>
+              <li>1 Stellenprofil aktiv</li>
+              <li>Anforderungsabgleich & Belege</li>
+              <li>Audit-Log</li>
+            </ul>
+          </div>
+          <div class="price-card featured">
+            <span class="price-tag">Beliebt</span>
+            <div class="price-k">Business</div>
+            <div class="price-amt">49&nbsp;€<small>/ Monat</small></div>
+            <div class="mk-lead" style="font-size:14px">Für aktive Recruiter.</div>
+            <ul class="price-li">
+              <li>Unbegrenzte Bewerbungen</li>
+              <li>Mehrere Stellenprofile parallel</li>
+              <li>Informationslücken & Rückfragen</li>
+              <li>Feedback-Lernschleife</li>
+              <li>Priorisierter Support</li>
+            </ul>
+          </div>
+          <div class="price-card">
+            <div class="price-k">Enterprise</div>
+            <div class="price-amt">Individuell</div>
+            <div class="mk-lead" style="font-size:14px">Für größere Teams.</div>
+            <ul class="price-li">
+              <li>Alles aus Business</li>
+              <li>SSO & Rollen</li>
+              <li>Eigene Datenhaltung</li>
+              <li>Dedizierter Ansprechpartner</li>
+            </ul>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    pc = st.columns(3)
+    with pc[0]:
+        if st.button("Starter wählen", key="price_starter", use_container_width=True):
+            goto("workspace")
+    with pc[1]:
+        if st.button(
+            "Business starten  →", key="price_business", type="primary",
+            use_container_width=True,
+        ):
+            goto("workspace")
+    with pc[2]:
+        if st.button("Vertrieb kontaktieren", key="price_ent", use_container_width=True):
+            goto("kontakt")
+
+    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
+    _sec_head(
+        "Häufige Fragen",
+        "Alles, was Geschäftsführer wissen wollen.",
+        "Noch eine Frage offen? Schreiben Sie uns über die Kontaktseite.",
+    )
+    with st.expander("Trifft Recruiting AI eine Auswahl oder lehnt Bewerber ab?"):
+        st.write(
+            "Nein. Recruiting AI bewertet niemanden, erstellt kein Ranking und "
+            "lehnt niemanden ab. Es strukturiert Informationen — die Entscheidung "
+            "treffen ausschließlich Sie."
+        )
+    with st.expander("Werden automatisch E-Mails an Bewerber versendet?"):
+        st.write(
+            "Nein. Rückfragen werden lediglich vorbereitet. Versendet wird nichts "
+            "ohne Ihre ausdrückliche Freigabe."
+        )
+    with st.expander("Wie nachvollziehbar ist die Analyse?"):
+        st.write(
+            "Jeder Agentenschritt wird im Audit-Log protokolliert, und jede "
+            "strukturierte Aussage verweist auf eine Belegstelle im Lebenslauf."
+        )
+    with st.expander("Kann ich monatlich kündigen?"):
+        st.write("Ja. Alle Pläne sind monatlich kündbar, ohne Mindestlaufzeit.")
+
+
+def render_ueber():
+    _page_header(
+        "Über uns",
+        "Wir bauen Werkzeuge, die zuarbeiten — nicht entscheiden.",
+        "Recruiting AI entstand aus einer einfachen Überzeugung: Software sollte "
+        "Geschäftsführern Zeit und Klarheit geben, ohne ihnen die Verantwortung "
+        "abzunehmen.",
+    )
+    _split(
+        IMG_ABOUT,
+        "Unsere Haltung",
+        "Technologie mit Augenmaß.",
+        "Wir glauben an menschliche Entscheidungen, unterstützt durch ehrliche, "
+        "transparente KI. Kein Hype, keine Black Box — nur ein Werkzeug, das "
+        "seinen Job sauberer macht.",
+        [
+            "Human-in-the-Loop als Grundprinzip",
+            "Transparenz und Belegbarkeit vor Bequemlichkeit",
+            "Fairness und DSGVO von Anfang an mitgedacht",
+            "Gebaut für KMU, nicht für Konzerne",
+        ],
+        img_right=False,
+    )
+    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
+    _stats()
+    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
+    _cta_band(
+        "Lernen Sie den Workspace kennen.",
+        "Am besten verstehen Sie Recruiting AI, indem Sie es ausprobieren.",
+        "Workspace öffnen  →",
+        "workspace",
+        "ueber_cta_band",
+    )
+
+
+def render_kontakt():
+    _page_header(
+        "Kontakt",
+        "Sprechen wir über Ihr Recruiting.",
+        "Ob Demo, Frage oder Enterprise-Anfrage — wir melden uns in der Regel "
+        "innerhalb eines Werktags.",
+    )
+    kc = st.columns([1, 1.2], gap="large")
+    with kc[0]:
+        st.markdown(
+            """
+            <div class="contact-card">
+              <div class="contact-row"><span class="contact-ic">✉️</span>
+                <div><b>E-Mail</b><small>hallo@recruiting-ai.de</small></div></div>
+              <div class="contact-row"><span class="contact-ic">📞</span>
+                <div><b>Telefon</b><small>+49&nbsp;30&nbsp;1234&nbsp;5678</small></div></div>
+              <div class="contact-row"><span class="contact-ic">📍</span>
+                <div><b>Standort</b><small>Berlin, Deutschland</small></div></div>
+              <div class="contact-row"><span class="contact-ic">🕑</span>
+                <div><b>Erreichbarkeit</b><small>Mo–Fr, 9–18&nbsp;Uhr</small></div></div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with kc[1]:
+        with st.container(border=True):
+            st.markdown(
+                '<div class="kmu-card-title">Nachricht senden</div>',
+                unsafe_allow_html=True,
+            )
+            with st.form("contact_form", clear_on_submit=True):
+                cf1, cf2 = st.columns(2)
+                with cf1:
+                    _name = st.text_input("Name")
+                with cf2:
+                    _company = st.text_input("Unternehmen")
+                _email = st.text_input("E-Mail")
+                _msg = st.text_area("Ihre Nachricht", height=120)
+                _sent = st.form_submit_button("Nachricht senden", type="primary")
+                if _sent:
+                    if not (_name.strip() and _email.strip() and _msg.strip()):
+                        st.warning("Bitte Name, E-Mail und Nachricht ausfüllen.")
+                    else:
+                        st.success(
+                            "Danke! Ihre Nachricht ist eingegangen — "
+                            "wir melden uns zeitnah."
+                        )
+            st.caption(
+                "Diese Demo versendet keine echten Nachrichten und speichert "
+                "keine Eingaben."
+            )
+
+
+# ---- Workflow- & Globus-Visual (für die Marketing-Seiten) ------------------
 
 _WORKFLOW_HTML = """
 <style>
-  .wf { margin:26px 0 8px; font-family:'Inter',-apple-system,sans-serif; }
-  .wf-title { font-size:22px; font-weight:800; color:#20145C; margin-bottom:4px; }
-  .wf-sub { color:#64748B; font-size:14px; margin-bottom:18px; }
+  .wf { margin:6px 0 8px; font-family:'Familjen Grotesk',-apple-system,sans-serif; }
   .wf-row { display:grid; grid-template-columns:repeat(7, 1fr); gap:10px;
     align-items:stretch; }
-  .wf-step { position:relative; background:rgba(255,255,255,0.82);
-    backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
-    border:1px solid rgba(255,255,255,0.8); border-radius:16px;
-    padding:16px 12px 14px; text-align:center;
-    box-shadow:0 8px 24px rgba(32,20,92,0.07);
+  .wf-step { position:relative; background:#FFFDF8;
+    border:1px solid #E5DECF; border-radius:16px;
+    padding:18px 12px 16px; text-align:center;
+    box-shadow:0 8px 24px rgba(23,32,42,0.06);
     transition:transform .2s ease, box-shadow .2s ease;
-    animation:fadeUp .6s ease both; }
+    animation:fadeUpG .6s ease both; }
   .wf-step:nth-child(2){animation-delay:.05s} .wf-step:nth-child(3){animation-delay:.1s}
   .wf-step:nth-child(4){animation-delay:.15s} .wf-step:nth-child(5){animation-delay:.2s}
   .wf-step:nth-child(6){animation-delay:.25s} .wf-step:nth-child(7){animation-delay:.3s}
   .wf-step:hover { transform:translateY(-4px);
-    box-shadow:0 16px 36px rgba(111,110,255,0.22); }
+    box-shadow:0 16px 36px rgba(23,32,42,0.14); }
   .wf-step::after { content:"→"; position:absolute; right:-13px; top:50%;
-    transform:translateY(-50%); color:#6F6EFF; font-weight:800; font-size:15px;
+    transform:translateY(-50%); color:#BE5B2A; font-weight:800; font-size:16px;
     z-index:2; animation:pulseArrow 2.4s ease-in-out infinite; }
   .wf-step:last-child::after { content:""; }
-  @keyframes pulseArrow { 0%,100%{opacity:.45} 50%{opacity:1} }
-  .wf-ic { width:38px; height:38px; border-radius:11px; margin:0 auto 9px;
-    display:flex; align-items:center; justify-content:center; font-size:18px;
-    background:linear-gradient(145deg,#EFF1FF,#E4E1FF); }
-  .wf-step.gz .wf-ic { background:linear-gradient(145deg,#D8F7F0,#C2F0E6); }
-  .wf-name { font-size:13px; font-weight:700; color:#111827; margin-bottom:4px; }
-  .wf-desc { font-size:11.5px; color:#64748B; line-height:1.45; }
+  @keyframes pulseArrow { 0%,100%{opacity:.4} 50%{opacity:1} }
+  .wf-ic { width:40px; height:40px; border-radius:12px; margin:0 auto 10px;
+    display:flex; align-items:center; justify-content:center; font-size:19px;
+    background:#F4E7DA; }
+  .wf-step.gz .wf-ic { background:#DCEFE4; }
+  .wf-name { font-size:13px; font-weight:700; color:#17202A; margin-bottom:4px; }
+  .wf-desc { font-size:11.5px; color:#6E6A5F; line-height:1.45; }
   @media (max-width:1100px){ .wf-row { grid-template-columns:repeat(4,1fr); }
     .wf-step:nth-child(4)::after{content:""} }
   @media (max-width:700px){ .wf-row { grid-template-columns:repeat(2,1fr); }
     .wf-step::after{content:""} }
 </style>
 <div class="wf">
-  <div class="wf-title">So arbeitet Recruiting AI</div>
-  <div class="wf-sub">Vom Stellenprofil zur Entscheidungsgrundlage — der Mensch entscheidet.</div>
   <div class="wf-row">
     <div class="wf-step"><div class="wf-ic">📤</div>
       <div class="wf-name">Stelle hochladen</div>
@@ -2474,46 +2952,33 @@ _WORKFLOW_HTML = """
 </div>
 """
 
-st.markdown(_WORKFLOW_HTML, unsafe_allow_html=True)
-
-# ---- CTA-Section mit Three.js Wireframe-Globus (isolierter iframe) ----
-
 _GLOBE_HTML = """
 <!DOCTYPE html><html><head><meta charset="utf-8">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   html,body { width:100%; height:100%; overflow:hidden;
-    font-family:'Inter',-apple-system,Segoe UI,Roboto,sans-serif; }
-  .band { position:relative; width:100%; height:100%; border-radius:24px; overflow:hidden;
+    font-family:'Familjen Grotesk',-apple-system,Segoe UI,Roboto,sans-serif; }
+  .band { position:relative; width:100%; height:100%; border-radius:22px; overflow:hidden;
     background:
-      radial-gradient(720px 420px at 80% 50%, rgba(111,110,255,0.22), transparent 60%),
-      linear-gradient(135deg, #1b1147 0%, #251a66 55%, #2c2080 100%);
-    border:1px solid rgba(255,255,255,0.12);
-    box-shadow:0 16px 44px rgba(32,20,92,0.18); }
+      radial-gradient(720px 420px at 80% 50%, rgba(190,91,42,0.20), transparent 60%),
+      linear-gradient(135deg, #15181C 0%, #1E242B 55%, #2A333D 100%);
+    border:1px solid rgba(255,255,255,0.10);
+    box-shadow:0 16px 44px rgba(23,32,42,0.20); }
   #c { position:absolute; inset:0; z-index:0; display:block; }
   .copy { position:absolute; z-index:2; left:48px; top:50%;
     transform:translateY(-50%); max-width:460px; }
-  .copy h2 { font-size:30px; font-weight:800; line-height:1.15;
-    letter-spacing:-0.02em; color:#fff; margin-bottom:12px; }
-  .copy p { color:#C9C6F2; font-size:15px; line-height:1.6; margin-bottom:22px; }
-  .copy .b { display:inline-flex; gap:12px; flex-wrap:wrap; }
-  .btn1 { background:#6F6EFF; color:#fff; font-weight:700; font-size:14px;
-    padding:12px 24px; border-radius:999px; box-shadow:0 12px 28px rgba(111,110,255,0.45); }
-  .btn2 { background:rgba(255,255,255,0.10); color:#fff; font-weight:700; font-size:14px;
-    padding:12px 24px; border-radius:999px; border:1px solid rgba(255,255,255,0.30); }
+  .copy h2 { font-family:'Fraunces',Georgia,serif; font-size:30px; font-weight:600;
+    line-height:1.15; letter-spacing:-0.01em; color:#FBF7EF; margin-bottom:12px; }
+  .copy p { color:#D8D2C6; font-size:15px; line-height:1.6; margin-bottom:4px; }
   @media (max-width:760px){ .copy{left:24px;max-width:60%} .copy h2{font-size:22px} }
 </style></head>
 <body>
   <div class="band">
     <canvas id="c"></canvas>
     <div class="copy">
-      <h2>Transparente Bewerbungsanalyse &ndash; in Sekunden.</h2>
+      <h2>Transparente Analyse &ndash; in Sekunden.</h2>
       <p>Recruiting AI strukturiert Bewerbungsunterlagen automatisch:
         nachvollziehbar, fair und ohne automatische Personalentscheidung.</p>
-      <div class="b">
-        <span class="btn1">Stellenprofil analysieren</span>
-        <span class="btn2">Bewerbungen hochladen</span>
-      </div>
     </div>
   </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -2528,21 +2993,18 @@ _GLOBE_HTML = """
     var group=new THREE.Group(); group.position.x=1.7; group.rotation.z=0.32; group.rotation.x=0.16;
     scene.add(group);
     var R=1.65;
-    // wireframe globe
     var wire=new THREE.LineSegments(
       new THREE.WireframeGeometry(new THREE.SphereGeometry(R,30,20)),
-      new THREE.LineBasicMaterial({color:0x8E8CFF,transparent:true,opacity:0.32}));
+      new THREE.LineBasicMaterial({color:0x9AA3AD,transparent:true,opacity:0.30}));
     group.add(wire);
-    // surface dots (fibonacci sphere)
     var N=440, pos=[], ga=Math.PI*(3-Math.sqrt(5)), i;
     for(i=0;i<N;i++){var y=1-(i/(N-1))*2; var rr=Math.sqrt(1-y*y); var th=ga*i;
       pos.push(Math.cos(th)*rr*R, y*R, Math.sin(th)*rr*R);}
     var dg=new THREE.BufferGeometry();
     dg.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
     var dots=new THREE.Points(dg, new THREE.PointsMaterial(
-      {color:0xCDCBFF,size:0.045,transparent:true,opacity:0.9}));
+      {color:0xE7E2D7,size:0.045,transparent:true,opacity:0.9}));
     group.add(dots);
-    // connection arcs
     function sp(){var u=Math.random(),v=Math.random();var th=2*Math.PI*u;var ph=Math.acos(2*v-1);
       return new THREE.Vector3(R*Math.sin(ph)*Math.cos(th),R*Math.cos(ph),R*Math.sin(ph)*Math.sin(th));}
     for(var k=0;k<16;k++){var a=sp(),b=sp();
@@ -2550,15 +3012,14 @@ _GLOBE_HTML = """
       var curve=new THREE.QuadraticBezierCurve3(a,mid,b);
       var g=new THREE.BufferGeometry().setFromPoints(curve.getPoints(42));
       group.add(new THREE.Line(g, new THREE.LineBasicMaterial(
-        {color:0x6F6EFF,transparent:true,opacity:0.5})));}
-    // Saturn-style rings
+        {color:0xBE5B2A,transparent:true,opacity:0.55})));}
     function ring(r0,r1,op){var rg=new THREE.RingGeometry(r0,r1,90);
-      var m=new THREE.MeshBasicMaterial({color:0x9B9AFF,side:THREE.DoubleSide,
+      var m=new THREE.MeshBasicMaterial({color:0xC9A37A,side:THREE.DoubleSide,
         transparent:true,opacity:op});
       var mesh=new THREE.Mesh(rg,m); mesh.rotation.x=Math.PI/2; return mesh;}
     var rings=new THREE.Group();
-    rings.add(ring(2.25,2.38,0.55)); rings.add(ring(2.55,2.62,0.32));
-    rings.add(ring(2.80,2.84,0.20));
+    rings.add(ring(2.25,2.38,0.50)); rings.add(ring(2.55,2.62,0.30));
+    rings.add(ring(2.80,2.84,0.18));
     rings.rotation.x=0.52; group.add(rings);
     function size(){var w=band.clientWidth,h=band.clientHeight;
       renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix();}
@@ -2572,7 +3033,32 @@ _GLOBE_HTML = """
 </body></html>
 """
 
-components.html(_GLOBE_HTML, height=340)
+
+# ---- Navigation rendern + Seiten-Routing -----------------------------------
+
+render_top_nav()
+
+_page = st.session_state.nav_page
+if _page == "home":
+    render_home()
+elif _page == "produkt":
+    render_produkt()
+elif _page == "ablauf":
+    render_ablauf()
+elif _page == "referenzen":
+    render_referenzen()
+elif _page == "preise":
+    render_preise()
+elif _page == "ueber":
+    render_ueber()
+elif _page == "kontakt":
+    render_kontakt()
+
+if _page != "workspace":
+    _footer()
+    st.stop()
+
+# --- Ab hier: Workspace (bestehende App-Logik, unverändert) ---
 
 # ---- KPI-Karten (echte Daten aus der App) ----
 
