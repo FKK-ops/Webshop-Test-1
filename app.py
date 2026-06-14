@@ -4036,6 +4036,82 @@ def _intro_markup() -> str:
     )
 
 
+# ---- Hero v3: CSS-Gradient + Glows, Spline rechts (transparent) ------------
+
+_HERO2_STYLE = """
+<style>
+/* Full-bleed gradient backdrop + soft glows, painted behind the hero */
+.hero-bg { position: relative; z-index: -1; height: 0; }
+.hero-bg::before {
+  content: ""; position: absolute; pointer-events: none;
+  left: 50%; transform: translateX(-50%); top: -32px;
+  width: 100vw; height: 660px;
+  background:
+    radial-gradient(440px 340px at 14% 94%, rgba(37,99,235,0.22), transparent 70%),
+    radial-gradient(480px 360px at 86% 6%, rgba(124,108,255,0.24), transparent 70%),
+    linear-gradient(135deg, #F8FCFF 0%, #F7F5FF 50%, #EEF2FF 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 68%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 68%, transparent 100%);
+}
+.hero2-text { padding: 24px 8px 0 4px; animation: fadeUp .6s cubic-bezier(.2,.7,.2,1) both; }
+.hero2-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; letter-spacing: .04em; color: #4F46E5;
+  background: rgba(255,255,255,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(79,70,229,0.18); padding: 7px 15px; border-radius: 999px;
+  box-shadow: 0 8px 22px rgba(79,70,229,0.12);
+}
+.hero2-eyebrow .ic, .hero2-eyebrow .ic svg { width: 15px; height: 15px; }
+.hero2-title {
+  font-family: var(--display); font-weight: 800;
+  font-size: clamp(40px, 4.4vw, 60px); line-height: 1.03; letter-spacing: -0.032em;
+  color: #0B1020; margin: 24px 0 18px; max-width: 560px;
+}
+.hero2-title em {
+  font-style: normal;
+  background: linear-gradient(120deg, #4F46E5 0%, #6F6EFF 45%, #14B8A6 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero2-sub { font-size: clamp(17px, 1.4vw, 20px); line-height: 1.6; color: #475569; max-width: 490px; margin-bottom: 28px; }
+.hero2-meta { display: flex; flex-wrap: wrap; gap: 10px; }
+.hero2-meta span {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; color: #334155;
+  background: rgba(255,255,255,0.55); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.7); padding: 8px 14px; border-radius: 12px;
+  box-shadow: 0 8px 18px rgba(15,23,42,0.06);
+}
+.hero2-meta .ic { color: #14B8A6; }
+.hero2-meta .ic, .hero2-meta .ic svg { width: 15px; height: 15px; }
+@media (max-width: 1080px) {
+  .hero-bg::before { height: 1180px; }
+  .hero2-text { padding-top: 6px; }
+  .hero2-title { font-size: clamp(34px, 7vw, 46px); }
+}
+</style>
+"""
+
+_SPLINE_HERO_HTML = """
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: transparent; overflow: hidden; }
+  #wrap { position: relative; width: 100%; height: 100%; background: transparent; }
+  spline-viewer { width: 100%; height: 100%; display: block; background: transparent; }
+  spline-viewer::part(logo) { display: none !important; }
+</style>
+<script type="module" src="https://unpkg.com/@splinetool/viewer@1/build/spline-viewer.js"></script>
+</head>
+<body>
+  <div id="wrap">
+    <spline-viewer
+      url="https://prod.spline.design/Ji0hiX2hb-mU5zX1/scene.splinecode"
+      loading-anim-type="none">
+    </spline-viewer>
+  </div>
+</body></html>
+"""
+
+
 # ---- Landing Page (Story-Layout, wechselnder Aufbau) -----------------------
 
 
@@ -4045,22 +4121,28 @@ def render_home() -> None:
 
     render_marketing_nav()
 
-    # 1 — HERO: Text links / Produkt-Mockup rechts
+    # 1 — HERO: Text links / Spline rechts (CSS-Gradient-Background + Glows)
     st.markdown(
-        f'<div id="produkt" class="lp-hero">'
-        f'<div><span class="lp-eyebrow">AI Recruiting · Multi-Agent</span>'
-        f"<h1>Recruiting ohne <em>stundenlanges</em> Lebenslauflesen.</h1>"
-        f'<div class="lp-sub">Recruiting AI analysiert Bewerbungen, prüft Qualifikationen '
-        f"und erkennt Informationslücken &ndash; ohne automatische Personalentscheidung.</div>"
-        f'<div class="lp-hero-meta">'
-        f'<span><span class="ic">{ic("bot", "sm")}</span> Multi-Agent</span>'
-        f'<span><span class="ic">{ic("shield", "sm")}</span> Human-in-the-Loop</span>'
-        f'<span><span class="ic">{ic("log", "sm")}</span> Auditierbar</span>'
-        f"</div></div>"
-        f'<div class="lp-visual">{_mock_dashboard_html()}</div>'
-        f"</div>",
+        _HERO2_STYLE + '<div id="produkt" class="hero-bg"></div>',
         unsafe_allow_html=True,
     )
+    hero_l, hero_r = st.columns([1.05, 0.95], gap="large")
+    with hero_l:
+        st.markdown(
+            f'<div class="hero2-text">'
+            f'<span class="hero2-eyebrow">{ic("sparkles", "sm")} AI Recruiting · Multi-Agent</span>'
+            f"<h1 class=\"hero2-title\">Recruiting ohne <em>stundenlanges</em> Lebenslauflesen.</h1>"
+            f'<div class="hero2-sub">Recruiting AI analysiert Bewerbungen, prüft Qualifikationen '
+            f"und erkennt Informationslücken &ndash; ohne automatische Personalentscheidung.</div>"
+            f'<div class="hero2-meta">'
+            f'<span><span class="ic">{ic("bot", "sm")}</span> Multi-Agent</span>'
+            f'<span><span class="ic">{ic("shield", "sm")}</span> Human-in-the-Loop</span>'
+            f'<span><span class="ic">{ic("log", "sm")}</span> Auditierbar</span>'
+            f"</div></div>",
+            unsafe_allow_html=True,
+        )
+    with hero_r:
+        components.html(_SPLINE_HERO_HTML, height=480)
     hc1, hc2, _hsp = st.columns([1.3, 1.3, 4])
     with hc1:
         if st.button("Demo starten", key="hero_demo", type="primary", use_container_width=True):
