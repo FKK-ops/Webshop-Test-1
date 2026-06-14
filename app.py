@@ -2338,6 +2338,182 @@ st.markdown(
       .ph h1 { font-size: 34px; }
       .cand-row { grid-template-columns: 1fr; }
     }
+
+    /* ====================================================================
+       MARKETING / LANDING PAGE
+       ==================================================================== */
+    .tac { text-align: center; }
+    .ic-center { margin-left: auto; margin-right: auto; margin-bottom: 16px; }
+    .mkt-h2 { font-family: var(--display); font-weight: 700; font-size: 32px; letter-spacing: -0.02em; color: var(--ink); margin: 0 0 8px; }
+    .mkt-nav {
+      display: flex; align-items: center; gap: 24px;
+      padding: 8px 8px 8px 10px;
+    }
+    .mkt-nav .links { display: flex; align-items: center; gap: 6px; }
+    .mkt-nav-link {
+      color: var(--muted); font-size: 14px; font-weight: 600;
+      padding: 8px 14px; border-radius: 10px; text-decoration: none;
+      transition: background .2s ease, color .2s ease;
+    }
+    .mkt-nav-link:hover { background: rgba(15,23,42,0.04); color: var(--ink); }
+
+    .mkt-hero {
+      position: relative; overflow: hidden;
+      display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 30px; align-items: center;
+      background: var(--surface);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      padding: 56px 48px;
+      box-shadow: var(--shadow-3);
+    }
+    .mkt-hero::before {
+      content:""; position: absolute; right: -140px; top: -120px;
+      width: 420px; height: 420px; border-radius: 50%;
+      background: radial-gradient(closest-side, rgba(111,110,255,0.30), transparent 70%);
+      pointer-events: none;
+    }
+    .mkt-hero-in { position: relative; z-index: 1; }
+    .mkt-eye {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 600; color: var(--indigo);
+      background: rgba(79,70,229,0.08); border: 1px solid rgba(79,70,229,0.18);
+      padding: 6px 12px; border-radius: 999px;
+    }
+    .mkt-eye .sp { width: 5px; height: 5px; border-radius: 50%; background: var(--indigo); box-shadow: 0 0 0 3px rgba(79,70,229,0.20); }
+    .mkt-hero h1 {
+      font-family: var(--display); font-weight: 700; font-size: 54px; line-height: 1.03;
+      letter-spacing: -0.028em; color: var(--ink); margin: 18px 0 14px; max-width: 620px;
+    }
+    .mkt-hero h1 em { font-style: normal; background: var(--grad-text); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .mkt-hero .sub { color: var(--muted); font-size: 18px; line-height: 1.55; max-width: 540px; }
+
+    /* AI orbit visual (right side of hero) */
+    .ai-orbit { position: relative; height: 360px; display: flex; align-items: center; justify-content: center; }
+    .ai-orbit .glow { position: absolute; width: 320px; height: 320px; border-radius: 50%;
+      background: radial-gradient(closest-side, rgba(111,110,255,0.22), transparent 70%); filter: blur(6px);
+      animation: orbGlow 6s ease-in-out infinite; }
+    @keyframes orbGlow { 0%,100% { transform: scale(0.96); opacity: .8; } 50% { transform: scale(1.05); opacity: 1; } }
+    .ai-core {
+      position: relative; z-index: 2; width: 104px; height: 104px; border-radius: 28px;
+      background: var(--grad); color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      box-shadow: 0 18px 40px rgba(79,70,229,0.40), inset 0 2px 0 rgba(255,255,255,0.35);
+      animation: coreFloat 6s ease-in-out infinite;
+    }
+    .ai-core .ic, .ai-core .ic svg { width: 42px; height: 42px; }
+    @keyframes coreFloat { 0%,100% { transform: translateY(-6px); } 50% { transform: translateY(6px); } }
+    .ai-ring { position: absolute; border: 1.5px dashed rgba(79,70,229,0.28); border-radius: 50%; }
+    .ai-ring.r1 { width: 200px; height: 200px; animation: spin 24s linear infinite; }
+    .ai-ring.r2 { width: 300px; height: 300px; animation: spinRev 32s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spinRev { to { transform: rotate(-360deg); } }
+    .ai-sat {
+      position: absolute; top: -20px; left: 50%; margin-left: -20px;
+      width: 40px; height: 40px; border-radius: 12px;
+      background: var(--surface-strong); border: 1px solid var(--line);
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--indigo); box-shadow: var(--shadow-2);
+    }
+    .ai-sat .ic, .ai-sat .ic svg { width: 18px; height: 18px; }
+    .ai-ring.r1 .ai-sat { animation: spinRev 24s linear infinite; }
+    .ai-ring.r2 .ai-sat { animation: spin 32s linear infinite; }
+    .ai-ring.r2 .ai-sat.s2 { top: auto; bottom: -20px; color: var(--teal); }
+
+    /* Trust bar */
+    .trustbar {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+      margin-top: 18px;
+    }
+    .trust-item {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: 14px; padding: 14px 16px; box-shadow: var(--shadow-1);
+      color: var(--ink); font-size: 13.5px; font-weight: 600;
+    }
+    .trust-item .ic { color: var(--teal); flex-shrink: 0; }
+
+    /* Generic card grid for problem / agents / security */
+    .card-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    .card-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .feat-card {
+      position: relative; overflow: hidden;
+      background: var(--surface); backdrop-filter: blur(22px);
+      border: 1px solid var(--line); border-radius: var(--radius-lg);
+      padding: 24px 22px; box-shadow: var(--shadow-2);
+      transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+    }
+    .feat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-3); border-color: rgba(79,70,229,0.22); }
+    .feat-ic {
+      width: 44px; height: 44px; border-radius: 12px; margin-bottom: 16px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--indigo); background: rgba(79,70,229,0.10);
+    }
+    .feat-ic.teal { color: var(--teal); background: rgba(20,184,166,0.12); }
+    .feat-ic svg { width: 20px; height: 20px; }
+    .feat-card h3 { font-family: var(--display); font-size: 17px; font-weight: 700; color: var(--ink); margin: 0 0 8px; }
+    .feat-card p { color: var(--muted); font-size: 13.5px; line-height: 1.55; margin: 0; }
+    .feat-num { position: absolute; right: 18px; top: 14px; font-family: var(--display); font-weight: 700; font-size: 30px; color: rgba(79,70,229,0.12); }
+
+    /* Big glass CTA card */
+    .cta-card {
+      position: relative; overflow: hidden; text-align: center;
+      background: var(--surface); backdrop-filter: blur(24px);
+      border: 1px solid var(--line); border-radius: var(--radius-xl);
+      padding: 48px 40px; box-shadow: var(--shadow-3);
+    }
+    .cta-card::before {
+      content:""; position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(520px 240px at 20% -10%, rgba(111,110,255,0.16), transparent 60%),
+        radial-gradient(520px 240px at 90% 120%, rgba(20,184,166,0.14), transparent 60%);
+    }
+    .cta-card-in { position: relative; z-index: 1; }
+    .cta-card h2 { font-family: var(--display); font-weight: 700; font-size: 34px; letter-spacing: -0.02em; color: var(--ink); margin: 0 0 10px; }
+    .cta-card p { color: var(--muted); font-size: 16px; max-width: 560px; margin: 0 auto; }
+
+    /* Human-in-the-loop flow */
+    .hil-flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 14px; align-items: stretch; }
+    .hil-node {
+      background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg);
+      padding: 24px 20px; text-align: center; box-shadow: var(--shadow-2);
+    }
+    .hil-node.is-decision { border: 1px solid rgba(20,184,166,0.30); background: linear-gradient(180deg, rgba(20,184,166,0.10), var(--surface) 60%); }
+    .hil-node .ic { width: 46px; height: 46px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; color: var(--indigo); background: rgba(79,70,229,0.10); margin-bottom: 12px; }
+    .hil-node.is-human .ic { color: var(--teal); background: rgba(20,184,166,0.12); }
+    .hil-node.is-decision .ic { color: var(--teal); background: rgba(20,184,166,0.14); }
+    .hil-node .ic svg { width: 22px; height: 22px; }
+    .hil-node b { display: block; font-family: var(--display); font-size: 16px; color: var(--ink); margin-bottom: 4px; }
+    .hil-node small { color: var(--muted); font-size: 12.5px; }
+    .hil-arrow { display: flex; align-items: center; justify-content: center; color: var(--soft); }
+    .hil-arrow svg { width: 22px; height: 22px; }
+
+    /* Footer */
+    .mkt-foot {
+      margin-top: 56px; padding: 32px 4px 8px;
+      border-top: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+    }
+    .mkt-foot .brand { display: flex; align-items: center; gap: 11px; }
+    .mkt-foot .brand .m { width: 32px; height: 32px; border-radius: 9px; background: var(--grad); color: #fff; display: inline-flex; align-items: center; justify-content: center; }
+    .mkt-foot .brand .m svg { width: 17px; height: 17px; }
+    .mkt-foot .brand b { font-family: var(--display); font-size: 16px; color: var(--ink); }
+    .mkt-foot .links { display: flex; gap: 8px; flex-wrap: wrap; }
+    .mkt-foot .links a { color: var(--muted); font-size: 13.5px; font-weight: 500; padding: 6px 12px; border-radius: 8px; }
+    .mkt-foot .links a:hover { background: rgba(15,23,42,0.04); color: var(--ink); }
+    .mkt-foot .copy { color: var(--soft); font-size: 12.5px; width: 100%; padding-top: 14px; }
+
+    @media (max-width: 1080px) {
+      .mkt-hero { grid-template-columns: 1fr; padding: 36px 28px; }
+      .ai-orbit { height: 280px; }
+      .mkt-hero h1 { font-size: 38px; }
+      .trustbar, .card-grid-4, .card-grid-3 { grid-template-columns: 1fr 1fr; }
+      .hil-flow { grid-template-columns: 1fr; }
+      .hil-arrow { transform: rotate(90deg); }
+    }
+    @media (max-width: 640px) {
+      .trustbar, .card-grid-4, .card-grid-3 { grid-template-columns: 1fr; }
+    }
     </style>
     <div class="bg-fx" aria-hidden="true">
       <div class="orb a"></div>
@@ -2419,7 +2595,7 @@ if "_flash" not in st.session_state:
 if "_coverage_logged" not in st.session_state:
     st.session_state._coverage_logged = set()
 if "nav_page" not in st.session_state:
-    st.session_state.nav_page = "dashboard"
+    st.session_state.nav_page = "home"
 
 NAV_ITEMS = [
     ("dashboard",  "Dashboard",  "lightning"),
@@ -2427,7 +2603,7 @@ NAV_ITEMS = [
     ("kandidaten", "Kandidaten", "users"),
     ("audit",      "Audit Log",  "log"),
 ]
-_VALID_PAGES = {pid for pid, _, _ in NAV_ITEMS}
+_VALID_PAGES = {pid for pid, _, _ in NAV_ITEMS} | {"home"}
 
 
 def goto(page: str) -> None:
@@ -2490,6 +2666,13 @@ with st.sidebar:
     )
     st.caption("AI Workspace für Geschäftsführer ohne eigenes HR-Team.")
     st.divider()
+    if st.button(
+        "←  Zur Website",
+        key="sb_home",
+        use_container_width=True,
+        type="primary" if st.session_state.nav_page == "home" else "secondary",
+    ):
+        goto("home")
     st.markdown("**Bereich**")
     for _pid, _lbl, _ico in NAV_ITEMS:
         if st.button(
@@ -2535,6 +2718,8 @@ def render_top_nav() -> None:
         _menu_ctx = st.popover("Mehr") if _has_popover else st.expander("Mehr")
         with _menu_ctx:
             st.caption("Schnellzugriff")
+            if st.button("Zur Website", key="mn_home", use_container_width=True):
+                goto("home")
             if st.button("Einstellungen", key="mn_settings", use_container_width=True):
                 pass
             if st.button("Hilfe & Support", key="mn_help", use_container_width=True):
@@ -3523,26 +3708,409 @@ def render_audit_log() -> None:
 
 
 # ---------------------------------------------------------------------------
-# App-Shell: Top-Nav rendern, Seite routen, Footer-Hinweis
+# Render: Marketing / Landing Page
 # ---------------------------------------------------------------------------
 
-st.markdown('<div class="shell-nav-wrap">', unsafe_allow_html=True)
-render_top_nav()
-st.markdown("</div>", unsafe_allow_html=True)
+
+def render_marketing_nav() -> None:
+    cols = st.columns([3.6, 1.0, 1.25])
+    with cols[0]:
+        st.markdown(
+            f"""
+            <div class="shell-nav mkt-nav">
+              <div class="shell-brand">
+                <div class="shell-mark">{ic("sparkles", "md")}</div>
+                <div class="shell-name">Recruiting&nbsp;AI<small>AI Recruiting Platform</small></div>
+              </div>
+              <div class="links">
+                <a class="mkt-nav-link" href="#produkt">Produkt</a>
+                <a class="mkt-nav-link" href="#workflow">Workflow</a>
+                <a class="mkt-nav-link" href="#features">Features</a>
+                <a class="mkt-nav-link" href="#sicherheit">Sicherheit</a>
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with cols[1]:
+        if st.button("Dashboard", key="mkt_nav_dash", use_container_width=True):
+            goto("dashboard")
+    with cols[2]:
+        if st.button("Demo starten", key="mkt_nav_demo", type="primary", use_container_width=True):
+            goto("recruiting")
+
+
+def _mkt_head(title: str, sub: str = "") -> None:
+    sub_html = f'<div class="section-sub tac">{sub}</div>' if sub else ""
+    st.markdown(
+        f'<div class="sec"><h2 class="mkt-h2 tac">{title}</h2>{sub_html}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def render_home() -> None:
+    # ---- 1+2 Nav + Hero ----
+    render_marketing_nav()
+    st.markdown(
+        f"""
+        <div id="produkt" class="mkt-hero">
+          <div class="mkt-hero-in">
+            <span class="mkt-eye"><span class="sp"></span>AI Recruiting · Multi-Agent</span>
+            <h1>Recruiting ohne <em>stundenlanges</em> Lebenslauflesen.</h1>
+            <div class="sub">Recruiting AI analysiert Bewerbungen, prüft Qualifikationen
+            und erkennt Informationslücken &ndash; transparent, nachvollziehbar und ohne
+            automatische Personalentscheidung.</div>
+          </div>
+          <div class="ai-orbit" aria-hidden="true">
+            <div class="glow"></div>
+            <div class="ai-ring r1"><div class="ai-sat">{ic("file", "md")}</div></div>
+            <div class="ai-ring r2"><div class="ai-sat">{ic("search", "md")}</div>
+              <div class="ai-sat s2">{ic("message", "md")}</div></div>
+            <div class="ai-core">{ic("sparkles", "lg")}</div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    hc1, hc2, _hsp = st.columns([1.3, 1.3, 4])
+    with hc1:
+        if st.button("Demo starten", key="hero_demo", type="primary", use_container_width=True):
+            goto("recruiting")
+    with hc2:
+        if st.button("Mehr erfahren", key="hero_more", use_container_width=True):
+            goto("dashboard")
+
+    # ---- 3 Trust bar ----
+    st.markdown(
+        f"""
+        <div class="trustbar">
+          <div class="trust-item"><span class="ic">{ic("bot","md")}</span> Multi-Agent Workflow</div>
+          <div class="trust-item"><span class="ic">{ic("shield","md")}</span> Human-in-the-Loop</div>
+          <div class="trust-item"><span class="ic">{ic("log","md")}</span> Audit Log</div>
+          <div class="trust-item"><span class="ic">{ic("check-circle","md")}</span> Keine automatische Entscheidung</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # ---- 4 Problem section ----
+    _mkt_head(
+        "Warum Recruiting heute Zeit kostet",
+        "Kleine Teams ohne HR-Abteilung verlieren Stunden mit manueller Sichtung.",
+    )
+    st.markdown(
+        f"""
+        <div class="card-grid-4">
+          <div class="feat-card"><div class="feat-num">01</div>
+            <div class="feat-ic">{ic("clock","md")}</div>
+            <h3>5–10 Stunden Sichtung</h3>
+            <p>Bewerbungsstapel manuell zu lesen bindet wertvolle Zeit der Geschäftsführung.</p></div>
+          <div class="feat-card"><div class="feat-num">02</div>
+            <div class="feat-ic">{ic("file","md")}</div>
+            <h3>Unterschiedliche CV-Formate</h3>
+            <p>Jeder Lebenslauf ist anders aufgebaut — Vergleichbarkeit muss erst hergestellt werden.</p></div>
+          <div class="feat-card"><div class="feat-num">03</div>
+            <div class="feat-ic">{ic("puzzle","md")}</div>
+            <h3>Fehlende Informationen</h3>
+            <p>Wichtige Angaben fehlen oft — und fallen erst spät im Prozess auf.</p></div>
+          <div class="feat-card"><div class="feat-num">04</div>
+            <div class="feat-ic">{ic("users","md")}</div>
+            <h3>Keine HR-Abteilung</h3>
+            <p>Ohne eigenes Recruiting-Team bleibt die Last bei wenigen Personen.</p></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # ---- 5 Lösung / Workflow ----
+    st.markdown('<div id="workflow"></div>', unsafe_allow_html=True)
+    _mkt_head(
+        "So arbeitet Recruiting AI",
+        "Sechs transparente Schritte — der letzte gehört immer dem Menschen.",
+    )
+    _solution_steps = [
+        ("upload", "Stelle hochladen", "Stellenanzeige einfügen."),
+        ("file", "CV analysieren", "Lebenslauf strukturieren."),
+        ("scale", "Qualifikationen prüfen", "Anforderungen abgleichen."),
+        ("puzzle", "Informationslücken erkennen", "Fehlende Angaben sichtbar machen."),
+        ("message", "Rückfragen vorbereiten", "Höflich vorformuliert."),
+        ("check-circle", "Entscheidung treffen", "Der Mensch entscheidet."),
+    ]
+    _cells = ""
+    for _i, (_icn, _name, _desc) in enumerate(_solution_steps):
+        _final = "is-final" if _i == len(_solution_steps) - 1 else ""
+        _cells += (
+            f'<div class="wf-step {_final}"><div class="wf-ic">{ic(_icn, "md")}</div>'
+            f"<b>{_name}</b><small>{_desc}</small></div>"
+        )
+    st.markdown(f'<div class="wf">{_cells}</div>', unsafe_allow_html=True)
+
+    # ---- 6 Workspace entry ----
+    st.markdown('<div class="sec"></div>', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div class="cta-card"><div class="cta-card-in">
+          <h2>Bereit für die Analyse?</h2>
+          <p>Öffnen Sie den Recruiting Workspace und starten Sie mit Stellenprofil und Lebensläufen.</p>
+        </div></div>
+        """,
+        unsafe_allow_html=True,
+    )
+    we1, we2, we3 = st.columns([1.5, 1.7, 1.5])
+    with we2:
+        if st.button("Recruiting Workspace öffnen", key="ws_entry", type="primary", use_container_width=True):
+            goto("recruiting")
+
+    # ---- 7 Dashboard preview (real data) ----
+    _total_candidates = len(st.session_state.candidates)
+    _total_gaps = sum(
+        len((c.get("quality") or {}).get("missing_information") or [])
+        + len((c.get("quality") or {}).get("unclear_information") or [])
+        for c in st.session_state.candidates
+    )
+    _total_questions = sum(
+        len((c.get("followups") or {}).get("questions") or [])
+        for c in st.session_state.candidates
+    )
+    _total_found = 0
+    if st.session_state.job_profile:
+        for c in st.session_state.candidates:
+            _total_found += status_counts(
+                evaluate_candidate_requirements(st.session_state.job_profile, c["data"])
+            )["Gefunden"]
+    _mkt_head(
+        "Volle Transparenz über jeden Schritt",
+        "Live-Kennzahlen aus Ihrem Workspace — nachvollziehbar statt Black Box.",
+    )
+    st.markdown(
+        f"""
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-head"><div class="kpi-ic purple">{ic("file","md")}</div>
+            <div class="kpi-label">Bewerbungen</div></div>
+            <div class="kpi-value">{_total_candidates}</div>
+            <div class="kpi-delta">{ic("trend-up","sm")}&nbsp;analysiert</div></div>
+          <div class="kpi"><div class="kpi-head"><div class="kpi-ic indigo">{ic("check-circle","md")}</div>
+            <div class="kpi-label">Anforderungen gefunden</div></div>
+            <div class="kpi-value">{_total_found}</div>
+            <div class="kpi-delta">über alle Kandidaten</div></div>
+          <div class="kpi"><div class="kpi-head"><div class="kpi-ic blue">{ic("puzzle","md")}</div>
+            <div class="kpi-label">Klärungsbedarf</div></div>
+            <div class="kpi-value">{_total_gaps}</div>
+            <div class="kpi-delta">offene Informationslücken</div></div>
+          <div class="kpi"><div class="kpi-head"><div class="kpi-ic teal">{ic("message","md")}</div>
+            <div class="kpi-label">Rückfragen vorbereitet</div></div>
+            <div class="kpi-value">{_total_questions}</div>
+            <div class="kpi-delta">warten auf Freigabe</div></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    dp1, dp2, _dp3 = st.columns([1.5, 1.2, 4])
+    with dp1:
+        if st.button("Zum Dashboard", key="prev_dash", use_container_width=True):
+            goto("dashboard")
+
+    # ---- 8 Agenten ----
+    st.markdown('<div id="features"></div>', unsafe_allow_html=True)
+    _mkt_head(
+        "Mehrere Agenten. Ein Workflow.",
+        "Spezialisierte Agenten arbeiten zusammen — keiner trifft eine Entscheidung.",
+    )
+    _agents = [
+        ("clipboard", "Stellenprofil-Agent", "Extrahiert objektiv prüfbare Anforderungen aus der Stellenanzeige."),
+        ("file", "CV-Agent", "Strukturiert jeden Lebenslauf in vergleichbare Felder mit Belegen."),
+        ("scale", "Matching-Agent", "Gleicht Qualifikationen ab: gefunden, teilweise, nicht gefunden."),
+        ("puzzle", "Informationslücken-Agent", "Erkennt fehlende und unklare Angaben statt sie zu raten."),
+        ("message", "Rückfragen-Agent", "Bereitet höfliche Rückfragen vor — versendet wird nichts automatisch."),
+    ]
+    _acards = ""
+    for _icn, _title, _desc in _agents:
+        _acards += (
+            f'<div class="feat-card"><div class="feat-ic">{ic(_icn,"md")}</div>'
+            f"<h3>{_title}</h3><p>{_desc}</p></div>"
+        )
+    st.markdown(f'<div class="card-grid-3">{_acards}</div>', unsafe_allow_html=True)
+
+    # ---- 9 Kandidaten ----
+    _mkt_head(
+        "Bewerbungen auf einen Blick vergleichen",
+        "Strukturierte Kandidatenkarten statt unübersichtlicher Tabellen.",
+    )
+    if st.session_state.candidates:
+        _jp = st.session_state.job_profile
+        _ccards = ""
+        for _c in st.session_state.candidates[:3]:
+            _d = _c["data"]
+            _name = _d.get("name") or "(ohne Name)"
+            _role = _d["experience"][0].get("role", "") if _d.get("experience") else ""
+            _skills = _d.get("skills") or []
+            _sb = "".join(
+                f'<span class="badge badge-info">{s}</span>' for s in _skills[:4]
+            ) or '<span class="badge badge-muted">keine Skills erfasst</span>'
+            if _jp:
+                _rc = status_counts(evaluate_candidate_requirements(_jp, _d))
+                _tot = _rc["Gefunden"] + _rc["Teilweise gefunden"] + _rc["Nicht gefunden"]
+                _metric = (
+                    f'<div class="cand-metric"><em>{_rc["Gefunden"]}</em><span> / {_tot}</span></div>'
+                    '<div class="cand-metric-label">Anforderungen gefunden</div>'
+                    if _tot else ""
+                )
+            else:
+                _metric = ""
+            _q = _c.get("quality") or {}
+            _gaps = len(_q.get("missing_information") or []) + len(_q.get("unclear_information") or [])
+            _status = (
+                f'<span class="badge badge-warn">Klärungsbedarf · {_gaps}</span>'
+                if _gaps else '<span class="badge badge-ok">Analyse abgeschlossen</span>'
+            )
+            _ccards += (
+                '<div class="feat-card"><div class="cand-id">'
+                f'<div class="app-av">{initials_for(_name)}</div>'
+                f'<div><div class="cand-name">{_name}</div>'
+                f'<div class="cand-role">{_role or _c["filename"]}</div></div></div>'
+                f'<div class="mt-3">{_metric}</div>'
+                f'<div class="cand-skills mt-2">{_sb}</div>'
+                f'<div class="mt-2">{_status}</div></div>'
+            )
+        st.markdown(f'<div class="card-grid-3">{_ccards}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(
+            f"""
+            <div class="cta-card"><div class="cta-card-in">
+              <div class="feat-ic teal ic-center">{ic("users","md")}</div>
+              <h2>Noch keine Kandidaten</h2>
+              <p>Laden Sie Bewerbungen im Recruiting Workspace hoch, um sie hier zu vergleichen.</p>
+            </div></div>
+            """,
+            unsafe_allow_html=True,
+        )
+    kc1, kc2, _kc3 = st.columns([1.7, 1.2, 4])
+    with kc1:
+        if st.button("Kandidaten ansehen", key="prev_kand", use_container_width=True):
+            goto("kandidaten")
+
+    # ---- 10 Human-in-the-Loop ----
+    _mkt_head("Der Mensch entscheidet.", "Der Agent liefert Daten. Die Verantwortung bleibt bei Ihnen.")
+    st.markdown(
+        f"""
+        <div class="hil-flow">
+          <div class="hil-node"><span class="ic">{ic("bot","lg")}</span>
+            <b>Agent</b><small>Strukturiert &amp; prüft Informationen</small></div>
+          <div class="hil-arrow">{ic("arrow-right","md")}</div>
+          <div class="hil-node is-human"><span class="ic">{ic("user","lg")}</span>
+            <b>Geschäftsführer</b><small>Sichtet die aufbereiteten Daten</small></div>
+          <div class="hil-arrow">{ic("arrow-right","md")}</div>
+          <div class="hil-node is-decision"><span class="ic">{ic("check-circle","lg")}</span>
+            <b>Entscheidung</b><small>Die Auswahl trifft der Mensch</small></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # ---- 11 Audit Log ----
+    _mkt_head("Jeder Schritt nachvollziehbar", "Eine vollständige Timeline jeder Agentenaktivität.")
+    _recent = load_audit_log()[-8:][::-1]
+    with st.container(border=True):
+        if _recent:
+            _items = ""
+            for _e in _recent:
+                _ts = _e.get("timestamp", "")
+                _t = _ts.split("T", 1)[1][:5] if "T" in _ts else _ts
+                _action = _e.get("action", "")
+                _sub = " · ".join(x for x in [_e.get("target", ""), _e.get("result_type", "")] if x)
+                _kind = "is-err" if "fehler" in (_action + _sub).lower() else (
+                    "is-warn" if ("klärung" in _action.lower() or "rückfrage" in _action.lower()) else "is-ok"
+                )
+                _items += (
+                    f'<div class="tl-item {_kind}"><div class="tl-dot"></div>'
+                    f'<div class="tl-time">{_t}</div><div class="tl-action">{_action}</div>'
+                    f'<div class="tl-target">{_sub}</div></div>'
+                )
+            st.markdown(f'<div class="tl">{_items}</div>', unsafe_allow_html=True)
+        else:
+            st.caption("Noch keine Agent-Aktivität — der Audit-Log füllt sich mit jeder Analyse.")
+    al1, al2, _al3 = st.columns([1.7, 1.2, 4])
+    with al1:
+        if st.button("Audit Log öffnen", key="prev_audit", use_container_width=True):
+            goto("audit")
+
+    # ---- 12 Sicherheit ----
+    st.markdown('<div id="sicherheit"></div>', unsafe_allow_html=True)
+    _mkt_head("Transparenz statt Black Box", "Kontrolle, Nachvollziehbarkeit und Fairness sind eingebaut.")
+    st.markdown(
+        f"""
+        <div class="card-grid-4">
+          <div class="feat-card"><div class="feat-ic teal">{ic("check-circle","md")}</div>
+            <h3>Keine automatische Entscheidung</h3>
+            <p>Recruiting AI bewertet niemanden und erstellt kein Ranking.</p></div>
+          <div class="feat-card"><div class="feat-ic teal">{ic("log","md")}</div>
+            <h3>Auditierbar</h3>
+            <p>Jeder Agentenschritt wird lückenlos protokolliert.</p></div>
+          <div class="feat-card"><div class="feat-ic teal">{ic("search","md")}</div>
+            <h3>Nachvollziehbar</h3>
+            <p>Jede Aussage verweist auf eine Belegstelle im Lebenslauf.</p></div>
+          <div class="feat-card"><div class="feat-ic teal">{ic("shield","md")}</div>
+            <h3>Kontrolle beim Nutzer</h3>
+            <p>Sie behalten jederzeit die volle Entscheidungshoheit.</p></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # ---- 13 Final CTA ----
+    st.markdown('<div class="sec"></div>', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div class="cta-card"><div class="cta-card-in">
+          <h2>Starten Sie Ihre erste Bewerbungsanalyse.</h2>
+          <p>In unter einer Minute zum strukturierten Überblick — ohne Setup, mit voller Kontrolle.</p>
+        </div></div>
+        """,
+        unsafe_allow_html=True,
+    )
+    fc1, fc2, fc3 = st.columns([1.5, 1.8, 1.5])
+    with fc2:
+        if st.button("Recruiting Workspace öffnen", key="final_cta", type="primary", use_container_width=True):
+            goto("recruiting")
+
+    # ---- 14 Footer ----
+    st.markdown(
+        f"""
+        <div class="mkt-foot">
+          <div class="brand"><span class="m">{ic("sparkles","md")}</span><b>Recruiting&nbsp;AI</b></div>
+          <div class="links"><a href="#produkt">Impressum</a><a href="#produkt">Datenschutz</a><a href="#produkt">Kontakt</a></div>
+          <div class="copy">© 2026 Recruiting&nbsp;AI · Human-in-the-Loop · Keine automatische Personalentscheidung.</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+# ---------------------------------------------------------------------------
+# App-Shell: Seite routen (Marketing-Landing oder funktionaler Workspace)
+# ---------------------------------------------------------------------------
 
 _page = st.session_state.nav_page
-if _page == "dashboard":
-    render_dashboard()
-elif _page == "recruiting":
-    render_recruiting()
-elif _page == "kandidaten":
-    render_kandidaten()
-elif _page == "audit":
-    render_audit_log()
-else:
-    render_dashboard()
 
-st.caption(
-    "Der Mensch entscheidet. Recruiting AI strukturiert Informationen — "
-    "die Entscheidung trifft der Geschäftsführer."
-)
+if _page == "home":
+    render_home()
+else:
+    st.markdown('<div class="shell-nav-wrap">', unsafe_allow_html=True)
+    render_top_nav()
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    if _page == "dashboard":
+        render_dashboard()
+    elif _page == "recruiting":
+        render_recruiting()
+    elif _page == "kandidaten":
+        render_kandidaten()
+    elif _page == "audit":
+        render_audit_log()
+    else:
+        render_dashboard()
+
+    st.caption(
+        "Der Mensch entscheidet. Recruiting AI strukturiert Informationen — "
+        "die Entscheidung trifft der Geschäftsführer."
+    )
