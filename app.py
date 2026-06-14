@@ -3916,10 +3916,133 @@ def _workflow_timeline_html() -> str:
     return f'<div class="tl-flow">{nodes}</div>'
 
 
+# ---- Immersive Intro (100vh Splash, scroll to explore) ---------------------
+
+_INTRO_STYLE = """
+<style>
+[data-testid="stMain"] { overflow-x: clip; }
+.intro {
+  position: relative;
+  width: 100vw; left: 50%; margin-left: -50vw; margin-right: -50vw;
+  min-height: 100vh; margin-top: -1.4rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.intro-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+.intro-grad {
+  position: absolute; inset: -2px; z-index: 0;
+  background: linear-gradient(125deg, #EEF0FF 0%, #E9EDFF 22%, #E5FBF6 50%, #F1ECFF 74%, #EEF0FF 100%);
+  background-size: 300% 300%; animation: introShift 22s ease infinite;
+}
+@keyframes introShift { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+.intro-glow { position: absolute; border-radius: 50%; filter: blur(74px); will-change: transform; }
+.intro-glow.g1 { width: 540px; height: 540px; left: 6%; top: 10%; background: radial-gradient(closest-side, rgba(111,110,255,0.55), transparent 70%); animation: introF1 17s ease-in-out infinite alternate; }
+.intro-glow.g2 { width: 580px; height: 580px; right: 4%; top: 16%; background: radial-gradient(closest-side, rgba(20,184,166,0.42), transparent 70%); animation: introF2 21s ease-in-out infinite alternate; }
+.intro-glow.g3 { width: 500px; height: 500px; left: 38%; bottom: 0%; background: radial-gradient(closest-side, rgba(37,99,235,0.40), transparent 70%); animation: introF3 25s ease-in-out infinite alternate; }
+@keyframes introF1 { from { transform: translate3d(0,0,0); } to { transform: translate3d(60px,40px,0); } }
+@keyframes introF2 { from { transform: translate3d(0,0,0); } to { transform: translate3d(-52px,28px,0); } }
+@keyframes introF3 { from { transform: translate3d(0,0,0); } to { transform: translate3d(28px,-42px,0); } }
+.intro-particles { position: absolute; inset: 0; pointer-events: none; }
+.intro-particles .pt { position: absolute; border-radius: 50%; background: rgba(79,70,229,0.55); box-shadow: 0 0 10px rgba(79,70,229,0.55); opacity: .5; animation: ptFloat 9s ease-in-out infinite; }
+.intro-particles .p1 { width: 7px; height: 7px; left: 18%; top: 30%; animation-delay: 0s; }
+.intro-particles .p2 { width: 5px; height: 5px; left: 30%; top: 64%; background: rgba(20,184,166,0.6); box-shadow: 0 0 10px rgba(20,184,166,0.6); animation-delay: 1.2s; }
+.intro-particles .p3 { width: 9px; height: 9px; left: 72%; top: 26%; animation-delay: 2.1s; }
+.intro-particles .p4 { width: 6px; height: 6px; left: 82%; top: 58%; background: rgba(37,99,235,0.6); box-shadow: 0 0 10px rgba(37,99,235,0.6); animation-delay: 3.0s; }
+.intro-particles .p5 { width: 4px; height: 4px; left: 50%; top: 18%; animation-delay: 1.7s; }
+.intro-particles .p6 { width: 6px; height: 6px; left: 60%; top: 74%; animation-delay: 2.6s; }
+.intro-particles .p7 { width: 5px; height: 5px; left: 12%; top: 72%; background: rgba(20,184,166,0.6); box-shadow: 0 0 10px rgba(20,184,166,0.6); animation-delay: 0.6s; }
+@keyframes ptFloat { 0%,100% { transform: translateY(-14px); opacity: .35; } 50% { transform: translateY(14px); opacity: .75; } }
+
+.intro-inner { position: relative; z-index: 2; text-align: center; padding: 0 24px; }
+.intro-card {
+  display: inline-flex; flex-direction: column; align-items: center;
+  padding: 60px 72px;
+  background: rgba(255,255,255,0.42);
+  backdrop-filter: blur(26px) saturate(140%); -webkit-backdrop-filter: blur(26px) saturate(140%);
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: 36px;
+  box-shadow: 0 34px 90px rgba(31,41,55,0.14), inset 0 1px 0 rgba(255,255,255,0.7);
+}
+.intro-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; letter-spacing: .06em; color: #4F46E5;
+  background: rgba(79,70,229,0.08); border: 1px solid rgba(79,70,229,0.18);
+  padding: 7px 16px; border-radius: 999px; margin-bottom: 26px;
+}
+.intro-eyebrow .ic, .intro-eyebrow .ic svg { width: 15px; height: 15px; }
+.intro-title {
+  font-family: var(--display); font-weight: 800;
+  font-size: clamp(56px, 11vw, 128px); line-height: 0.92; letter-spacing: -0.045em;
+  margin: 0 0 18px;
+  background: linear-gradient(120deg, #4F46E5 0%, #6F6EFF 42%, #14B8A6 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.intro-sub { font-size: clamp(18px, 2.4vw, 26px); font-weight: 500; color: #33414E; max-width: 600px; margin: 0 auto; line-height: 1.4; }
+
+.intro-scroll {
+  position: absolute; left: 50%; bottom: 5vh; transform: translateX(-50%); z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  color: #64748B; font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+}
+.intro-mouse { width: 26px; height: 42px; border: 2px solid rgba(15,23,42,0.28); border-radius: 14px; position: relative; }
+.intro-mouse i { position: absolute; left: 50%; top: 8px; width: 4px; height: 8px; margin-left: -2px; border-radius: 2px; background: #4F46E5; animation: introWheel 1.7s ease-in-out infinite; }
+@keyframes introWheel { 0% { transform: translateY(0); opacity: 1; } 70% { transform: translateY(13px); opacity: 0; } 100% { opacity: 0; } }
+.intro-chev { display: flex; align-items: center; color: #94A3B8; animation: introHint 2.2s ease-in-out infinite; }
+.intro-chev .ic, .intro-chev .ic svg { width: 18px; height: 18px; }
+@keyframes introHint { 0%,100% { transform: translateY(0); opacity: .6; } 50% { transform: translateY(6px); opacity: 1; } }
+
+/* Scroll-reveal: hero exits upward + shrinks while the site fades in below */
+@supports (animation-timeline: view()) {
+  .intro-card {
+    animation: introExit linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+  }
+  .intro-scroll {
+    animation: introFade linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 35%;
+  }
+}
+@keyframes introExit { to { transform: translateY(-72px) scale(0.9); opacity: 0; } }
+@keyframes introFade { to { opacity: 0; } }
+
+@media (max-width: 640px) { .intro-card { padding: 40px 28px; border-radius: 28px; } }
+@media (prefers-reduced-motion: reduce) {
+  .intro-grad, .intro-glow, .intro-particles .pt, .intro-mouse i, .intro-chev, .intro-scroll, .intro-card { animation: none !important; }
+}
+</style>
+"""
+
+
+def _intro_markup() -> str:
+    return (
+        '<div class="intro"><div class="intro-bg">'
+        '<div class="intro-grad"></div>'
+        '<div class="intro-glow g1"></div><div class="intro-glow g2"></div>'
+        '<div class="intro-glow g3"></div>'
+        '<div class="intro-particles">'
+        '<span class="pt p1"></span><span class="pt p2"></span><span class="pt p3"></span>'
+        '<span class="pt p4"></span><span class="pt p5"></span><span class="pt p6"></span>'
+        '<span class="pt p7"></span></div></div>'
+        '<div class="intro-inner"><div class="intro-card">'
+        f'<span class="intro-eyebrow">{ic("sparkles", "sm")} AI Recruiting Platform</span>'
+        '<h1 class="intro-title">Recruiting&nbsp;AI</h1>'
+        '<div class="intro-sub">Recruiting ohne stundenlanges Lebenslauflesen.</div>'
+        "</div></div>"
+        '<div class="intro-scroll"><span>Scroll to explore</span>'
+        '<span class="intro-mouse"><i></i></span>'
+        f'<span class="intro-chev">{ic("chevron-down", "sm")}</span></div>'
+        "</div>"
+    )
+
+
 # ---- Landing Page (Story-Layout, wechselnder Aufbau) -----------------------
 
 
 def render_home() -> None:
+    # 0 — IMMERSIVE INTRO (100vh, scroll to explore)
+    st.markdown(_INTRO_STYLE + _intro_markup(), unsafe_allow_html=True)
+
     render_marketing_nav()
 
     # 1 — HERO: Text links / Produkt-Mockup rechts
