@@ -4253,52 +4253,172 @@ _HERO_MERGED_STYLE = """
 """
 
 
+# ---- Solo Hero: complete 100vh hero inside one transparent component -------
+# The whole hero (CSS gradient + glows + transparent Spline + text + CTA +
+# scroll hint) lives inside a single components.html document. The gradient
+# is the iframe BODY background, so there is never a white box — even while
+# Spline loads. Parent CSS stretches the component to a borderless,
+# full-bleed 100vh frame so it reads as one seamless scene.
+
+_SOLO_HERO_STYLE = """
+<style>
+.solo-hero-flag { display: none; }
+[data-testid="stVerticalBlock"]:has(> div:first-child .solo-hero-flag) {
+  position: relative;
+  width: 100vw; left: 50%; margin-left: -50vw; margin-right: -50vw;
+  height: 100vh; margin-top: -1.4rem;
+  overflow: hidden; gap: 0 !important;
+}
+[data-testid="stVerticalBlock"]:has(> div:first-child .solo-hero-flag) > div:first-child {
+  position: absolute; height: 0; min-height: 0; margin: 0; padding: 0; opacity: 0; pointer-events: none;
+}
+[data-testid="stVerticalBlock"]:has(> div:first-child .solo-hero-flag) > div:has(iframe) {
+  height: 100% !important; margin: 0 !important; padding: 0 !important;
+}
+[data-testid="stVerticalBlock"]:has(> div:first-child .solo-hero-flag) [data-testid="stIFrame"],
+[data-testid="stVerticalBlock"]:has(> div:first-child .solo-hero-flag) [data-testid="stCustomComponentV1"] {
+  height: 100% !important; background: transparent !important; border: 0 !important;
+}
+[data-testid="stVerticalBlock"]:has(> div:first-child .solo-hero-flag) iframe {
+  width: 100% !important; height: 100% !important;
+  border: 0 !important; background: transparent !important; display: block;
+}
+</style>
+"""
+
+_SOLO_HERO_HTML = """
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ height:100%; width:100%; overflow:hidden; background:transparent;
+    font-family:'Inter','Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+  .stage{ position:relative; width:100%; height:100%; overflow:hidden;
+    background:linear-gradient(135deg,#F8FCFF 0%,#F7F5FF 50%,#EEF2FF 100%); }
+  .glow{ position:absolute; border-radius:50%; filter:blur(72px); pointer-events:none; z-index:0; }
+  .glow.tr{ width:560px; height:560px; right:-150px; top:-170px;
+    background:radial-gradient(closest-side,rgba(124,108,255,0.34),transparent 70%); }
+  .glow.bl{ width:600px; height:600px; left:-160px; bottom:-180px;
+    background:radial-gradient(closest-side,rgba(37,99,235,0.30),transparent 70%); }
+  spline-viewer{ position:absolute; inset:0; width:100%; height:100%; display:block;
+    background:transparent; z-index:1; }
+  spline-viewer::part(logo){ display:none !important; }
+  .veil{ position:absolute; inset:0; z-index:2; pointer-events:none;
+    background:linear-gradient(90deg,rgba(248,252,255,0.80) 0%,rgba(248,252,255,0.34) 30%,transparent 56%); }
+  .fg{ position:absolute; inset:0; z-index:3; display:flex; flex-direction:column; justify-content:center;
+    padding:0 clamp(28px,7vw,120px); transition:transform .85s cubic-bezier(.65,0,.35,1), opacity .7s ease; }
+  .fg .inner{ max-width:600px; }
+  .eyebrow{ display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600; letter-spacing:.04em;
+    color:#4F46E5; background:rgba(255,255,255,0.62); backdrop-filter:blur(12px);
+    border:1px solid rgba(79,70,229,0.18); padding:7px 15px; border-radius:999px;
+    box-shadow:0 8px 22px rgba(79,70,229,0.12); opacity:0; animation:rise .7s cubic-bezier(.2,.7,.2,1) .05s both; }
+  .eyebrow svg{ width:15px; height:15px; }
+  h1{ font-family:'Inter Tight','Inter',sans-serif; font-weight:800; font-size:clamp(40px,5vw,66px);
+    line-height:1.02; letter-spacing:-0.035em; color:#0B1020; margin:24px 0 18px; max-width:600px;
+    opacity:0; animation:rise .7s cubic-bezier(.2,.7,.2,1) .12s both; }
+  h1 em{ font-style:normal; background:linear-gradient(120deg,#4F46E5,#6F6EFF 45%,#14B8A6);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .sub{ font-size:clamp(17px,1.5vw,20px); line-height:1.6; color:#475569; max-width:500px; margin-bottom:30px;
+    opacity:0; animation:rise .7s cubic-bezier(.2,.7,.2,1) .19s both; }
+  .cta{ display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    opacity:0; animation:rise .7s cubic-bezier(.2,.7,.2,1) .26s both; }
+  .join{ appearance:none; border:0; cursor:pointer; font-family:inherit;
+    display:inline-flex; align-items:center; gap:10px; font-size:15px; font-weight:700; letter-spacing:.03em;
+    color:#fff; padding:15px 30px; border-radius:14px;
+    background:linear-gradient(135deg,#6F6EFF 0%,#4F46E5 55%,#2563EB 100%); background-size:200% 200%;
+    box-shadow:0 14px 30px rgba(79,70,229,0.34), inset 0 1px 0 rgba(255,255,255,0.25);
+    transition:transform .18s ease, box-shadow .25s ease, background-position .5s ease; }
+  .join:hover{ transform:translateY(-2px); background-position:100% 0; box-shadow:0 20px 44px rgba(79,70,229,0.48); }
+  .join:active{ transform:translateY(0); }
+  .join svg{ width:18px; height:18px; }
+  .meta{ display:flex; gap:10px; flex-wrap:wrap; margin-top:30px;
+    opacity:0; animation:rise .7s cubic-bezier(.2,.7,.2,1) .33s both; }
+  .chip{ display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:#334155;
+    background:rgba(255,255,255,0.62); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.7);
+    padding:8px 14px; border-radius:12px; box-shadow:0 8px 18px rgba(15,23,42,0.06); }
+  .chip svg{ width:15px; height:15px; color:#14B8A6; }
+  .scroll{ position:absolute; left:0; right:0; bottom:34px; z-index:3; display:flex; flex-direction:column;
+    align-items:center; gap:10px; color:#64748B; font-size:12px; font-weight:600; letter-spacing:.16em;
+    text-transform:uppercase; pointer-events:none; transition:opacity .5s ease; }
+  .mouse{ width:26px; height:42px; border:2px solid rgba(15,23,42,0.28); border-radius:14px; position:relative; }
+  .mouse i{ position:absolute; left:50%; top:8px; width:4px; height:8px; margin-left:-2px; border-radius:2px;
+    background:#4F46E5; animation:wheel 1.7s ease-in-out infinite; }
+  .chev{ display:flex; color:#94A3B8; animation:hint 2.2s ease-in-out infinite; }
+  .chev svg{ width:18px; height:18px; }
+  body.leaving .fg{ transform:translateY(-72px); opacity:0; }
+  body.leaving .scroll{ opacity:0; }
+  @keyframes rise{ from{ opacity:0; transform:translateY(16px); } to{ opacity:1; transform:translateY(0); } }
+  @keyframes wheel{ 0%{ transform:translateY(0); opacity:1; } 70%{ transform:translateY(13px); opacity:0; } 100%{ opacity:0; } }
+  @keyframes hint{ 0%,100%{ transform:translateY(0); opacity:.6; } 50%{ transform:translateY(6px); opacity:1; } }
+  @media (max-width:820px){ .veil{ background:linear-gradient(180deg,rgba(248,252,255,0.45),transparent 52%); } }
+  @media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+<script type="module" src="https://unpkg.com/@splinetool/viewer@1/build/spline-viewer.js"></script>
+</head>
+<body>
+  <div class="stage">
+    <div class="glow tr"></div>
+    <div class="glow bl"></div>
+    <spline-viewer url="https://prod.spline.design/Ji0hiX2hb-mU5zX1/scene.splinecode" loading-anim-type="none"></spline-viewer>
+    <div class="veil"></div>
+    <div class="fg"><div class="inner">
+      <span class="eyebrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg> AI Recruiting &middot; Multi-Agent</span>
+      <h1>Recruiting ohne <em>stundenlanges</em> Lebenslauflesen.</h1>
+      <div class="sub">Recruiting AI analysiert Bewerbungen, pr&uuml;ft Qualifikationen und erkennt Informationsl&uuml;cken &ndash; ohne automatische Personalentscheidung.</div>
+      <div class="cta">
+        <button class="join" id="joinBtn" type="button">JOIN US NOW
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+      <div class="meta">
+        <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="9" rx="2"/><circle cx="12" cy="6" r="2"/><path d="M12 8v3"/><path d="M8 16h.01"/><path d="M16 16h.01"/></svg> Multi-Agent</span>
+        <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Human-in-the-Loop</span>
+        <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 10 11 15 8 12"/></svg> Auditierbar</span>
+      </div>
+    </div></div>
+    <div class="scroll"><span>Scroll to explore</span><span class="mouse"><i></i></span>
+      <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></div>
+  </div>
+  <script>
+  (function(){
+    var btn = document.getElementById('joinBtn');
+    function findScroller(d){
+      var cs = [d.querySelector('[data-testid="stMain"]'), d.querySelector('section.main'),
+                d.querySelector('[data-testid="stAppViewContainer"]'), d.scrollingElement, d.documentElement, d.body];
+      for (var i=0;i<cs.length;i++){ var c=cs[i]; if (c && c.scrollHeight > c.clientHeight + 4) return c; }
+      return d.scrollingElement || d.documentElement;
+    }
+    function go(){
+      document.body.classList.add('leaving');
+      try {
+        var pd = window.parent.document, sc = findScroller(pd);
+        sc.scrollTo({ top: Math.max(0, sc.clientHeight - 6), behavior: 'smooth' });
+      } catch (e) {}
+    }
+    if (btn) btn.addEventListener('click', go);
+  })();
+  </script>
+</body></html>
+"""
+
+
 # ---- Landing Page (Story-Layout, wechselnder Aufbau) -----------------------
 
 
 def render_home() -> None:
-    # HERO = Intro/Entrance — the only hero section. 100vh full-bleed,
-    # CSS gradient + soft glows, transparent Spline scene as integrated
-    # background (no white box / iframe-like container), headline + sub +
-    # CTAs + meta + scroll-to-explore on top. Animations and scroll-reveal
-    # are preserved.
-    st.markdown(_HERO_MERGED_STYLE, unsafe_allow_html=True)
+    # HERO = Intro/Entrance — the only hero section. The entire hero (CSS
+    # gradient + glows + transparent Spline + headline + sub + JOIN US NOW +
+    # meta + scroll hint) is one full-bleed 100vh component. The gradient is
+    # the iframe body background, so there is never a white rectangle. The
+    # JOIN US NOW button smoothly scrolls the page past the hero to reveal
+    # the site below (Apple/Linear-style). No app logic is touched.
+    st.markdown(_SOLO_HERO_STYLE, unsafe_allow_html=True)
     with st.container():
         st.markdown(
-            '<div id="produkt" class="hero-merged-marker"></div>',
+            '<div id="produkt" class="solo-hero-flag"></div>',
             unsafe_allow_html=True,
         )
-        components.html(_SPLINE_HERO_HTML, height=720)
-        st.markdown(
-            f'<div class="hero-merged-text">'
-            f'<span class="hero2-eyebrow">{ic("sparkles","sm")} AI Recruiting · Multi-Agent</span>'
-            f'<h1 class="hero2-title">Recruiting ohne <em>stundenlanges</em> Lebenslauflesen.</h1>'
-            f'<div class="hero2-sub">Recruiting AI analysiert Bewerbungen, prüft Qualifikationen '
-            f"und erkennt Informationslücken &ndash; ohne automatische Personalentscheidung.</div>"
-            f"</div>",
-            unsafe_allow_html=True,
-        )
-        hc1, hc2, _hsp = st.columns([1.3, 1.3, 4])
-        with hc1:
-            if st.button("Demo starten", key="hero_demo", type="primary", use_container_width=True):
-                goto("recruiting")
-        with hc2:
-            if st.button("Mehr erfahren", key="hero_more", use_container_width=True):
-                goto("dashboard")
-        st.markdown(
-            f'<div class="hero-merged-meta">'
-            f'<span><span class="ic">{ic("bot","sm")}</span> Multi-Agent</span>'
-            f'<span><span class="ic">{ic("shield","sm")}</span> Human-in-the-Loop</span>'
-            f'<span><span class="ic">{ic("log","sm")}</span> Auditierbar</span>'
-            f"</div>",
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            f'<div class="hero-merged-scroll"><span>Scroll to explore</span>'
-            f'<span class="intro-mouse"><i></i></span>'
-            f'<span class="intro-chev">{ic("chevron-down","sm")}</span></div>',
-            unsafe_allow_html=True,
-        )
+        components.html(_SOLO_HERO_HTML, height=760, scrolling=False)
 
     render_marketing_nav()
 
