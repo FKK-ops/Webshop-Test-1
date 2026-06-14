@@ -4112,44 +4112,195 @@ _SPLINE_HERO_HTML = """
 """
 
 
+# ---- Merged Hero (Intro + Hero): 100vh full-bleed, Spline als BG ----------
+
+_HERO_MERGED_STYLE = """
+<style>
+.hero-merged-marker { display: none; }
+
+/* The hero container: full-bleed 100vh with CSS gradient + soft glows */
+[data-testid="stVerticalBlock"]:has(> div:first-child .hero-merged-marker) {
+  position: relative;
+  width: 100vw; left: 50%; margin-left: -50vw;
+  min-height: 100vh; margin-top: -1.4rem;
+  padding: 64px clamp(28px, 5vw, 110px) 120px;
+  background: linear-gradient(135deg, #F8FCFF 0%, #F7F5FF 50%, #EEF2FF 100%);
+  overflow: hidden;
+  display: flex; flex-direction: column; justify-content: center; gap: 22px;
+}
+[data-testid="stVerticalBlock"]:has(> div:first-child .hero-merged-marker)::before {
+  content: ""; position: absolute; pointer-events: none;
+  right: -160px; top: -180px; width: 560px; height: 560px;
+  background: radial-gradient(closest-side, rgba(124,108,255,0.34), transparent 70%);
+  filter: blur(60px); z-index: 0;
+}
+[data-testid="stVerticalBlock"]:has(> div:first-child .hero-merged-marker)::after {
+  content: ""; position: absolute; pointer-events: none;
+  left: -160px; bottom: -180px; width: 580px; height: 580px;
+  background: radial-gradient(closest-side, rgba(37,99,235,0.30), transparent 70%);
+  filter: blur(60px); z-index: 0;
+}
+
+/* Marker takes no flow space */
+[data-testid="stVerticalBlock"]:has(> div:first-child .hero-merged-marker) > div:first-child {
+  position: absolute; opacity: 0; pointer-events: none;
+  height: 0; min-height: 0; margin: 0; padding: 0;
+}
+
+/* Spline embed (the iframe + its wrappers) becomes the absolute background */
+[data-testid="stVerticalBlock"]:has(> div:first-child .hero-merged-marker) [data-testid="element-container"]:has([data-testid="stIFrame"]),
+[data-testid="stVerticalBlock"]:has(> div:first-child .hero-merged-marker) [data-testid="element-container"]:has([data-testid="stCustomComponentV1"]) {
+  position: absolute !important; inset: 0 !important;
+  width: 100% !important; height: 100% !important;
+  z-index: 1 !important; margin: 0 !important; padding: 0 !important;
+}
+[data-testid="stVerticalBlock"]:has(> div:first-child .hero-merged-marker) [data-testid="stIFrame"],
+[data-testid="stVerticalBlock"]:has(> div:first-child .hero-merged-marker) [data-testid="stCustomComponentV1"] {
+  background: transparent !important; border: 0 !important; box-shadow: none !important;
+  width: 100% !important; height: 100% !important;
+}
+[data-testid="stVerticalBlock"]:has(> div:first-child .hero-merged-marker) iframe {
+  width: 100% !important; height: 100% !important;
+  background: transparent !important; border: 0 !important; box-shadow: none !important; display: block;
+}
+
+/* Foreground content layers above Spline */
+[data-testid="stVerticalBlock"]:has(> div:first-child .hero-merged-marker) > div:not(:first-child):not(:nth-child(2)) {
+  position: relative; z-index: 3;
+}
+
+/* Soft left-side readability veil so the headline is always crisp */
+[data-testid="stVerticalBlock"]:has(> div:first-child .hero-merged-marker) > div:nth-child(2)::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  background: linear-gradient(90deg, rgba(248,252,255,0.72) 0%, rgba(248,252,255,0.30) 28%, transparent 52%);
+}
+
+/* Text + CTAs constrained left column width */
+.hero-merged-text {
+  max-width: 620px;
+  animation: fadeUp .8s cubic-bezier(.2,.7,.2,1) both;
+}
+.hero-merged-text .hero2-title { margin-top: 26px; margin-bottom: 22px; }
+.hero-merged-text .hero2-sub { margin-bottom: 0; max-width: 540px; }
+
+.hero-merged-meta {
+  display: flex; flex-wrap: wrap; gap: 10px; max-width: 620px;
+  animation: fadeUp .8s cubic-bezier(.2,.7,.2,1) both; animation-delay: .28s;
+}
+.hero-merged-meta span {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; color: #334155;
+  background: rgba(255,255,255,0.65); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.7); padding: 8px 14px; border-radius: 12px;
+  box-shadow: 0 8px 18px rgba(15,23,42,0.06);
+}
+.hero-merged-meta .ic { color: #14B8A6; }
+.hero-merged-meta .ic, .hero-merged-meta .ic svg { width: 15px; height: 15px; }
+
+/* CTA columns row width */
+[data-testid="stVerticalBlock"]:has(> div:first-child .hero-merged-marker) [data-testid="stHorizontalBlock"] {
+  max-width: 620px;
+}
+
+/* Scroll-to-explore floats absolutely at bottom center of the hero */
+[data-testid="stVerticalBlock"]:has(> div:first-child .hero-merged-marker) [data-testid="element-container"]:has(.hero-merged-scroll) {
+  position: absolute !important;
+  left: 0; right: 0; bottom: 36px;
+  z-index: 4 !important;
+  margin: 0 !important;
+  display: flex !important; justify-content: center !important;
+  pointer-events: none;
+}
+.hero-merged-scroll {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 10px;
+  color: #64748B; font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+}
+.hero-merged-scroll .intro-mouse { width: 26px; height: 42px; border: 2px solid rgba(15,23,42,0.28); border-radius: 14px; position: relative; }
+.hero-merged-scroll .intro-mouse i { position: absolute; left: 50%; top: 8px; width: 4px; height: 8px; margin-left: -2px; border-radius: 2px; background: #4F46E5; animation: introWheel 1.7s ease-in-out infinite; }
+.hero-merged-scroll .intro-chev { display: flex; align-items: center; color: #94A3B8; animation: introHint 2.2s ease-in-out infinite; }
+.hero-merged-scroll .intro-chev .ic, .hero-merged-scroll .intro-chev .ic svg { width: 18px; height: 18px; }
+
+@keyframes introWheel { 0% { transform: translateY(0); opacity: 1; } 70% { transform: translateY(13px); opacity: 0; } 100% { opacity: 0; } }
+@keyframes introHint { 0%,100% { transform: translateY(0); opacity: .6; } 50% { transform: translateY(6px); opacity: 1; } }
+@keyframes introExit { to { transform: translateY(-72px) scale(0.94); opacity: 0; } }
+@keyframes introFade { to { opacity: 0; } }
+
+/* Scroll-linked exit (Apple/Linear feel) — content drifts up + fades as
+   the hero scrolls past, scroll hint vanishes first */
+@supports (animation-timeline: view()) {
+  .hero-merged-text, .hero-merged-meta {
+    animation: introExit linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 100%;
+  }
+  .hero-merged-scroll {
+    animation: introFade linear both;
+    animation-timeline: view();
+    animation-range: exit 0% exit 35%;
+  }
+}
+
+@media (max-width: 1080px) {
+  [data-testid="stVerticalBlock"]:has(> div:first-child .hero-merged-marker) {
+    padding: 48px 24px 120px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-merged-scroll .intro-mouse i, .hero-merged-scroll .intro-chev,
+  .hero-merged-text, .hero-merged-meta { animation: none !important; }
+}
+</style>
+"""
+
+
 # ---- Landing Page (Story-Layout, wechselnder Aufbau) -----------------------
 
 
 def render_home() -> None:
-    # 0 — IMMERSIVE INTRO (100vh, scroll to explore)
-    st.markdown(_INTRO_STYLE + _intro_markup(), unsafe_allow_html=True)
-
-    render_marketing_nav()
-
-    # 1 — HERO: Text links / Spline rechts (CSS-Gradient-Background + Glows)
-    st.markdown(
-        _HERO2_STYLE + '<div id="produkt" class="hero-bg"></div>',
-        unsafe_allow_html=True,
-    )
-    hero_l, hero_r = st.columns([1.05, 0.95], gap="large")
-    with hero_l:
+    # HERO = Intro/Entrance — the only hero section. 100vh full-bleed,
+    # CSS gradient + soft glows, transparent Spline scene as integrated
+    # background (no white box / iframe-like container), headline + sub +
+    # CTAs + meta + scroll-to-explore on top. Animations and scroll-reveal
+    # are preserved.
+    st.markdown(_HERO_MERGED_STYLE, unsafe_allow_html=True)
+    with st.container():
         st.markdown(
-            f'<div class="hero2-text">'
-            f'<span class="hero2-eyebrow">{ic("sparkles", "sm")} AI Recruiting · Multi-Agent</span>'
-            f"<h1 class=\"hero2-title\">Recruiting ohne <em>stundenlanges</em> Lebenslauflesen.</h1>"
-            f'<div class="hero2-sub">Recruiting AI analysiert Bewerbungen, prüft Qualifikationen '
-            f"und erkennt Informationslücken &ndash; ohne automatische Personalentscheidung.</div>"
-            f'<div class="hero2-meta">'
-            f'<span><span class="ic">{ic("bot", "sm")}</span> Multi-Agent</span>'
-            f'<span><span class="ic">{ic("shield", "sm")}</span> Human-in-the-Loop</span>'
-            f'<span><span class="ic">{ic("log", "sm")}</span> Auditierbar</span>'
-            f"</div></div>",
+            '<div id="produkt" class="hero-merged-marker"></div>',
             unsafe_allow_html=True,
         )
-    with hero_r:
-        components.html(_SPLINE_HERO_HTML, height=480)
-    hc1, hc2, _hsp = st.columns([1.3, 1.3, 4])
-    with hc1:
-        if st.button("Demo starten", key="hero_demo", type="primary", use_container_width=True):
-            goto("recruiting")
-    with hc2:
-        if st.button("Mehr erfahren", key="hero_more", use_container_width=True):
-            goto("dashboard")
+        components.html(_SPLINE_HERO_HTML, height=720)
+        st.markdown(
+            f'<div class="hero-merged-text">'
+            f'<span class="hero2-eyebrow">{ic("sparkles","sm")} AI Recruiting · Multi-Agent</span>'
+            f'<h1 class="hero2-title">Recruiting ohne <em>stundenlanges</em> Lebenslauflesen.</h1>'
+            f'<div class="hero2-sub">Recruiting AI analysiert Bewerbungen, prüft Qualifikationen '
+            f"und erkennt Informationslücken &ndash; ohne automatische Personalentscheidung.</div>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
+        hc1, hc2, _hsp = st.columns([1.3, 1.3, 4])
+        with hc1:
+            if st.button("Demo starten", key="hero_demo", type="primary", use_container_width=True):
+                goto("recruiting")
+        with hc2:
+            if st.button("Mehr erfahren", key="hero_more", use_container_width=True):
+                goto("dashboard")
+        st.markdown(
+            f'<div class="hero-merged-meta">'
+            f'<span><span class="ic">{ic("bot","sm")}</span> Multi-Agent</span>'
+            f'<span><span class="ic">{ic("shield","sm")}</span> Human-in-the-Loop</span>'
+            f'<span><span class="ic">{ic("log","sm")}</span> Auditierbar</span>'
+            f"</div>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f'<div class="hero-merged-scroll"><span>Scroll to explore</span>'
+            f'<span class="intro-mouse"><i></i></span>'
+            f'<span class="intro-chev">{ic("chevron-down","sm")}</span></div>',
+            unsafe_allow_html=True,
+        )
+
+    render_marketing_nav()
 
     # 2 — TRUST STRIP (dünnes Band)
     st.markdown(
