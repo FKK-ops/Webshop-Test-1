@@ -1682,465 +1682,726 @@ st.set_page_config(
 
 
 # ---------------------------------------------------------------------------
-# Custom CSS — Dark Dashboard Theme
+# Design-System (Premium-SaaS): Tokens, Glasflächen, Animationen, SVG-Icons
 # ---------------------------------------------------------------------------
+#
+# Informationsarchitektur (vom Marketing-Stil zum Produkt-Stil reduziert):
+#
+#   Top-Nav  ─►  Dashboard  · Recruiting · Kandidaten · Audit Log
+#   User-Menü (Dropdown) ─►  Einstellungen · Hilfe · Sign out
+#
+#   Dashboard       Überblick, KPIs, Workflow-Status, AI Activity Feed,
+#                   "Letzte Bewerbungen" (read-only)
+#   Recruiting      Stellenprofil-Eingabe & Analyse | Bewerbungen-Upload
+#                   & Verarbeitung. Strukturiertes Stellenprofil unten.
+#   Kandidaten      Filter, Karten, Profil-Detail mit Anforderungs-
+#                   abgleich, Belegen, Rückfragen und Feedback inline.
+#   Audit Log       Timeline der Agentenschritte, Feedback-Übersicht,
+#                   Tabellen-Ansicht.
+#
+# Designprinzipien: viel Weißraum · klare Hierarchie · große Typo · keine
+# Dashboard-Überladung · alle Icons als Inline-SVG (keine Emoji) · keine
+# Inline-styles (Utility-/Komponenten-Klassen) · markenspezifische
+# Gradients (Lila→Indigo→Blau, Indigo→Türkis) · dezente Glow-Orbs als
+# Hintergrund · Hover-Lift + Glow · CSS-Scroll-Reveal (animation-timeline:
+# view()), mit fallback-fade-up beim ersten Render.
+# ---------------------------------------------------------------------------
+
 
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Familjen+Grotesk:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter+Tight:wght@500;600;700;800&display=swap');
 
     :root{
-        --paper:#F4F1EA; --paper-2:#ECE6D9; --card:#FFFDF8;
-        --ink:#17202A; --ink-2:#33414E; --muted:#6E6A5F; --soft:#8C8675;
-        --line:#E5DECF; --line-2:#EFE9DC;
-        --accent:#BE5B2A; --accent-d:#A14A1F; --accent-soft:#F4E7DA;
-        --display:'Fraunces',Georgia,'Times New Roman',serif;
-        --sans:'Familjen Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-        --ok:#1F7A4D; --warn:#B45309; --err:#B3261E; --info:#1D4ED8;
+      --ink:#0B1020;
+      --ink-2:#1F2937;
+      --body:#334155;
+      --muted:#64748B;
+      --soft:#94A3B8;
+
+      --bg:#FAFAFE;
+      --bg-2:#F4F4FB;
+      --surface:rgba(255,255,255,0.72);
+      --surface-2:rgba(255,255,255,0.55);
+      --surface-strong:rgba(255,255,255,0.92);
+      --line:rgba(15,23,42,0.07);
+      --line-2:rgba(15,23,42,0.05);
+      --line-3:rgba(15,23,42,0.10);
+
+      --purple:#6F6EFF;
+      --purple-2:#8E8CFF;
+      --indigo:#4F46E5;
+      --indigo-2:#6366F1;
+      --blue:#2563EB;
+      --teal:#14B8A6;
+
+      --ok:#16A34A;
+      --ok-bg:#E8F7EE;
+      --warn:#B45309;
+      --warn-bg:#FDF1DA;
+      --err:#B91C1C;
+      --err-bg:#FCE8E8;
+      --info:#1D4ED8;
+      --info-bg:#EAF0FE;
+
+      --grad:linear-gradient(135deg,#6F6EFF 0%,#4F46E5 55%,#2563EB 100%);
+      --grad-soft:linear-gradient(135deg,rgba(111,110,255,0.18) 0%,rgba(79,70,229,0.14) 50%,rgba(20,184,166,0.12) 100%);
+      --grad-text:linear-gradient(120deg,#4F46E5 0%,#6F6EFF 45%,#14B8A6 100%);
+
+      --shadow-1:0 1px 2px rgba(15,23,42,0.04), 0 1px 1px rgba(15,23,42,0.03);
+      --shadow-2:0 8px 24px rgba(15,23,42,0.06), 0 2px 6px rgba(15,23,42,0.04);
+      --shadow-3:0 22px 44px rgba(15,23,42,0.08), 0 4px 12px rgba(15,23,42,0.05);
+      --shadow-glow:0 0 0 1px rgba(79,70,229,0.18), 0 16px 40px rgba(79,70,229,0.20);
+
+      --radius-sm:10px;
+      --radius:14px;
+      --radius-lg:20px;
+      --radius-xl:24px;
+
+      --sans:'Inter','Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      --display:'Inter Tight','Inter',-apple-system,sans-serif;
     }
 
-    html, body, [class*="css"], .stApp, p, span, label, li, div, input, textarea, button {
-        font-family: var(--sans);
+    html, body, [class*="css"], .stApp,
+    p, span, label, li, div, input, textarea, button {
+      font-family: var(--sans);
+      font-feature-settings:'cv11','ss01','ss03','cv02';
     }
-    .stApp { color: var(--ink); }
+    .stApp { color: var(--ink); background: transparent; }
 
-    /* ---- Background: warm paper with very soft grain ---- */
+    /* ---------- Animated background (orbs + grain) ---------- */
     [data-testid="stAppViewContainer"] {
-        position: relative;
-        background-color: var(--paper);
-        background-image:
-            radial-gradient(900px 520px at 100% -6%, rgba(190,91,42,0.05), transparent 60%),
-            radial-gradient(820px 520px at -6% 4%, rgba(23,32,42,0.045), transparent 62%);
-        background-attachment: fixed;
+      position: relative;
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(900px 700px at 8% -6%, rgba(111,110,255,0.18), transparent 60%),
+        radial-gradient(720px 560px at 96% 4%, rgba(79,70,229,0.16), transparent 62%),
+        radial-gradient(700px 620px at 86% 92%, rgba(20,184,166,0.16), transparent 62%),
+        radial-gradient(820px 680px at -2% 96%, rgba(37,99,235,0.14), transparent 60%);
+      background-attachment: fixed;
     }
     [data-testid="stAppViewContainer"]::before {
-        content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
-        opacity: 0.05;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      content:""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      opacity:.04;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     }
     [data-testid="stMain"] { background: transparent; }
     [data-testid="stHeader"] { background: transparent; }
-    .block-container { padding-top: 1.4rem; max-width: 1180px; position: relative; z-index: 1; }
+    .block-container { padding-top: 1.4rem; padding-bottom: 5rem; max-width: 1200px; position: relative; z-index: 1; }
 
-    /* ---- Sidebar ---- */
-    [data-testid="stSidebar"] { background: var(--card) !important; border-right: 1px solid var(--line); }
+    /* slow drifting orbs as decoration on the body */
+    .bg-fx { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .bg-fx .orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .55; mix-blend-mode: normal; will-change: transform; }
+    .bg-fx .orb.a { width: 520px; height: 520px; left: -80px; top: -120px; background: radial-gradient(closest-side, rgba(111,110,255,0.55), transparent 70%); animation: floatA 26s ease-in-out infinite alternate; }
+    .bg-fx .orb.b { width: 560px; height: 560px; right: -120px; top: 12%; background: radial-gradient(closest-side, rgba(79,70,229,0.40), transparent 70%); animation: floatB 30s ease-in-out infinite alternate; }
+    .bg-fx .orb.c { width: 460px; height: 460px; left: 30%; bottom: -160px; background: radial-gradient(closest-side, rgba(20,184,166,0.38), transparent 70%); animation: floatC 34s ease-in-out infinite alternate; }
+    @keyframes floatA { from{transform:translate3d(0,0,0) scale(1);} to{transform:translate3d(60px,30px,0) scale(1.05);} }
+    @keyframes floatB { from{transform:translate3d(0,0,0) scale(1);} to{transform:translate3d(-50px,40px,0) scale(0.96);} }
+    @keyframes floatC { from{transform:translate3d(0,0,0) scale(1);} to{transform:translate3d(20px,-30px,0) scale(1.08);} }
+
+    /* ---------- Headings & text ---------- */
+    h1, h2, h3, h4, h5, h6 {
+      color: var(--ink) !important; font-family: var(--display);
+      letter-spacing:-0.018em; font-weight: 700;
+    }
+    h1 { font-size: 40px; line-height: 1.08; }
+    h2 { font-size: 26px; line-height: 1.18; }
+    h3 { font-size: 19px; line-height: 1.25; }
+    [data-testid="stCaptionContainer"] { color: var(--muted) !important; font-size: 13px; }
+    p, span, label, li { color: var(--body); }
+    a { color: var(--indigo); text-decoration: none; }
+    .stApp hr { border: none; border-top: 1px solid var(--line); }
+
+    /* ---------- Sidebar (collapsed by default, keeps minimal commands) ---------- */
+    [data-testid="stSidebar"] { background: var(--surface-strong) !important; border-right: 1px solid var(--line); backdrop-filter: blur(16px); }
     [data-testid="stSidebar"] * { color: var(--ink); }
 
-    /* ---- Headings / text ---- */
-    h1, h2, h3, h4, h5, h6 { color: var(--ink) !important; font-family: var(--sans); letter-spacing: -0.012em; font-weight: 700; }
-    [data-testid="stCaptionContainer"] { color: var(--muted) !important; }
-    p, span, label, li { color: var(--ink-2); }
-    a { color: var(--accent); text-decoration: none; }
-
-    /* ---- Inputs ---- */
+    /* ---------- Inputs ---------- */
     .stTextInput input, .stTextArea textarea,
     .stSelectbox div[data-baseweb="select"] {
-        background: var(--card) !important; color: var(--ink) !important;
-        border: 1px solid var(--line) !important; border-radius: 10px !important;
-        font-family: var(--sans) !important;
+      background: var(--surface-strong) !important;
+      color: var(--ink) !important;
+      border: 1px solid var(--line-3) !important;
+      border-radius: var(--radius-sm) !important;
+      font-family: var(--sans) !important;
+      box-shadow: var(--shadow-1) !important;
     }
     .stTextInput input:focus, .stTextArea textarea:focus {
-        border-color: var(--accent) !important;
-        box-shadow: 0 0 0 3px rgba(190,91,42,0.14) !important;
+      border-color: var(--indigo) !important;
+      box-shadow: 0 0 0 4px rgba(79,70,229,0.14) !important;
     }
     [data-testid="stFileUploaderDropzone"] {
-        background: var(--paper-2) !important; border: 1.4px dashed #C9BFA9 !important;
-        color: var(--muted) !important; border-radius: 12px !important;
+      background: rgba(255,255,255,0.62) !important;
+      border: 1.4px dashed rgba(15,23,42,0.18) !important;
+      color: var(--muted) !important;
+      border-radius: var(--radius) !important;
+      backdrop-filter: blur(10px);
+    }
+    [data-testid="stFileUploaderDropzone"]:hover {
+      border-color: var(--indigo) !important;
+      background: rgba(255,255,255,0.82) !important;
     }
 
-    /* ---- Buttons: default = ghost ink, primary = solid ink ---- */
+    /* ---------- Buttons (premium) ---------- */
     .stButton > button, .stDownloadButton > button,
     [data-testid="stFormSubmitButton"] > button {
-        font-family: var(--sans) !important; font-weight: 600 !important;
-        border-radius: 10px !important; padding: 9px 18px !important;
-        transition: all .16s ease; letter-spacing: .01em;
+      font-family: var(--sans) !important; font-weight: 600 !important;
+      border-radius: 12px !important;
+      padding: 10px 18px !important;
+      transition: transform .15s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease, color .2s ease;
+      letter-spacing: 0;
     }
     .stButton > button {
-        background: transparent !important; color: var(--ink) !important;
-        border: 1.4px solid var(--ink) !important; box-shadow: none !important;
+      background: var(--surface-strong) !important;
+      color: var(--ink) !important;
+      border: 1px solid var(--line-3) !important;
+      box-shadow: var(--shadow-1) !important;
     }
-    .stButton > button:hover { background: var(--ink) !important; color: var(--paper) !important; transform: translateY(-1px); }
+    .stButton > button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(79,70,229,0.40) !important;
+      box-shadow: 0 8px 22px rgba(15,23,42,0.08), 0 0 0 4px rgba(79,70,229,0.10) !important;
+    }
     .stButton > button[kind="primary"],
     [data-testid="baseButton-primary"],
     [data-testid="stFormSubmitButton"] > button,
     .stDownloadButton > button {
-        background: var(--ink) !important; color: #F7F2E8 !important;
-        border: 1.4px solid var(--ink) !important;
+      background: var(--grad) !important;
+      background-size: 200% 200% !important;
+      color: #FFFFFF !important;
+      border: 1px solid rgba(255,255,255,0.18) !important;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.20) inset, 0 10px 24px rgba(79,70,229,0.30) !important;
     }
     .stButton > button[kind="primary"]:hover,
     [data-testid="baseButton-primary"]:hover,
     [data-testid="stFormSubmitButton"] > button:hover {
-        background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important;
+      transform: translateY(-1px);
+      background-position: 100% 0 !important;
+      box-shadow: 0 16px 34px rgba(79,70,229,0.42), 0 0 0 4px rgba(79,70,229,0.18) !important;
     }
-    .stButton > button:disabled { opacity: .45 !important; transform: none !important; }
+    .stButton > button:disabled { opacity: .50 !important; transform: none !important; box-shadow: none !important; }
+    [data-testid="stSpinner"] { color: var(--indigo); }
 
-    /* ---- Tabs ---- */
+    /* ---------- Tabs ---------- */
     [data-testid="stTabs"] [role="tablist"] {
-        background: var(--card); border: 1px solid var(--line);
-        border-radius: 12px; padding: 6px; gap: 4px; flex-wrap: wrap;
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 6px;
+      gap: 4px;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow-1);
     }
     [data-testid="stTabs"] [role="tab"] {
-        color: var(--muted) !important; background: transparent !important;
-        border-radius: 8px !important; padding: 8px 16px !important; font-weight: 600 !important;
+      color: var(--muted) !important; background: transparent !important;
+      border-radius: 10px !important; padding: 8px 16px !important; font-weight: 600 !important; font-size: 14px;
     }
     [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
-        background: var(--accent-soft) !important; color: var(--accent-d) !important;
+      background: var(--surface-strong) !important;
+      color: var(--ink) !important;
+      box-shadow: var(--shadow-1);
     }
 
-    /* ---- Cards / expanders / dataframe ---- */
-    [data-testid="stExpander"] {
-        background: var(--card); border: 1px solid var(--line);
-        border-radius: 14px; box-shadow: 0 6px 22px rgba(23,32,42,0.05);
-    }
-    [data-testid="stExpander"] summary { color: var(--ink) !important; }
-    [data-testid="stDataFrame"] {
-        background: var(--card); border: 1px solid var(--line);
-        border-radius: 14px; padding: 6px;
-    }
+    /* ---------- Cards / expanders / dataframe (Glas) ---------- */
+    [data-testid="stExpander"],
+    [data-testid="stDataFrame"],
     [data-testid="stVerticalBlockBorderWrapper"] {
-        background: var(--card) !important; border: 1px solid var(--line) !important;
-        border-radius: 18px; box-shadow: 0 10px 30px rgba(23,32,42,0.06);
+      background: var(--surface) !important;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--line) !important;
+      border-radius: var(--radius-lg) !important;
+      box-shadow: var(--shadow-2);
+      transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
     }
-    [data-testid="stSpinner"] { color: var(--accent); }
-
-    /* ---- Generic cards / titles ---- */
-    .kmu-card {
-        background: var(--card); border: 1px solid var(--line); border-radius: 18px;
-        padding: 22px 24px; margin-bottom: 18px; box-shadow: 0 10px 30px rgba(23,32,42,0.06);
+    [data-testid="stVerticalBlockBorderWrapper"]:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-3);
+      border-color: rgba(79,70,229,0.22) !important;
     }
-    .kmu-card-title {
-        color: var(--ink); font-weight: 700; font-size: 18px; margin-bottom: 14px;
-        display: flex; justify-content: space-between; align-items: center;
+    [data-testid="stExpander"] summary { color: var(--ink) !important; font-weight: 600; }
+    [data-testid="stDataFrame"] { padding: 6px; }
+
+    /* ========== APP SHELL: Top-Nav ========== */
+    .shell-nav {
+      display: flex; align-items: center; gap: 18px;
+      padding: 10px 14px; margin: 4px 0 20px;
+      background: var(--surface);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow-2);
     }
-    .kmu-card-title small { color: var(--accent); font-weight: 600; font-size: 13px; }
-
-    /* ---- KPI cards ---- */
-    .kpi-card {
-        background: var(--card); border: 1px solid var(--line); border-radius: 18px;
-        padding: 20px 22px; position: relative; overflow: hidden; min-height: 132px;
-        box-shadow: 0 10px 30px rgba(23,32,42,0.06);
+    .shell-brand { display: flex; align-items: center; gap: 11px; padding-left: 6px; }
+    .shell-mark {
+      width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+      background: var(--grad); color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      box-shadow: 0 6px 14px rgba(79,70,229,0.32), inset 0 1px 0 rgba(255,255,255,0.30);
     }
-    .kpi-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
-    .kpi-icon {
-        width: 40px; height: 40px; border-radius: 11px; display: inline-flex;
-        align-items: center; justify-content: center; font-size: 19px; margin-bottom: 12px;
+    .shell-mark svg { width: 18px; height: 18px; }
+    .shell-name { font-family: var(--display); font-weight: 700; font-size: 16px; color: var(--ink); letter-spacing: -0.01em; line-height: 1; }
+    .shell-name small { display: block; font-family: var(--sans); font-weight: 500; font-size: 10.5px; color: var(--muted); letter-spacing: .14em; text-transform: uppercase; margin-top: 3px; }
+    .shell-grow { flex: 1; }
+
+    /* The nav buttons themselves are Streamlit buttons - we restyle them
+       only inside the .shell-nav container scope via a parent class. */
+    .shell-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600;
+      color: var(--indigo); background: rgba(79,70,229,0.10);
+      padding: 4px 10px; border-radius: 999px;
     }
-    .kpi-card.teal::before { background: var(--ink); }
-    .kpi-card.orange::before { background: var(--warn); }
-    .kpi-card.blue::before { background: var(--info); }
-    .kpi-card.green::before { background: var(--ok); }
-    .kpi-card.red::before { background: var(--err); }
-    .kpi-card.teal .kpi-icon { background: #E9EAEC; }
-    .kpi-card.orange .kpi-icon { background: #FBEAD3; }
-    .kpi-card.blue .kpi-icon { background: #E2E8FB; }
-    .kpi-card.green .kpi-icon { background: #DCEFE4; }
-    .kpi-value { font-size: 34px; font-weight: 800; line-height: 1.1; color: var(--ink); font-family: var(--display); }
-    .kpi-value.teal { color: var(--ink); }
-    .kpi-value.blue { color: var(--info); }
-    .kpi-value.orange { color: var(--warn); }
-    .kpi-value.green { color: var(--ok); }
-    .kpi-value.red { color: var(--err); }
-    .kpi-label { color: var(--muted); font-size: 13px; margin-top: 8px; line-height: 1.4; font-weight: 500; }
+    .shell-tag .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgba(22,163,74,0.18); }
 
-    /* ---- Dashboard header ---- */
-    .dashboard-header { display: flex; justify-content: space-between; align-items: flex-end; margin: 6px 0 18px; }
-    .dashboard-header h1 { font-size: 30px !important; margin: 0 !important; font-weight: 800; font-family: var(--display); letter-spacing: -0.01em; }
-    .dashboard-header .subtitle { color: var(--muted); font-size: 14px; margin-top: 4px; }
-    .kmu-avatar, .app-avatar {
-        background: var(--ink); color: var(--paper); width: 34px; height: 34px; border-radius: 50%;
-        display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
+    /* nav button restyle (applies only to buttons within the nav columns) */
+    .nav-btn-wrap .stButton > button {
+      background: transparent !important;
+      color: var(--muted) !important;
+      border: 1px solid transparent !important;
+      box-shadow: none !important;
+      padding: 8px 14px !important;
+      font-weight: 600 !important;
     }
-    .kmu-topbar { display: none; }
+    .nav-btn-wrap .stButton > button:hover {
+      background: rgba(15,23,42,0.04) !important;
+      color: var(--ink) !important;
+      transform: none;
+    }
+    .nav-btn-wrap.active .stButton > button {
+      background: var(--surface-strong) !important;
+      color: var(--ink) !important;
+      border: 1px solid var(--line-3) !important;
+      box-shadow: var(--shadow-1) !important;
+    }
 
-    /* ---- Badges ---- */
-    .kmu-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; margin: 1px 0; }
-    .kmu-badge-ok { background: #DCEFE4; color: var(--ok); }
-    .kmu-badge-warn { background: #FBEAD3; color: var(--warn); }
-    .kmu-badge-err { background: #F7DEDC; color: var(--err); }
-    .kmu-badge-info { background: var(--accent-soft); color: var(--accent-d); }
-    .kmu-badge-muted { background: #ECE6D9; color: var(--muted); }
+    /* User chip + dropdown popover */
+    .user-chip {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 5px 8px 5px 5px; background: var(--surface-strong); border: 1px solid var(--line);
+      border-radius: 999px; box-shadow: var(--shadow-1);
+    }
+    .user-chip .av {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--grad); color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 11px; letter-spacing: .04em;
+    }
+    .user-chip b { color: var(--ink); font-size: 13px; font-weight: 600; }
+    .user-chip small { color: var(--muted); font-size: 11px; }
 
-    /* ---- Lists ---- */
-    .kmu-list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line-2); gap: 12px; }
-    .kmu-list-item:last-child { border-bottom: none; }
-    .kmu-list-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--ink); color: var(--paper); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
-    .kmu-list-name { font-weight: 600; color: var(--ink); font-size: 14px; }
-    .kmu-list-file { color: var(--muted); font-size: 12px; margin-top: 2px; }
-    .kmu-logo { font-size: 17px; font-weight: 800; color: var(--ink); padding: 4px 8px 12px 8px; font-family: var(--display); }
+    /* ========== Page header (eyebrow + title + lead) ========== */
+    .ph { padding: 12px 0 4px; }
+    .ph .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 11.5px; font-weight: 700; letter-spacing: .18em;
+      text-transform: uppercase; color: var(--indigo);
+    }
+    .ph .eyebrow::before { content:""; width: 22px; height: 1.5px; background: linear-gradient(90deg, var(--indigo), var(--teal)); border-radius: 2px; }
+    .ph h1 {
+      font-family: var(--display); font-weight: 700; font-size: 44px; line-height: 1.06;
+      letter-spacing:-0.02em; color: var(--ink); margin: 12px 0 10px;
+    }
+    .ph h1 em { font-style: normal; background: var(--grad-text); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .ph .lead { color: var(--muted); font-size: 17px; line-height: 1.55; max-width: 720px; }
 
-    /* ---- Donut legend ---- */
-    .donut-wrap { display: flex; align-items: center; gap: 24px; }
-    .donut-legend { font-size: 13px; flex: 1; }
-    .donut-legend-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; color: var(--ink-2); }
-    .donut-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
-    .donut-count { margin-left: auto; color: var(--muted); font-weight: 600; }
+    /* ========== Section + utility ========== */
+    .sec { margin-top: 44px; }
+    .sec-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 18px; gap: 18px; }
+    .sec-head h2 { font-family: var(--display); font-weight: 700; font-size: 22px; color: var(--ink); margin: 0; }
+    .sec-head .sub { color: var(--muted); font-size: 13.5px; margin-top: 4px; }
+    .sec-head .right { color: var(--muted); font-size: 12.5px; }
 
-    /* ---- Question rows ---- */
-    .question-row { background: var(--paper-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; color: var(--ink); font-size: 14px; }
-    .question-row.reviewed { border-left: 4px solid var(--ok); }
+    .row { display: flex; gap: 14px; align-items: center; }
+    .grow { flex: 1; }
+    .mt-2 { margin-top: 8px; } .mt-3 { margin-top: 14px; } .mt-4 { margin-top: 22px; } .mt-6 { margin-top: 36px; }
+    .mb-2 { margin-bottom: 8px; } .mb-3 { margin-bottom: 14px; } .mb-4 { margin-bottom: 22px; }
 
-    /* ---- HiL line ---- */
-    .hil-line { color: var(--ink-2); font-size: 13px; padding: 10px 16px; margin: 4px 0 14px 0; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 8px; font-weight: 500; }
+    /* ========== KPI cards ========== */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .kpi {
+      position: relative; overflow: hidden;
+      background: var(--surface);
+      backdrop-filter: blur(22px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 22px 22px 20px;
+      box-shadow: var(--shadow-2);
+      transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+    }
+    .kpi:hover { transform: translateY(-4px); box-shadow: var(--shadow-3); border-color: rgba(79,70,229,0.22); }
+    .kpi-head { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .kpi-ic {
+      width: 36px; height: 36px; border-radius: 11px; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #fff;
+    }
+    .kpi-ic svg { width: 18px; height: 18px; }
+    .kpi-ic.purple { background: linear-gradient(135deg,#6F6EFF,#4F46E5); }
+    .kpi-ic.indigo { background: linear-gradient(135deg,#4F46E5,#3730A3); }
+    .kpi-ic.blue   { background: linear-gradient(135deg,#2563EB,#1E40AF); }
+    .kpi-ic.teal   { background: linear-gradient(135deg,#14B8A6,#0D9488); }
+    .kpi-label { color: var(--muted); font-size: 12.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+    .kpi-value { font-family: var(--display); font-weight: 700; font-size: 38px; color: var(--ink); line-height: 1.05; letter-spacing: -0.02em; }
+    .kpi-delta { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12.5px; margin-top: 8px; }
+    .kpi-spark { position: absolute; right: 14px; top: 14px; opacity: .8; }
 
-    /* ---- Coverage box ---- */
-    .coverage-box { background: var(--accent-soft); border: 1px solid #EBD8C6; border-radius: 12px; padding: 14px 18px; margin: 6px 0 4px 0; text-align: center; }
-    .coverage-value { font-size: 26px; font-weight: 800; color: var(--accent-d); font-family: var(--display); }
-    .coverage-label { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    /* ========== Glass card (reusable) ========== */
+    .gcard {
+      background: var(--surface);
+      backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      box-shadow: var(--shadow-2);
+      transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+    }
+    .gcard:hover { transform: translateY(-2px); box-shadow: var(--shadow-3); }
+    .gcard-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 10px; }
+    .gcard-title { font-family: var(--display); font-weight: 700; font-size: 16px; color: var(--ink); }
+    .gcard-meta { color: var(--muted); font-size: 12.5px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+    .gcard-meta .live { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 0 3px rgba(20,184,166,0.18); animation: pulseLive 1.8s ease-in-out infinite; }
+    @keyframes pulseLive { 0%,100% { box-shadow: 0 0 0 3px rgba(20,184,166,0.18); } 50% { box-shadow: 0 0 0 7px rgba(20,184,166,0); } }
 
-    /* ---- Timeline (Audit) ---- */
-    .timeline { position: relative; margin: 6px 0 0 6px; padding-left: 22px; }
-    .timeline::before { content: ""; position: absolute; left: 5px; top: 4px; bottom: 4px; width: 2px; background: var(--line); }
-    .tl-item { position: relative; padding: 0 0 18px 4px; }
-    .tl-dot { position: absolute; left: -22px; top: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid var(--card); box-shadow: 0 0 0 2px var(--accent-soft); }
-    .tl-time { color: var(--soft); font-size: 12px; font-weight: 600; }
-    .tl-action { color: var(--ink); font-weight: 600; font-size: 14px; }
-    .tl-target { color: var(--muted); font-size: 13px; }
-    .section-title { font-size: 20px; font-weight: 800; color: var(--ink); margin: 6px 0 2px 0; font-family: var(--display); }
-    .section-sub { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+    /* ========== Hero band (Dashboard) ========== */
+    .hero {
+      position: relative; overflow: hidden;
+      background: var(--surface);
+      backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      padding: 40px 40px 36px;
+      box-shadow: var(--shadow-3);
+      margin-bottom: 28px;
+    }
+    .hero::before {
+      content:""; position: absolute; right: -120px; top: -120px;
+      width: 380px; height: 380px; border-radius: 50%;
+      background: radial-gradient(closest-side, rgba(111,110,255,0.34), transparent 70%);
+      filter: blur(10px); pointer-events: none;
+    }
+    .hero::after {
+      content:""; position: absolute; left: -100px; bottom: -120px;
+      width: 320px; height: 320px; border-radius: 50%;
+      background: radial-gradient(closest-side, rgba(20,184,166,0.28), transparent 70%);
+      filter: blur(8px); pointer-events: none;
+    }
+    .hero-in { position: relative; z-index: 1; max-width: 760px; }
+    .hero-eye {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 600; color: var(--indigo);
+      background: rgba(79,70,229,0.08); border: 1px solid rgba(79,70,229,0.18);
+      padding: 6px 12px; border-radius: 999px;
+    }
+    .hero-eye .sp { width: 5px; height: 5px; border-radius: 50%; background: var(--indigo); box-shadow: 0 0 0 3px rgba(79,70,229,0.20); }
+    .hero h1 {
+      font-family: var(--display); font-weight: 700; font-size: 50px; line-height: 1.04;
+      letter-spacing:-0.025em; color: var(--ink); margin: 16px 0 12px;
+    }
+    .hero h1 em { font-style: normal; background: var(--grad-text); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero .sub { color: var(--muted); font-size: 17px; line-height: 1.55; max-width: 620px; }
+    .hero-trust { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 22px; }
+    .hero-trust span { display: inline-flex; align-items: center; gap: 8px; color: var(--body); font-size: 13.5px; font-weight: 500; }
+    .hero-trust .ic { color: var(--teal); }
+    .hero-trust .ic svg { width: 16px; height: 16px; }
 
-    /* ---- Upload tiles ---- */
-    .upload-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
-    .upload-ic { width: 42px; height: 42px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; background: var(--accent-soft); }
-    .upload-ic.green { background: #DCEFE4; }
-    .upload-title { font-weight: 700; font-size: 16px; color: var(--ink); }
-    .upload-desc { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+    /* ========== Workflow visualizer ========== */
+    .wf { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+    .wf-step {
+      position: relative;
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px 14px 16px;
+      box-shadow: var(--shadow-1);
+      transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+    }
+    .wf-step:hover { transform: translateY(-3px); box-shadow: var(--shadow-2); border-color: rgba(79,70,229,0.25); }
+    .wf-step.is-final { border: 1px solid rgba(20,184,166,0.30); background: linear-gradient(180deg, rgba(20,184,166,0.10), var(--surface) 60%); }
+    .wf-step::after {
+      content:""; position: absolute; right: -8px; top: 50%;
+      width: 14px; height: 2px; background: linear-gradient(90deg, rgba(79,70,229,0.45), transparent);
+      transform: translateY(-50%);
+    }
+    .wf-step:last-child::after { content: none; }
+    .wf-ic {
+      width: 30px; height: 30px; border-radius: 9px; margin-bottom: 10px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--indigo); background: rgba(79,70,229,0.10);
+    }
+    .wf-step.is-final .wf-ic { color: var(--teal); background: rgba(20,184,166,0.12); }
+    .wf-ic svg { width: 16px; height: 16px; }
+    .wf-step b { display: block; color: var(--ink); font-size: 13.5px; font-weight: 600; margin-bottom: 3px; line-height: 1.2; }
+    .wf-step small { color: var(--muted); font-size: 11.5px; line-height: 1.4; display: block; }
+    @media (max-width: 1080px) { .wf { grid-template-columns: repeat(3, 1fr); } .wf-step::after { content: none; } }
+    @media (max-width: 640px) { .wf { grid-template-columns: repeat(2, 1fr); } }
 
-    /* ---- Candidate cards ---- */
-    .cand-name { font-weight: 700; font-size: 16px; color: var(--ink); }
+    /* ========== Activity feed ========== */
+    .feed { display: flex; flex-direction: column; }
+    .feed-row {
+      display: grid; grid-template-columns: 34px 1fr auto;
+      align-items: center; gap: 12px; padding: 12px 4px;
+      border-bottom: 1px solid var(--line-2);
+    }
+    .feed-row:last-child { border-bottom: none; }
+    .feed-ic {
+      width: 34px; height: 34px; border-radius: 10px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(79,70,229,0.08); color: var(--indigo);
+    }
+    .feed-ic svg { width: 16px; height: 16px; }
+    .feed-row.is-success .feed-ic { background: rgba(22,163,74,0.10); color: var(--ok); }
+    .feed-row.is-warn .feed-ic { background: rgba(180,83,9,0.10); color: var(--warn); }
+    .feed-row.is-err .feed-ic { background: rgba(185,28,28,0.10); color: var(--err); }
+    .feed-row.is-teal .feed-ic { background: rgba(20,184,166,0.12); color: var(--teal); }
+    .feed-body { min-width: 0; }
+    .feed-body b { display: block; color: var(--ink); font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feed-body small { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+    .feed-time { color: var(--soft); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+
+    /* ========== Last applicants list ========== */
+    .applist { display: flex; flex-direction: column; }
+    .app-row {
+      display: grid; grid-template-columns: 40px 1fr auto;
+      align-items: center; gap: 14px; padding: 14px 4px;
+      border-bottom: 1px solid var(--line-2);
+    }
+    .app-row:last-child { border-bottom: none; }
+    .app-av {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--grad); color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px; letter-spacing: .03em;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
+    }
+    .app-name { color: var(--ink); font-weight: 600; font-size: 14px; }
+    .app-role { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+
+    /* ========== Badges ========== */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 11.5px; font-weight: 600;
+      border: 1px solid transparent;
+    }
+    .badge svg { width: 12px; height: 12px; }
+    .badge-ok    { background: var(--ok-bg);   color: var(--ok);   border-color: rgba(22,163,74,0.18); }
+    .badge-warn  { background: var(--warn-bg); color: var(--warn); border-color: rgba(180,83,9,0.18); }
+    .badge-err   { background: var(--err-bg);  color: var(--err);  border-color: rgba(185,28,28,0.18); }
+    .badge-info  { background: var(--info-bg); color: var(--info); border-color: rgba(29,78,216,0.18); }
+    .badge-muted { background: rgba(15,23,42,0.05); color: var(--muted); border-color: rgba(15,23,42,0.06); }
+    /* Backward-compat aliases used inside business code */
+    .kmu-badge        { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600; border: 1px solid transparent; margin: 1px 0; }
+    .kmu-badge-ok     { background: var(--ok-bg);   color: var(--ok);   border-color: rgba(22,163,74,0.18); }
+    .kmu-badge-warn   { background: var(--warn-bg); color: var(--warn); border-color: rgba(180,83,9,0.18); }
+    .kmu-badge-err    { background: var(--err-bg);  color: var(--err);  border-color: rgba(185,28,28,0.18); }
+    .kmu-badge-info   { background: var(--info-bg); color: var(--info); border-color: rgba(29,78,216,0.18); }
+    .kmu-badge-muted  { background: rgba(15,23,42,0.05); color: var(--muted); border-color: rgba(15,23,42,0.06); }
+
+    /* ========== Candidate cards ========== */
+    .cand-row { display: grid; grid-template-columns: minmax(0,2.4fr) minmax(0,1fr) minmax(0,2.4fr) auto; gap: 18px; align-items: center; }
+    .cand-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .cand-name { color: var(--ink); font-weight: 700; font-size: 15.5px; }
     .cand-role { color: var(--muted); font-size: 13px; margin-top: 2px; }
-    .cand-metric { font-size: 22px; font-weight: 800; color: var(--accent-d); font-family: var(--display); }
-    .cand-metric-label { font-size: 11px; color: var(--soft); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+    .cand-metric { font-family: var(--display); font-weight: 700; font-size: 24px; color: var(--ink); line-height: 1.05; letter-spacing: -0.01em; }
+    .cand-metric em { font-style: normal; background: var(--grad-text); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .cand-metric-label { color: var(--soft); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; margin-top: 4px; }
+    .cand-skills { display: flex; flex-wrap: wrap; gap: 5px; }
 
-    /* ---- Activity feed ---- */
-    .feed-item { display: flex; align-items: center; gap: 11px; padding: 9px 2px; border-bottom: 1px solid var(--line-2); animation: fadeUpG .5s ease both; }
-    .feed-item:last-child { border-bottom: none; }
-    .feed-ic { width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; background: var(--accent-soft); }
-    .feed-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-    .feed-body b { color: var(--ink); font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .feed-body small { color: var(--soft); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .feed-time { color: var(--soft); font-size: 11.5px; font-weight: 600; flex-shrink: 0; }
-
-    /* ---- Microinteractions ---- */
-    @keyframes fadeUpG { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .kmu-card, .kpi-card, [data-testid="stVerticalBlockBorderWrapper"] { transition: transform .2s ease, box-shadow .2s ease; }
-    .kpi-card:hover, .kmu-card:hover { transform: translateY(-4px); box-shadow: 0 18px 42px rgba(23,32,42,0.12); }
-    .kmu-badge { animation: fadeUpG .45s ease both; }
-
-    /* =====================================================================
-       TOP NAVIGATION (masthead) + MARKETING PAGES
-       ===================================================================== */
-    .nav-brand { display: flex; align-items: center; gap: 11px; padding-top: 4px; }
-    .nav-mark {
-        width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
-        background: var(--ink); color: var(--paper); display: inline-flex;
-        align-items: center; justify-content: center; font-size: 19px;
-        font-family: var(--display); font-weight: 700;
+    /* ========== Coverage panel ========== */
+    .cov {
+      display: flex; align-items: center; gap: 14px;
+      background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(20,184,166,0.06));
+      border: 1px solid rgba(79,70,229,0.18);
+      border-radius: 14px; padding: 14px 18px;
     }
-    .nav-name { font-family: var(--display); font-weight: 700; font-size: 19px; color: var(--ink); line-height: 1; letter-spacing: -0.01em; }
-    .nav-name small { display: block; font-family: var(--sans); font-weight: 500; font-size: 11px; color: var(--muted); letter-spacing: .14em; text-transform: uppercase; margin-top: 3px; }
-    .nav-rule { border: none; border-top: 1px solid var(--line); margin: 4px 0 6px; }
+    .cov-num { font-family: var(--display); font-weight: 700; font-size: 28px; color: var(--ink); letter-spacing: -0.02em; line-height: 1; }
+    .cov-num em { font-style: normal; background: var(--grad-text); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .cov-label { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+    .cov-bar { flex: 1; height: 6px; background: rgba(15,23,42,0.06); border-radius: 999px; overflow: hidden; }
+    .cov-bar > i { display: block; height: 100%; background: var(--grad); border-radius: 999px; transition: width .8s cubic-bezier(.2,.7,.2,1); }
 
-    .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-d); }
-    .eyebrow::before { content: ""; width: 26px; height: 1.5px; background: var(--accent); display: inline-block; }
-
-    /* ---- Marketing hero (stock image, Ken-Burns) ---- */
-    .mk-hero { position: relative; border-radius: 26px; overflow: hidden; margin: 8px 0 18px; min-height: 520px; display: flex; align-items: center; box-shadow: 0 24px 60px rgba(23,32,42,0.20); border: 1px solid rgba(23,32,42,0.10); }
-    .mk-hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; transform: scale(1.06); animation: kenburns 22s ease-in-out infinite alternate; z-index: 0; }
-    @keyframes kenburns { from { transform: scale(1.04) translate(0,0); } to { transform: scale(1.14) translate(-2%, -2%); } }
-    .mk-hero-ov { position: absolute; inset: 0; z-index: 1; background: linear-gradient(105deg, rgba(18,22,28,0.90) 0%, rgba(18,22,28,0.72) 42%, rgba(18,22,28,0.22) 78%, rgba(18,22,28,0.05) 100%); }
-    .mk-hero-in { position: relative; z-index: 2; padding: 56px 56px; max-width: 760px; }
-    .mk-eyebrow { color: #E8B58C; }
-    .mk-eyebrow::before { background: #E8B58C; }
-    .mk-h1 { font-family: var(--display); font-weight: 600; font-size: 56px; line-height: 1.04; letter-spacing: -0.02em; color: #FBF7EF; margin: 16px 0 18px; }
-    .mk-h1 em { font-style: italic; color: #F0C49B; }
-    .mk-sub { color: #E7E2D7; font-size: 18px; line-height: 1.6; max-width: 560px; font-weight: 400; }
-    .mk-meta { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 26px; }
-    .mk-meta span { color: #EDE7DA; font-size: 13.5px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; }
-    .mk-meta i { color: #F0C49B; font-style: normal; font-weight: 800; }
-
-    /* ---- Section scaffolding ---- */
-    .mk-sec { margin: 40px 0; }
-    .mk-sec-head { max-width: 680px; margin-bottom: 26px; }
-    .mk-h2 { font-family: var(--display); font-weight: 600; font-size: 38px; line-height: 1.1; letter-spacing: -0.015em; color: var(--ink); margin: 12px 0 10px; }
-    .mk-lead { color: var(--muted); font-size: 17px; line-height: 1.6; }
-
-    /* ---- Logos strip ---- */
-    .logos { display: flex; flex-wrap: wrap; gap: 16px 34px; align-items: center; padding: 18px 24px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; }
-    .logos span { font-family: var(--display); font-weight: 600; font-size: 19px; color: #9A9282; letter-spacing: .02em; }
-    .logos .lab { font-family: var(--sans); font-weight: 600; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--soft); margin-right: 8px; }
-
-    /* ---- Stats band ---- */
-    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
-    .stat { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 26px 22px; box-shadow: 0 8px 24px rgba(23,32,42,0.05); transition: transform .2s ease, box-shadow .2s ease; }
-    .stat:hover { transform: translateY(-4px); box-shadow: 0 16px 38px rgba(23,32,42,0.12); }
-    .stat-n { font-family: var(--display); font-weight: 700; font-size: 40px; color: var(--ink); line-height: 1; }
-    .stat-n em { color: var(--accent); font-style: normal; }
-    .stat-l { color: var(--muted); font-size: 14px; margin-top: 8px; line-height: 1.45; }
-
-    /* ---- Feature grid ---- */
-    .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .feat-card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; box-shadow: 0 10px 28px rgba(23,32,42,0.06); transition: transform .22s ease, box-shadow .22s ease; display: flex; flex-direction: column; }
-    .feat-card:hover { transform: translateY(-6px); box-shadow: 0 22px 48px rgba(23,32,42,0.14); }
-    .feat-img { height: 168px; background-size: cover; background-position: center; position: relative; }
-    .feat-img::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(18,22,28,0) 40%, rgba(18,22,28,0.28) 100%); }
-    .feat-body { padding: 20px 22px 24px; }
-    .feat-k { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-d); }
-    .feat-h { font-family: var(--display); font-weight: 600; font-size: 21px; color: var(--ink); margin: 8px 0 8px; line-height: 1.2; }
-    .feat-p { color: var(--muted); font-size: 14.5px; line-height: 1.6; }
-
-    /* ---- Showreel (cross-fade slideshow) ---- */
-    .reel { position: relative; height: 420px; border-radius: 22px; overflow: hidden; border: 1px solid rgba(23,32,42,0.10); box-shadow: 0 22px 54px rgba(23,32,42,0.18); }
-    .reel .slide { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; animation: reelFade 18s infinite; }
-    .reel .slide:nth-child(1){ animation-delay: 0s; }
-    .reel .slide:nth-child(2){ animation-delay: 6s; }
-    .reel .slide:nth-child(3){ animation-delay: 12s; }
-    @keyframes reelFade { 0%{opacity:0;transform:scale(1.05);} 6%{opacity:1;} 30%{opacity:1;transform:scale(1.1);} 36%{opacity:0;} 100%{opacity:0;} }
-    .reel-ov { position: absolute; inset: 0; z-index: 2; background: linear-gradient(0deg, rgba(18,22,28,0.66), rgba(18,22,28,0.05) 60%); display: flex; align-items: flex-end; padding: 30px 34px; }
-    .reel-ov h3 { font-family: var(--display); font-weight: 600; font-size: 26px; color: #FBF7EF; margin: 0; }
-    .reel-ov p { color: #E7E2D7; margin: 6px 0 0; font-size: 15px; }
-    .reel-dot { position: absolute; z-index: 3; top: 20px; left: 22px; display: inline-flex; align-items: center; gap: 8px; color: #FBF7EF; font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
-    .reel-dot::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #E5484D; box-shadow: 0 0 0 0 rgba(229,72,77,0.6); animation: pulseDot 1.8s infinite; }
-    @keyframes pulseDot { 0%{box-shadow:0 0 0 0 rgba(229,72,77,0.5);} 70%{box-shadow:0 0 0 10px rgba(229,72,77,0);} 100%{box-shadow:0 0 0 0 rgba(229,72,77,0);} }
-
-    /* ---- Split (image + text) ---- */
-    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
-    .split-img { height: 380px; border-radius: 20px; background-size: cover; background-position: center; box-shadow: 0 18px 44px rgba(23,32,42,0.16); border: 1px solid rgba(23,32,42,0.08); }
-    .split ul { list-style: none; padding: 0; margin: 16px 0 0; }
-    .split li { color: var(--ink-2); font-size: 15.5px; line-height: 1.5; padding: 10px 0 10px 30px; position: relative; border-bottom: 1px solid var(--line-2); }
-    .split li::before { content: "→"; position: absolute; left: 0; top: 10px; color: var(--accent); font-weight: 800; }
-
-    /* ---- Testimonials ---- */
-    .quote-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .quote { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 26px 24px; box-shadow: 0 10px 28px rgba(23,32,42,0.06); display: flex; flex-direction: column; }
-    .quote .mark { font-family: var(--display); font-size: 46px; line-height: .4; color: var(--accent); height: 24px; }
-    .quote p { color: var(--ink-2); font-size: 15.5px; line-height: 1.6; font-style: italic; font-family: var(--display); font-weight: 400; }
-    .quote-by { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
-    .quote-av { width: 44px; height: 44px; border-radius: 50%; background-size: cover; background-position: center; flex-shrink: 0; border: 2px solid var(--accent-soft); }
-    .quote-by b { color: var(--ink); font-size: 14px; display: block; }
-    .quote-by small { color: var(--muted); font-size: 12.5px; }
-
-    /* ---- Pricing ---- */
-    .price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: stretch; }
-    .price-card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 28px 26px; display: flex; flex-direction: column; box-shadow: 0 10px 28px rgba(23,32,42,0.06); }
-    .price-card.featured { border: 1.6px solid var(--ink); box-shadow: 0 20px 48px rgba(23,32,42,0.16); position: relative; }
-    .price-tag { position: absolute; top: 18px; right: 18px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 4px 12px; border-radius: 999px; }
-    .price-k { font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent-d); }
-    .price-amt { font-family: var(--display); font-weight: 700; font-size: 44px; color: var(--ink); margin: 10px 0 2px; }
-    .price-amt small { font-family: var(--sans); font-size: 15px; font-weight: 500; color: var(--muted); }
-    .price-li { list-style: none; padding: 0; margin: 16px 0; flex: 1; }
-    .price-li li { color: var(--ink-2); font-size: 14.5px; padding: 8px 0 8px 26px; position: relative; border-bottom: 1px solid var(--line-2); }
-    .price-li li::before { content: "✓"; position: absolute; left: 0; color: var(--ok); font-weight: 800; }
-
-    /* ---- CTA band ---- */
-    .cta-band { position: relative; border-radius: 24px; overflow: hidden; padding: 50px 48px; margin: 8px 0; background: linear-gradient(120deg, #14181E 0%, #1E2731 60%, #2A3845 100%); box-shadow: 0 24px 56px rgba(23,32,42,0.22); }
-    .cta-band::after { content: ""; position: absolute; right: -60px; top: -60px; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(closest-side, rgba(190,91,42,0.34), transparent 70%); }
-    .cta-h { font-family: var(--display); font-weight: 600; font-size: 34px; color: #FBF7EF; line-height: 1.12; margin: 0 0 10px; position: relative; z-index: 1; max-width: 620px; }
-    .cta-p { color: #D8D2C6; font-size: 16px; line-height: 1.6; max-width: 560px; position: relative; z-index: 1; }
-
-    /* ---- Contact ---- */
-    .contact-card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 24px 26px; box-shadow: 0 10px 28px rgba(23,32,42,0.06); }
-    .contact-row { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--line-2); }
-    .contact-row:last-child { border-bottom: none; }
-    .contact-ic { width: 40px; height: 40px; border-radius: 11px; background: var(--accent-soft); display: inline-flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-    .contact-row b { color: var(--ink); font-size: 14px; display: block; }
-    .contact-row small { color: var(--muted); font-size: 13px; }
-
-    /* ---- Footer ---- */
-    .mk-foot { border-top: 1px solid var(--line); margin-top: 44px; padding: 30px 4px 12px; display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 24px; }
-    .mk-foot h4 { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--soft); margin: 0 0 12px; }
-    .mk-foot a, .mk-foot p { color: var(--ink-2); font-size: 14px; line-height: 1.9; display: block; }
-    .mk-foot .brandline { font-family: var(--display); font-weight: 700; font-size: 20px; color: var(--ink); margin-bottom: 8px; }
-    .mk-foot .muted { color: var(--muted); font-size: 13px; line-height: 1.6; }
-    .foot-legal { color: var(--soft); font-size: 12.5px; text-align: center; padding: 18px 0 6px; border-top: 1px solid var(--line-2); margin-top: 24px; }
-
-    @media (max-width: 1000px){
-        .feat-grid, .quote-grid, .price-grid, .stats { grid-template-columns: 1fr 1fr; }
-        .split { grid-template-columns: 1fr; }
-        .mk-h1 { font-size: 40px; }
-        .mk-hero-in { padding: 36px 28px; }
-        .mk-foot { grid-template-columns: 1fr 1fr; }
+    /* ========== Timeline (audit log) ========== */
+    .tl { position: relative; margin: 4px 0; padding-left: 26px; }
+    .tl::before { content:""; position: absolute; left: 6px; top: 6px; bottom: 6px; width: 2px; background: linear-gradient(180deg, rgba(79,70,229,0.20), rgba(20,184,166,0.10)); }
+    .tl-item { position: relative; padding: 0 0 18px 6px; }
+    .tl-dot {
+      position: absolute; left: -22px; top: 6px;
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--surface-strong); border: 2px solid var(--indigo);
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.10);
     }
-    @media (max-width: 640px){
-        .feat-grid, .quote-grid, .price-grid, .stats { grid-template-columns: 1fr; }
-        .mk-h1 { font-size: 32px; }
+    .tl-item.is-warn .tl-dot { border-color: var(--warn); box-shadow: 0 0 0 3px rgba(180,83,9,0.12); }
+    .tl-item.is-err .tl-dot  { border-color: var(--err);  box-shadow: 0 0 0 3px rgba(185,28,28,0.12); }
+    .tl-item.is-ok .tl-dot   { border-color: var(--ok);   box-shadow: 0 0 0 3px rgba(22,163,74,0.12); }
+    .tl-time { color: var(--soft); font-size: 11.5px; font-weight: 600; }
+    .tl-action { color: var(--ink); font-weight: 600; font-size: 14px; margin-top: 2px; }
+    .tl-target { color: var(--muted); font-size: 13px; }
+
+    /* ========== Question rows ========== */
+    .qrow {
+      background: var(--surface-strong);
+      border: 1px solid var(--line); border-radius: 12px;
+      padding: 12px 16px; margin-bottom: 10px;
+      color: var(--ink); font-size: 14px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .qrow.reviewed { border-left: 3px solid var(--ok); background: linear-gradient(90deg, rgba(22,163,74,0.05), var(--surface-strong) 40%); }
+
+    /* ========== Upload tiles ========== */
+    .uphead { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .upic {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--indigo); background: rgba(79,70,229,0.10);
+    }
+    .upic svg { width: 20px; height: 20px; }
+    .upic.teal { color: var(--teal); background: rgba(20,184,166,0.10); }
+    .uptitle { font-family: var(--display); font-weight: 700; font-size: 16px; color: var(--ink); }
+    .updesc { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+
+    /* ========== HiL note ========== */
+    .hil-line {
+      position: relative;
+      background: linear-gradient(90deg, rgba(79,70,229,0.07), rgba(20,184,166,0.05) 60%, transparent);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--indigo);
+      border-radius: 12px;
+      padding: 12px 18px;
+      color: var(--ink-2);
+      font-size: 13.5px; font-weight: 500;
+      margin: 16px 0;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .hil-line .ic { color: var(--indigo); }
+    .hil-line .ic svg { width: 16px; height: 16px; }
+
+    /* ========== Icon block (16/18/22) ========== */
+    .ic { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; }
+    .ic svg { width: 100%; height: 100%; }
+    .ic-sm { width: 14px; height: 14px; }
+    .ic-md { width: 18px; height: 18px; }
+    .ic-lg { width: 22px; height: 22px; }
+
+    /* ========== Section title (legacy hooks) ========== */
+    .section-title { font-family: var(--display); font-size: 20px; font-weight: 700; color: var(--ink); margin: 6px 0 4px; }
+    .section-sub { color: var(--muted); font-size: 13.5px; margin-bottom: 16px; }
+    .kmu-card-title { color: var(--ink); font-family: var(--display); font-weight: 700; font-size: 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .kmu-card-title small { color: var(--teal); font-weight: 600; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; }
+
+    /* Legacy hooks kept for the existing business code paths */
+    .coverage-box { background: linear-gradient(135deg, rgba(79,70,229,0.10), rgba(20,184,166,0.07)); border: 1px solid rgba(79,70,229,0.20); border-radius: 14px; padding: 14px 18px; text-align: center; }
+    .coverage-value { font-family: var(--display); font-size: 26px; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; }
+    .coverage-label { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .kmu-list-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--grad); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.25); }
+    .kmu-logo { font-family: var(--display); font-size: 17px; font-weight: 700; color: var(--ink); padding: 4px 8px 12px 8px; letter-spacing: -0.01em; }
+
+    /* ========== Reveal animations ========== */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .reveal { animation: fadeUp .55s cubic-bezier(.2,.7,.2,1) both; }
+    .reveal.d1 { animation-delay: .04s; }
+    .reveal.d2 { animation-delay: .10s; }
+    .reveal.d3 { animation-delay: .16s; }
+    .reveal.d4 { animation-delay: .22s; }
+    .reveal.d5 { animation-delay: .28s; }
+    .reveal.d6 { animation-delay: .34s; }
+
+    /* Modern scroll-linked reveal (Chromium 115+, Firefox 129+, Safari 16+ partial) */
+    @supports (animation-timeline: view()) {
+      .scroll-reveal {
+        animation: fadeUp 1ms linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 22%;
+      }
+    }
+
+    .kpi, .gcard, .wf-step, .feed-row, .app-row, .tl-item, [data-testid="stVerticalBlockBorderWrapper"] { animation: fadeUp .55s cubic-bezier(.2,.7,.2,1) both; }
+    .kpi-grid > .kpi:nth-child(1){animation-delay:.04s}
+    .kpi-grid > .kpi:nth-child(2){animation-delay:.10s}
+    .kpi-grid > .kpi:nth-child(3){animation-delay:.16s}
+    .kpi-grid > .kpi:nth-child(4){animation-delay:.22s}
+    .wf > .wf-step:nth-child(2){animation-delay:.04s}
+    .wf > .wf-step:nth-child(3){animation-delay:.08s}
+    .wf > .wf-step:nth-child(4){animation-delay:.12s}
+    .wf > .wf-step:nth-child(5){animation-delay:.16s}
+    .wf > .wf-step:nth-child(6){animation-delay:.20s}
+
+    /* Hide Streamlit default footer/menu for a cleaner SaaS shell */
+    [data-testid="stToolbar"] { right: 14px; }
+
+    @media (max-width: 1080px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .hero { padding: 32px 28px 28px; }
+      .hero h1 { font-size: 36px; }
+      .ph h1 { font-size: 34px; }
+      .cand-row { grid-template-columns: 1fr; }
     }
     </style>
+    <div class="bg-fx" aria-hidden="true">
+      <div class="orb a"></div>
+      <div class="orb b"></div>
+      <div class="orb c"></div>
+    </div>
     """,
     unsafe_allow_html=True,
 )
 
 
 # ---------------------------------------------------------------------------
-# Dashboard-Hilfsfunktionen (rein optisch — keine Bewertung der Bewerber)
+# SVG-Icon-Set (Lucide-inspired, stroke-only) — alle Emojis durch Icons ersetzt
 # ---------------------------------------------------------------------------
 
+ICONS: dict[str, str] = {
+    "sparkles":   '<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>',
+    "bot":        '<rect x="3" y="11" width="18" height="9" rx="2"/><circle cx="12" cy="6" r="2"/><path d="M12 8v3"/><path d="M8 16h.01"/><path d="M16 16h.01"/>',
+    "file":       '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
+    "check":      '<polyline points="20 6 9 17 4 12"/>',
+    "check-circle":'<circle cx="12" cy="12" r="10"/><polyline points="16 10 11 15 8 12"/>',
+    "search":     '<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.6" y2="16.6"/>',
+    "message":    '<path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3a8.38 8.38 0 0 1 8.5 8.5z"/>',
+    "clipboard":  '<rect x="8" y="2" width="8" height="4" rx="1"/><rect x="4" y="6" width="16" height="16" rx="2"/>',
+    "paperclip":  '<path d="M21 12.79V7a4 4 0 0 0-8 0v10a2 2 0 0 0 4 0V8"/>',
+    "upload":     '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+    "settings":   '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+    "help":       '<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    "user":       '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    "users":      '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    "puzzle":     '<path d="M19.5 14.5a2.5 2.5 0 1 0 0-5H18V8a2 2 0 0 0-2-2h-1.5a2.5 2.5 0 1 0-5 0H8a2 2 0 0 0-2 2v1.5a2.5 2.5 0 1 0 0 5V16a2 2 0 0 0 2 2h1.5a2.5 2.5 0 1 0 5 0H16a2 2 0 0 0 2-2v-1.5z"/>',
+    "scale":      '<path d="M12 3v18"/><path d="M5 9l-3 7a4 4 0 0 0 6 0L5 9z"/><path d="M19 9l-3 7a4 4 0 0 0 6 0L19 9z"/><path d="M3 5h18"/>',
+    "arrow-right":'<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+    "chevron-down":'<polyline points="6 9 12 15 18 9"/>',
+    "chevron-right":'<polyline points="9 6 15 12 9 18"/>',
+    "log":        '<path d="M21 12V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7"/><path d="M9 7h6"/><path d="M9 11h6"/><path d="M9 15h3"/><circle cx="17" cy="17" r="3"/><path d="M17 14v3l2 1"/>',
+    "lightning":  '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+    "shield":     '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    "trend-up":   '<polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/>',
+    "edit":       '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+    "mail":       '<rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2 6 12 13 22 6"/>',
+    "filter":     '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
+    "clock":      '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+    "x":          '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+    "play":       '<polygon points="5 3 19 12 5 21 5 3"/>',
+    "more":       '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+    "logout":     '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+    "globe":      '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+}
 
-def quality_bucket(quality: dict | None) -> str:
-    """Klassifiziert die DATENQUALITÄT in drei Buckets (kein Eignungsurteil)."""
-    if not quality or quality.get("_error"):
-        return "unvollständig"
-    missing_n = len(quality.get("missing_information", []))
-    unclear_n = len(quality.get("unclear_information", []))
-    if missing_n == 0 and unclear_n == 0:
-        return "vollständig"
-    if missing_n >= 3:
-        return "unvollständig"
-    return "informationslücken"
 
-
-def render_donut(buckets: dict[str, int]) -> str:
-    total = sum(buckets.values()) or 1
-    colors = {
-        "vollständig": "#10B981",
-        "informationslücken": "#F59E0B",
-        "unvollständig": "#EF4444",
-    }
-    cx, cy, r = 70, 70, 52
-    circumference = 2 * 3.14159 * r
-    offset = 0
-    arcs: list[str] = []
-    for k in ("vollständig", "informationslücken", "unvollständig"):
-        v = buckets.get(k, 0)
-        if v == 0:
-            continue
-        frac = v / total
-        arc_len = circumference * frac
-        arcs.append(
-            f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="transparent" '
-            f'stroke="{colors[k]}" stroke-width="18" '
-            f'stroke-dasharray="{arc_len:.2f} {circumference:.2f}" '
-            f'stroke-dashoffset="{-offset:.2f}" '
-            f'transform="rotate(-90 {cx} {cy})"/>'
-        )
-        offset += arc_len
-    if not arcs:
-        arcs.append(
-            f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="transparent" '
-            f'stroke="#1E3A5F" stroke-width="18"/>'
-        )
+def ic(name: str, size: str = "md", cls: str = "") -> str:
+    body = ICONS.get(name, "")
+    klass = f"ic ic-{size} " + (cls or "")
     return (
-        '<svg width="140" height="140" viewBox="0 0 140 140">'
-        + "".join(arcs)
-        + f'<text x="70" y="70" text-anchor="middle" dominant-baseline="middle" '
-        f'fill="#F8FAFC" font-size="22" font-weight="700">{sum(buckets.values())}</text>'
-        + f'<text x="70" y="92" text-anchor="middle" '
-        f'fill="#94A3B8" font-size="11">Gesamt</text>'
-        + "</svg>"
+        f'<span class="{klass.strip()}">'
+        f'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+        f'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+        f"{body}</svg></span>"
     )
 
 
-def initials_for(name: str) -> str:
-    parts = [p for p in (name or "").strip().split() if p]
-    if not parts:
-        return "?"
-    if len(parts) == 1:
-        return parts[0][:2].upper()
-    return (parts[0][0] + parts[-1][0]).upper()
-
-
 # ---------------------------------------------------------------------------
-# Session State
+# Session-State + Router
 # ---------------------------------------------------------------------------
 
 if "candidates" not in st.session_state:
@@ -2152,1860 +2413,1134 @@ if "job_profile" not in st.session_state:
 if "job_profile_source" not in st.session_state:
     st.session_state.job_profile_source = ""
 if "reviewed_questions" not in st.session_state:
-    # Map filename -> set of question-indices, die als geprüft markiert wurden
     st.session_state.reviewed_questions = {}
 if "_flash" not in st.session_state:
-    # Transiente Statusmeldungen, die einen st.rerun() überleben
     st.session_state._flash = []
 if "_coverage_logged" not in st.session_state:
     st.session_state._coverage_logged = set()
-
-
-# ---------------------------------------------------------------------------
-# Sidebar — Logo, Navigation, Eingaben, Hilfe
-# ---------------------------------------------------------------------------
-
-# ---------------------------------------------------------------------------
-# Multi-Page-Router (Session-State) — reine Navigation, keine Geschäftslogik
-# ---------------------------------------------------------------------------
-
-NAV_PAGES = [
-    ("home", "Start"),
-    ("produkt", "Produkt"),
-    ("ablauf", "So funktioniert's"),
-    ("referenzen", "Referenzen"),
-    ("preise", "Preise"),
-]
-NAV_MORE = [
-    ("ueber", "Über uns"),
-    ("kontakt", "Kontakt"),
-]
-_ALL_PAGE_IDS = {p for p, _ in NAV_PAGES + NAV_MORE} | {"workspace"}
-
 if "nav_page" not in st.session_state:
-    st.session_state.nav_page = "home"
+    st.session_state.nav_page = "dashboard"
+
+NAV_ITEMS = [
+    ("dashboard",  "Dashboard",  "lightning"),
+    ("recruiting", "Recruiting", "clipboard"),
+    ("kandidaten", "Kandidaten", "users"),
+    ("audit",      "Audit Log",  "log"),
+]
+_VALID_PAGES = {pid for pid, _, _ in NAV_ITEMS}
 
 
 def goto(page: str) -> None:
-    """Wechselt die sichtbare Seite (nur Navigation)."""
-    if page in _ALL_PAGE_IDS:
+    if page in _VALID_PAGES:
         st.session_state.nav_page = page
         st.rerun()
 
+
+def quality_bucket(quality: dict | None) -> str:
+    if not quality or quality.get("_error"):
+        return "unvollständig"
+    missing_n = len(quality.get("missing_information", []))
+    unclear_n = len(quality.get("unclear_information", []))
+    if missing_n == 0 and unclear_n == 0:
+        return "vollständig"
+    if missing_n >= 3:
+        return "unvollständig"
+    return "informationslücken"
+
+
+def initials_for(name: str) -> str:
+    parts = [p for p in (name or "").strip().split() if p]
+    if not parts:
+        return "—"
+    if len(parts) == 1:
+        return parts[0][:2].upper()
+    return (parts[0][0] + parts[-1][0]).upper()
+
+
+def _activity_kind(action: str) -> tuple[str, str]:
+    """Returns (css_class, icon_name) for a given audit action string."""
+    a = (action or "").lower()
+    if "fehler" in a:
+        return "is-err", "x"
+    if "rückfrage" in a or "rueckfrage" in a:
+        return "", "message"
+    if "stellenprofil" in a:
+        return "is-teal", "clipboard"
+    if "cv analysiert" in a or "extrahiert" in a or "text extrahiert" in a:
+        return "is-success", "file"
+    if "informationslücken" in a or "klärungspunkte" in a:
+        return "", "puzzle"
+    if "anforderungen" in a:
+        return "is-teal", "scale"
+    if "feedback" in a:
+        return "", "edit"
+    if "hochgeladen" in a:
+        return "", "upload"
+    return "", "sparkles"
+
+
+# ---------------------------------------------------------------------------
+# Sidebar — minimal (Nav lebt in der Top-Bar)
+# ---------------------------------------------------------------------------
 
 with st.sidebar:
     st.markdown(
         '<div class="kmu-logo">Recruiting&nbsp;AI</div>',
         unsafe_allow_html=True,
     )
-    st.caption("Der KI-Workspace für Geschäftsführer ohne eigenes HR-Team.")
+    st.caption("AI Workspace für Geschäftsführer ohne eigenes HR-Team.")
     st.divider()
-    st.markdown("**Navigation**")
-    for _pid, _lbl in NAV_PAGES + NAV_MORE:
-        _active = st.session_state.nav_page == _pid
+    st.markdown("**Bereich**")
+    for _pid, _lbl, _ico in NAV_ITEMS:
         if st.button(
-            ("●  " if _active else "") + _lbl,
+            ("●  " if st.session_state.nav_page == _pid else "    ") + _lbl,
             key=f"sb_{_pid}",
             use_container_width=True,
-            type="primary" if _active else "secondary",
+            type="primary" if st.session_state.nav_page == _pid else "secondary",
         ):
             goto(_pid)
     st.divider()
-    if st.button(
-        "Workspace öffnen  →",
-        key="sb_ws",
-        type="primary",
-        use_container_width=True,
-    ):
-        goto("workspace")
-    st.caption("Der Mensch entscheidet — der Agent strukturiert.")
+    st.button("Einstellungen", key="sb_settings", use_container_width=True)
+    st.button("Hilfe & Support", key="sb_help", use_container_width=True)
 
 
 # ---------------------------------------------------------------------------
-# Top-Navigation, Marketing-Seiten & Seiten-Routing
-# (rein optisch — die bestehende App-Logik bleibt unverändert)
+# Top-Nav (Brand · Pages · User-Dropdown)
 # ---------------------------------------------------------------------------
-
-
-def _img(pid: str, w: int = 1200) -> str:
-    return f"https://images.unsplash.com/{pid}?auto=format&fit=crop&w={w}&q=80"
-
-
-IMG_HERO = _img("photo-1521737604893-d14cc237f11d", 1700)
-IMG_REEL1 = _img("photo-1600880292203-757bb62b4baf", 1400)
-IMG_REEL2 = _img("photo-1497366216548-37526070297c", 1400)
-IMG_REEL3 = _img("photo-1522071820081-009f0129c71c", 1400)
-IMG_SPLIT1 = _img("photo-1573164713988-8665fc963095", 1200)
-IMG_SPLIT2 = _img("photo-1551836022-d5d88e9218df", 1200)
-IMG_ABOUT = _img("photo-1542744173-8e7e53415bb0", 1300)
-
-FEATURES = [
-    {
-        "img": _img("photo-1450101499163-c8848c66ca85"),
-        "k": "Schritt 01",
-        "h": "Stellenprofil verstehen",
-        "p": "Fügen Sie die Stellenanzeige ein. Der Agent extrahiert ausschließlich "
-        "objektiv prüfbare Anforderungen — Skills, Sprachen, Zertifikate, Erfahrung.",
-    },
-    {
-        "img": _img("photo-1486312338219-ce68d2c6f44d"),
-        "k": "Schritt 02",
-        "h": "Lebensläufe strukturieren",
-        "p": "Mehrere PDF-Bewerbungen werden gleichzeitig eingelesen und in saubere, "
-        "vergleichbare Felder überführt — inklusive Belegstellen im Original.",
-    },
-    {
-        "img": _img("photo-1460925895917-afdab827c52f"),
-        "k": "Schritt 03",
-        "h": "Anforderungen abgleichen",
-        "p": "Jede Anforderung wird transparent als gefunden, teilweise gefunden oder "
-        "nicht gefunden markiert — mit nachvollziehbarer Begründung. Kein Score.",
-    },
-    {
-        "img": _img("photo-1454165804606-c3d57bc86b40"),
-        "k": "Schritt 04",
-        "h": "Informationslücken erkennen",
-        "p": "Fehlende oder unklare Angaben werden sichtbar gemacht, statt sie zu "
-        "raten — die Grundlage für faire, fundierte Gespräche.",
-    },
-    {
-        "img": _img("photo-1521791136064-7986c2920216"),
-        "k": "Schritt 05",
-        "h": "Rückfragen vorbereiten",
-        "p": "Höfliche, präzise Rückfragen werden vorformuliert. Sie prüfen und geben "
-        "frei — es wird nichts automatisch versendet.",
-    },
-    {
-        "img": _img("photo-1600880292089-90a7e086ee0c"),
-        "k": "Schritt 06",
-        "h": "Der Mensch entscheidet",
-        "p": "Recruiting AI bewertet niemanden und erstellt kein Ranking. Die Auswahl "
-        "treffen Sie — vollständig auditierbar und DSGVO-konform gedacht.",
-    },
-]
-
-TESTIMONIALS = [
-    {
-        "av": _img("photo-1500648767791-00dcc994a43e", 200),
-        "t": "Wir bekommen täglich 40 Bewerbungen. Recruiting AI gibt uns in Minuten "
-        "eine saubere, vergleichbare Übersicht — die Entscheidung treffen wir trotzdem selbst.",
-        "by": "Markus Reinhardt",
-        "role": "Geschäftsführer, Reinhardt Bau GmbH",
-    },
-    {
-        "av": _img("photo-1494790108377-be9c29b29330", 200),
-        "t": "Endlich kein stundenlanges Lebenslauflesen mehr. Besonders die "
-        "Informationslücken-Erkennung spart uns peinliche Nachfragen im Gespräch.",
-        "by": "Sandra Kühn",
-        "role": "Inhaberin, Kühn Digital Studio",
-    },
-    {
-        "av": _img("photo-1472099645785-5658abf4ff4e", 200),
-        "t": "Transparent und nachvollziehbar. Jede Aussage hat eine Belegstelle — "
-        "das schafft Vertrauen bei uns und im Team.",
-        "by": "Daniel Vogt",
-        "role": "CEO, Vogt Logistik",
-    },
-    {
-        "av": _img("photo-1519085360753-af0119f7cbe7", 200),
-        "t": "Wir sind ein 12-Personen-Team ohne HR-Abteilung. Der Workspace fühlt "
-        "sich an wie eine zusätzliche, sehr gründliche Kollegin.",
-        "by": "Lena Brandt",
-        "role": "Gründerin, Brandt Manufaktur",
-    },
-    {
-        "av": _img("photo-1507003211169-0a1dd7228f2d", 200),
-        "t": "Die Audit-Funktion ist Gold wert. Wir können jeden Schritt der Analyse "
-        "lückenlos nachvollziehen — wichtig für Fairness und Compliance.",
-        "by": "Thomas Eder",
-        "role": "Geschäftsführer, Eder & Partner",
-    },
-    {
-        "av": _img("photo-1438761681033-6461ffad8d80", 200),
-        "t": "Keine Black Box, keine automatische Ablehnung. Genau das wollten wir: "
-        "ein Werkzeug, das uns zuarbeitet, statt für uns zu urteilen.",
-        "by": "Julia Hofmann",
-        "role": "Inhaberin, Hofmann Praxisklinik",
-    },
-]
 
 
 def render_top_nav() -> None:
     active = st.session_state.nav_page
-    cols = st.columns([2.5, 0.9, 1.0, 1.55, 1.35, 1.15, 1.05, 1.65])
+    cols = st.columns([3.0, 1.05, 1.15, 1.15, 1.05, 1.05, 1.6])
     with cols[0]:
         st.markdown(
-            '<div class="nav-brand"><span class="nav-mark">R</span>'
-            '<span class="nav-name">Recruiting&nbsp;AI'
-            "<small>Recruiting Intelligence</small></span></div>",
-            unsafe_allow_html=True,
-        )
-    for idx, (pid, lbl) in enumerate(NAV_PAGES):
-        with cols[1 + idx]:
-            if st.button(
-                ("●  " if active == pid else "") + lbl,
-                key=f"nav_{pid}",
-                use_container_width=True,
-            ):
-                goto(pid)
-    with cols[6]:
-        _menu = st.popover("Mehr  ▾") if hasattr(st, "popover") else st.expander("Mehr  ▾")
-        with _menu:
-            st.caption("Weitere Seiten")
-            for pid, lbl in NAV_MORE:
-                if st.button(lbl, key=f"more_{pid}", use_container_width=True):
-                    goto(pid)
-            st.divider()
-            if st.button("→ Workspace", key="more_ws", use_container_width=True):
-                goto("workspace")
-    with cols[7]:
-        if st.button(
-            "Workspace öffnen  →",
-            key="nav_ws",
-            type="primary",
-            use_container_width=True,
-        ):
-            goto("workspace")
-    st.markdown('<hr class="nav-rule">', unsafe_allow_html=True)
-
-
-# ---- Wiederverwendbare Bausteine -------------------------------------------
-
-
-def _hero(img, eyebrow, title_html, sub, meta_html):
-    st.markdown(
-        f"""
-        <div class="mk-hero">
-          <div class="mk-hero-bg" style="background-image:url('{img}')"></div>
-          <div class="mk-hero-ov"></div>
-          <div class="mk-hero-in">
-            <span class="eyebrow mk-eyebrow">{eyebrow}</span>
-            <h1 class="mk-h1">{title_html}</h1>
-            <div class="mk-sub">{sub}</div>
-            <div class="mk-meta">{meta_html}</div>
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def _page_header(eyebrow, title, lead):
-    st.markdown(
-        f'<div style="margin:14px 0 30px">'
-        f'<span class="eyebrow">{eyebrow}</span>'
-        f'<div class="mk-h2" style="font-size:46px;margin-top:14px">{title}</div>'
-        f'<div class="mk-lead" style="max-width:720px;margin-top:8px">{lead}</div></div>',
-        unsafe_allow_html=True,
-    )
-
-
-def _sec_head(eyebrow, title, lead):
-    st.markdown(
-        f'<div class="mk-sec-head"><span class="eyebrow">{eyebrow}</span>'
-        f'<div class="mk-h2">{title}</div>'
-        f'<div class="mk-lead">{lead}</div></div>',
-        unsafe_allow_html=True,
-    )
-
-
-def _logos():
-    st.markdown(
-        '<div class="logos"><span class="lab">Vertraut von Unternehmen ohne HR-Team</span>'
-        "<span>Reinhardt&nbsp;Bau</span><span>Kühn&nbsp;Studio</span>"
-        "<span>Vogt&nbsp;Logistik</span><span>Brandt&nbsp;Manufaktur</span>"
-        "<span>Eder&nbsp;&amp;&nbsp;Partner</span><span>Hofmann&nbsp;Klinik</span></div>",
-        unsafe_allow_html=True,
-    )
-
-
-def _stats():
-    st.markdown(
-        """
-        <div class="stats">
-          <div class="stat"><div class="stat-n">4<em>×</em></div>
-            <div class="stat-l">spezialisierte Agenten in einem Workflow</div></div>
-          <div class="stat"><div class="stat-n">~8&nbsp;<em>Min</em></div>
-            <div class="stat-l">statt Stunden pro Bewerbungsstapel</div></div>
-          <div class="stat"><div class="stat-n">100<em>%</em></div>
-            <div class="stat-l">der Schritte auditierbar dokumentiert</div></div>
-          <div class="stat"><div class="stat-n">0</div>
-            <div class="stat-l">automatische Personalentscheidungen</div></div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def _feature_grid(items):
-    cards = ""
-    for it in items:
-        cards += (
-            '<div class="feat-card">'
-            f"<div class=\"feat-img\" style=\"background-image:url('{it['img']}')\"></div>"
-            f'<div class="feat-body"><div class="feat-k">{it["k"]}</div>'
-            f'<div class="feat-h">{it["h"]}</div>'
-            f'<div class="feat-p">{it["p"]}</div></div></div>'
-        )
-    st.markdown(f'<div class="feat-grid">{cards}</div>', unsafe_allow_html=True)
-
-
-def _testimonials(items):
-    cards = ""
-    for it in items:
-        cards += (
-            '<div class="quote"><div class="mark">&ldquo;</div>'
-            f'<p>{it["t"]}</p><div class="quote-by">'
-            f"<div class=\"quote-av\" style=\"background-image:url('{it['av']}')\"></div>"
-            f'<div><b>{it["by"]}</b><small>{it["role"]}</small></div></div></div>'
-        )
-    st.markdown(f'<div class="quote-grid">{cards}</div>', unsafe_allow_html=True)
-
-
-def _split(img, eyebrow, title, lead, items, img_right=True):
-    li = "".join(f"<li>{x}</li>" for x in items)
-    img_html = f"<div class=\"split-img\" style=\"background-image:url('{img}')\"></div>"
-    txt_html = (
-        f'<div><span class="eyebrow">{eyebrow}</span>'
-        f'<div class="mk-h2">{title}</div><div class="mk-lead">{lead}</div>'
-        f"<ul>{li}</ul></div>"
-    )
-    inner = (txt_html + img_html) if img_right else (img_html + txt_html)
-    st.markdown(
-        f'<div class="mk-sec"><div class="split">{inner}</div></div>',
-        unsafe_allow_html=True,
-    )
-
-
-def _reel():
-    st.markdown(
-        f"""
-        <div class="reel">
-          <span class="reel-dot">Im Einsatz</span>
-          <div class="slide" style="background-image:url('{IMG_REEL1}')"></div>
-          <div class="slide" style="background-image:url('{IMG_REEL2}')"></div>
-          <div class="slide" style="background-image:url('{IMG_REEL3}')"></div>
-          <div class="reel-ov"><div>
-            <h3>Vom PDF zur Entscheidungsgrundlage</h3>
-            <p>Vier Agenten arbeiten zusammen — Sie behalten die Kontrolle.</p>
-          </div></div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def _cta_band(title, text, primary_label, primary_target, key):
-    st.markdown(
-        f'<div class="cta-band"><div class="cta-h">{title}</div>'
-        f'<div class="cta-p">{text}</div></div>',
-        unsafe_allow_html=True,
-    )
-    cc = st.columns([1.5, 1.5, 3])
-    with cc[0]:
-        if st.button(
-            primary_label, key=key, type="primary", use_container_width=True
-        ):
-            goto(primary_target)
-    with cc[1]:
-        if st.button(
-            "Kontakt aufnehmen", key=key + "_k", use_container_width=True
-        ):
-            goto("kontakt")
-
-
-def _footer():
-    st.markdown(
-        """
-        <div class="mk-foot">
-          <div>
-            <div class="brandline">Recruiting&nbsp;AI</div>
-            <p class="muted">Der KI-Workspace für Geschäftsführer ohne eigenes
-            HR-Team. Wir strukturieren Bewerbungen — die Entscheidung bleibt
-            immer bei Ihnen.</p>
-          </div>
-          <div><h4>Produkt</h4><a>Funktionen</a><a>So funktioniert's</a>
-            <a>Preise</a><a>Workspace</a></div>
-          <div><h4>Unternehmen</h4><a>Über uns</a><a>Referenzen</a>
-            <a>Kontakt</a><a>Karriere</a></div>
-          <div><h4>Rechtliches</h4><a>Datenschutz</a><a>Impressum</a>
-            <a>AGB</a><a>DSGVO</a></div>
-        </div>
-        <div class="foot-legal">© 2026 Recruiting&nbsp;AI · Human-in-the-Loop ·
-        Keine automatische Personalentscheidung · Made in Germany</div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-# ---- Seiten ----------------------------------------------------------------
-
-
-def render_home():
-    _hero(
-        IMG_HERO,
-        "KI-Recruiting-Workspace",
-        "Bewerbungen verstehen.<br><em>Menschen</em> entscheiden.",
-        "Recruiting AI strukturiert eingehende Lebensläufe, prüft fachliche "
-        "Anforderungen und erkennt Informationslücken — transparent, "
-        "nachvollziehbar und ohne automatische Personalentscheidung.",
-        "<span><i>✓</i> Multi-Agent-Analyse</span>"
-        "<span><i>✓</i> Human-in-the-Loop</span>"
-        "<span><i>✓</i> Vollständig auditierbar</span>",
-    )
-    hc = st.columns([1.5, 1.6, 3])
-    with hc[0]:
-        if st.button(
-            "Kostenlos testen  →", key="home_cta1", type="primary",
-            use_container_width=True,
-        ):
-            goto("workspace")
-    with hc[1]:
-        if st.button(
-            "So funktioniert's", key="home_cta2", use_container_width=True
-        ):
-            goto("ablauf")
-
-    st.markdown('<div style="height:26px"></div>', unsafe_allow_html=True)
-    _logos()
-
-    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
-    _stats()
-
-    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
-    _sec_head(
-        "Was der Workspace leistet",
-        "Vier Agenten. Ein Ziel: Klarheit ohne Urteil.",
-        "Jeder Schritt ist nachvollziehbar belegt. Bewertet wird nicht — "
-        "strukturiert schon.",
-    )
-    _feature_grid(FEATURES[:3])
-
-    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
-    _sec_head(
-        "Der Ablauf",
-        "Vom Stellenprofil zur Entscheidungsgrundlage.",
-        "Sieben transparente Schritte — der letzte gehört immer dem Menschen.",
-    )
-    st.markdown(_WORKFLOW_HTML, unsafe_allow_html=True)
-
-    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
-    _sec_head(
-        "Stimmen aus der Praxis",
-        "Gemacht für Unternehmen ohne HR-Abteilung.",
-        "Geschäftsführerinnen und Geschäftsführer, die ihre Zeit zurückbekommen.",
-    )
-    _testimonials(TESTIMONIALS[:3])
-
-    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
-    _cta_band(
-        "Bereit, den Bewerbungsstapel in Klarheit zu verwandeln?",
-        "Starten Sie in unter einer Minute — kein Setup, keine Kreditkarte. "
-        "Sie behalten jederzeit die volle Entscheidungshoheit.",
-        "Workspace kostenlos öffnen  →",
-        "workspace",
-        "home_cta_band",
-    )
-
-
-def render_produkt():
-    _page_header(
-        "Produkt",
-        "Ein Workspace, der zuarbeitet — nicht urteilt.",
-        "Recruiting AI verbindet vier spezialisierte Agenten zu einem "
-        "durchgängigen, auditierbaren Analyse-Workflow. Sie behalten die "
-        "Kontrolle über jede Entscheidung.",
-    )
-    _feature_grid(FEATURES)
-
-    _split(
-        IMG_SPLIT1,
-        "Transparenz by Design",
-        "Jede Aussage hat eine Belegstelle.",
-        "Keine Black Box: Recruiting AI zeigt für jede strukturierte Information "
-        "die Fundstelle im Original-Lebenslauf. So bleibt jede Analyse prüfbar.",
-        [
-            "Anforderungen klar als gefunden / teilweise / nicht gefunden markiert",
-            "Belegstellen direkt aus dem Lebenslauf zitiert",
-            "Nur objektiv prüfbare Kriterien — keine Soft-Skill-Bewertung",
-            "Lückenloses Audit-Log über jeden Agentenschritt",
-        ],
-        img_right=True,
-    )
-    _split(
-        IMG_SPLIT2,
-        "Mensch im Mittelpunkt",
-        "Human-in-the-Loop, kompromisslos.",
-        "Der Agent liefert Daten — die Entscheidung treffen Sie. Es gibt kein "
-        "Ranking, keinen Score und keine automatische Ablehnung.",
-        [
-            "Keine automatische Personalentscheidung",
-            "Rückfragen werden vorbereitet, aber nie automatisch versendet",
-            "Volle Kontrolle über jeden Verarbeitungsschritt",
-            "DSGVO-konform gedacht, auf Fairness ausgelegt",
-        ],
-        img_right=False,
-    )
-    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
-    _cta_band(
-        "Sehen Sie Recruiting AI an Ihren eigenen Bewerbungen.",
-        "Laden Sie ein Stellenprofil und ein paar Lebensläufe hoch — in Minuten "
-        "haben Sie eine strukturierte, belegte Übersicht.",
-        "Jetzt ausprobieren  →",
-        "workspace",
-        "prod_cta_band",
-    )
-
-
-def render_ablauf():
-    _page_header(
-        "So funktioniert's",
-        "Vier Agenten, sieben Schritte, ein Mensch am Ende.",
-        "Recruiting AI nimmt Ihnen die Fleißarbeit ab und macht jeden Schritt "
-        "sichtbar — damit Sie schneller und sicherer entscheiden.",
-    )
-    st.markdown(_WORKFLOW_HTML, unsafe_allow_html=True)
-
-    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
-    _sec_head(
-        "Live im Einsatz",
-        "Sehen, wie aus Unterlagen Klarheit wird.",
-        "Ein dynamischer Blick in den Workspace — vom Upload bis zur Entscheidung.",
-    )
-    _reel()
-
-    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
-    _sec_head(
-        "Vernetzte Analyse",
-        "Jeder Datenpunkt ist verbunden — und nachvollziehbar.",
-        "Die Agenten teilen Kontext, ohne Entscheidungen zu treffen.",
-    )
-    components.html(_GLOBE_HTML, height=340)
-
-    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
-    _cta_band(
-        "Probieren Sie den kompletten Ablauf selbst aus.",
-        "Vom Stellenprofil bis zu vorbereiteten Rückfragen — in einem Durchgang.",
-        "Workspace öffnen  →",
-        "workspace",
-        "ablauf_cta_band",
-    )
-
-
-def render_referenzen():
-    _page_header(
-        "Referenzen",
-        "Unternehmen, die ihre Zeit zurückbekommen haben.",
-        "Vom Handwerksbetrieb bis zur Praxisklinik: Recruiting AI hilft kleinen "
-        "und mittleren Teams, Bewerbungen souverän zu strukturieren.",
-    )
-    _stats()
-    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
-    _testimonials(TESTIMONIALS)
-    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
-    _logos()
-    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
-    _cta_band(
-        "Werden Sie das nächste Team, das Stunden spart.",
-        "Testen Sie Recruiting AI mit Ihren eigenen Unterlagen — unverbindlich.",
-        "Kostenlos starten  →",
-        "workspace",
-        "ref_cta_band",
-    )
-
-
-def render_preise():
-    _page_header(
-        "Preise",
-        "Faire Preise für Teams ohne HR-Abteilung.",
-        "Transparent, monatlich kündbar, ohne versteckte Kosten. Starten Sie "
-        "kostenlos und wachsen Sie, wenn Sie mehr brauchen.",
-    )
-    st.markdown(
-        """
-        <div class="price-grid">
-          <div class="price-card">
-            <div class="price-k">Starter</div>
-            <div class="price-amt">0&nbsp;€<small>/ Monat</small></div>
-            <div class="mk-lead" style="font-size:14px">Zum Ausprobieren.</div>
-            <ul class="price-li">
-              <li>Bis zu 10 Bewerbungen / Monat</li>
-              <li>1 Stellenprofil aktiv</li>
-              <li>Anforderungsabgleich & Belege</li>
-              <li>Audit-Log</li>
-            </ul>
-          </div>
-          <div class="price-card featured">
-            <span class="price-tag">Beliebt</span>
-            <div class="price-k">Business</div>
-            <div class="price-amt">49&nbsp;€<small>/ Monat</small></div>
-            <div class="mk-lead" style="font-size:14px">Für aktive Recruiter.</div>
-            <ul class="price-li">
-              <li>Unbegrenzte Bewerbungen</li>
-              <li>Mehrere Stellenprofile parallel</li>
-              <li>Informationslücken & Rückfragen</li>
-              <li>Feedback-Lernschleife</li>
-              <li>Priorisierter Support</li>
-            </ul>
-          </div>
-          <div class="price-card">
-            <div class="price-k">Enterprise</div>
-            <div class="price-amt">Individuell</div>
-            <div class="mk-lead" style="font-size:14px">Für größere Teams.</div>
-            <ul class="price-li">
-              <li>Alles aus Business</li>
-              <li>SSO & Rollen</li>
-              <li>Eigene Datenhaltung</li>
-              <li>Dedizierter Ansprechpartner</li>
-            </ul>
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    pc = st.columns(3)
-    with pc[0]:
-        if st.button("Starter wählen", key="price_starter", use_container_width=True):
-            goto("workspace")
-    with pc[1]:
-        if st.button(
-            "Business starten  →", key="price_business", type="primary",
-            use_container_width=True,
-        ):
-            goto("workspace")
-    with pc[2]:
-        if st.button("Vertrieb kontaktieren", key="price_ent", use_container_width=True):
-            goto("kontakt")
-
-    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
-    _sec_head(
-        "Häufige Fragen",
-        "Alles, was Geschäftsführer wissen wollen.",
-        "Noch eine Frage offen? Schreiben Sie uns über die Kontaktseite.",
-    )
-    with st.expander("Trifft Recruiting AI eine Auswahl oder lehnt Bewerber ab?"):
-        st.write(
-            "Nein. Recruiting AI bewertet niemanden, erstellt kein Ranking und "
-            "lehnt niemanden ab. Es strukturiert Informationen — die Entscheidung "
-            "treffen ausschließlich Sie."
-        )
-    with st.expander("Werden automatisch E-Mails an Bewerber versendet?"):
-        st.write(
-            "Nein. Rückfragen werden lediglich vorbereitet. Versendet wird nichts "
-            "ohne Ihre ausdrückliche Freigabe."
-        )
-    with st.expander("Wie nachvollziehbar ist die Analyse?"):
-        st.write(
-            "Jeder Agentenschritt wird im Audit-Log protokolliert, und jede "
-            "strukturierte Aussage verweist auf eine Belegstelle im Lebenslauf."
-        )
-    with st.expander("Kann ich monatlich kündigen?"):
-        st.write("Ja. Alle Pläne sind monatlich kündbar, ohne Mindestlaufzeit.")
-
-
-def render_ueber():
-    _page_header(
-        "Über uns",
-        "Wir bauen Werkzeuge, die zuarbeiten — nicht entscheiden.",
-        "Recruiting AI entstand aus einer einfachen Überzeugung: Software sollte "
-        "Geschäftsführern Zeit und Klarheit geben, ohne ihnen die Verantwortung "
-        "abzunehmen.",
-    )
-    _split(
-        IMG_ABOUT,
-        "Unsere Haltung",
-        "Technologie mit Augenmaß.",
-        "Wir glauben an menschliche Entscheidungen, unterstützt durch ehrliche, "
-        "transparente KI. Kein Hype, keine Black Box — nur ein Werkzeug, das "
-        "seinen Job sauberer macht.",
-        [
-            "Human-in-the-Loop als Grundprinzip",
-            "Transparenz und Belegbarkeit vor Bequemlichkeit",
-            "Fairness und DSGVO von Anfang an mitgedacht",
-            "Gebaut für KMU, nicht für Konzerne",
-        ],
-        img_right=False,
-    )
-    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
-    _stats()
-    st.markdown('<div class="mk-sec"></div>', unsafe_allow_html=True)
-    _cta_band(
-        "Lernen Sie den Workspace kennen.",
-        "Am besten verstehen Sie Recruiting AI, indem Sie es ausprobieren.",
-        "Workspace öffnen  →",
-        "workspace",
-        "ueber_cta_band",
-    )
-
-
-def render_kontakt():
-    _page_header(
-        "Kontakt",
-        "Sprechen wir über Ihr Recruiting.",
-        "Ob Demo, Frage oder Enterprise-Anfrage — wir melden uns in der Regel "
-        "innerhalb eines Werktags.",
-    )
-    kc = st.columns([1, 1.2], gap="large")
-    with kc[0]:
-        st.markdown(
-            """
-            <div class="contact-card">
-              <div class="contact-row"><span class="contact-ic">✉️</span>
-                <div><b>E-Mail</b><small>hallo@recruiting-ai.de</small></div></div>
-              <div class="contact-row"><span class="contact-ic">📞</span>
-                <div><b>Telefon</b><small>+49&nbsp;30&nbsp;1234&nbsp;5678</small></div></div>
-              <div class="contact-row"><span class="contact-ic">📍</span>
-                <div><b>Standort</b><small>Berlin, Deutschland</small></div></div>
-              <div class="contact-row"><span class="contact-ic">🕑</span>
-                <div><b>Erreichbarkeit</b><small>Mo–Fr, 9–18&nbsp;Uhr</small></div></div>
+            f"""
+            <div class="shell-brand">
+              <div class="shell-mark">{ic("sparkles", "md")}</div>
+              <div class="shell-name">Recruiting&nbsp;AI<small>AI Workspace</small></div>
             </div>
             """,
             unsafe_allow_html=True,
         )
-    with kc[1]:
-        with st.container(border=True):
-            st.markdown(
-                '<div class="kmu-card-title">Nachricht senden</div>',
-                unsafe_allow_html=True,
-            )
-            with st.form("contact_form", clear_on_submit=True):
-                cf1, cf2 = st.columns(2)
-                with cf1:
-                    _name = st.text_input("Name")
-                with cf2:
-                    _company = st.text_input("Unternehmen")
-                _email = st.text_input("E-Mail")
-                _msg = st.text_area("Ihre Nachricht", height=120)
-                _sent = st.form_submit_button("Nachricht senden", type="primary")
-                if _sent:
-                    if not (_name.strip() and _email.strip() and _msg.strip()):
-                        st.warning("Bitte Name, E-Mail und Nachricht ausfüllen.")
-                    else:
-                        st.success(
-                            "Danke! Ihre Nachricht ist eingegangen — "
-                            "wir melden uns zeitnah."
-                        )
-            st.caption(
-                "Diese Demo versendet keine echten Nachrichten und speichert "
-                "keine Eingaben."
-            )
-
-
-# ---- Workflow- & Globus-Visual (für die Marketing-Seiten) ------------------
-
-_WORKFLOW_HTML = """
-<style>
-  .wf { margin:6px 0 8px; font-family:'Familjen Grotesk',-apple-system,sans-serif; }
-  .wf-row { display:grid; grid-template-columns:repeat(7, 1fr); gap:10px;
-    align-items:stretch; }
-  .wf-step { position:relative; background:#FFFDF8;
-    border:1px solid #E5DECF; border-radius:16px;
-    padding:18px 12px 16px; text-align:center;
-    box-shadow:0 8px 24px rgba(23,32,42,0.06);
-    transition:transform .2s ease, box-shadow .2s ease;
-    animation:fadeUpG .6s ease both; }
-  .wf-step:nth-child(2){animation-delay:.05s} .wf-step:nth-child(3){animation-delay:.1s}
-  .wf-step:nth-child(4){animation-delay:.15s} .wf-step:nth-child(5){animation-delay:.2s}
-  .wf-step:nth-child(6){animation-delay:.25s} .wf-step:nth-child(7){animation-delay:.3s}
-  .wf-step:hover { transform:translateY(-4px);
-    box-shadow:0 16px 36px rgba(23,32,42,0.14); }
-  .wf-step::after { content:"→"; position:absolute; right:-13px; top:50%;
-    transform:translateY(-50%); color:#BE5B2A; font-weight:800; font-size:16px;
-    z-index:2; animation:pulseArrow 2.4s ease-in-out infinite; }
-  .wf-step:last-child::after { content:""; }
-  @keyframes pulseArrow { 0%,100%{opacity:.4} 50%{opacity:1} }
-  .wf-ic { width:40px; height:40px; border-radius:12px; margin:0 auto 10px;
-    display:flex; align-items:center; justify-content:center; font-size:19px;
-    background:#F4E7DA; }
-  .wf-step.gz .wf-ic { background:#DCEFE4; }
-  .wf-name { font-size:13px; font-weight:700; color:#17202A; margin-bottom:4px; }
-  .wf-desc { font-size:11.5px; color:#6E6A5F; line-height:1.45; }
-  @media (max-width:1100px){ .wf-row { grid-template-columns:repeat(4,1fr); }
-    .wf-step:nth-child(4)::after{content:""} }
-  @media (max-width:700px){ .wf-row { grid-template-columns:repeat(2,1fr); }
-    .wf-step::after{content:""} }
-</style>
-<div class="wf">
-  <div class="wf-row">
-    <div class="wf-step"><div class="wf-ic">📤</div>
-      <div class="wf-name">Stelle hochladen</div>
-      <div class="wf-desc">Stellenanzeige einfügen.</div></div>
-    <div class="wf-step"><div class="wf-ic">📋</div>
-      <div class="wf-name">Stellenprofil-Agent</div>
-      <div class="wf-desc">Extrahiert prüfbare Anforderungen.</div></div>
-    <div class="wf-step"><div class="wf-ic">📄</div>
-      <div class="wf-name">CV-Agent</div>
-      <div class="wf-desc">Strukturiert jeden Lebenslauf.</div></div>
-    <div class="wf-step"><div class="wf-ic">🔍</div>
-      <div class="wf-name">Anforderungsabgleich</div>
-      <div class="wf-desc">Gefunden, teilweise, nicht gefunden.</div></div>
-    <div class="wf-step"><div class="wf-ic">🧩</div>
-      <div class="wf-name">Informationslücken</div>
-      <div class="wf-desc">Erkennt fehlende Angaben.</div></div>
-    <div class="wf-step"><div class="wf-ic">💬</div>
-      <div class="wf-name">Rückfragen</div>
-      <div class="wf-desc">Formuliert höfliche Rückfragen.</div></div>
-    <div class="wf-step gz"><div class="wf-ic">👤</div>
-      <div class="wf-name">Geschäftsführer entscheidet</div>
-      <div class="wf-desc">Der Mensch entscheidet.</div></div>
-  </div>
-</div>
-"""
-
-_GLOBE_HTML = """
-<!DOCTYPE html><html><head><meta charset="utf-8">
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  html,body { width:100%; height:100%; overflow:hidden;
-    font-family:'Familjen Grotesk',-apple-system,Segoe UI,Roboto,sans-serif; }
-  .band { position:relative; width:100%; height:100%; border-radius:22px; overflow:hidden;
-    background:
-      radial-gradient(720px 420px at 80% 50%, rgba(190,91,42,0.20), transparent 60%),
-      linear-gradient(135deg, #15181C 0%, #1E242B 55%, #2A333D 100%);
-    border:1px solid rgba(255,255,255,0.10);
-    box-shadow:0 16px 44px rgba(23,32,42,0.20); }
-  #c { position:absolute; inset:0; z-index:0; display:block; }
-  .copy { position:absolute; z-index:2; left:48px; top:50%;
-    transform:translateY(-50%); max-width:460px; }
-  .copy h2 { font-family:'Fraunces',Georgia,serif; font-size:30px; font-weight:600;
-    line-height:1.15; letter-spacing:-0.01em; color:#FBF7EF; margin-bottom:12px; }
-  .copy p { color:#D8D2C6; font-size:15px; line-height:1.6; margin-bottom:4px; }
-  @media (max-width:760px){ .copy{left:24px;max-width:60%} .copy h2{font-size:22px} }
-</style></head>
-<body>
-  <div class="band">
-    <canvas id="c"></canvas>
-    <div class="copy">
-      <h2>Transparente Analyse &ndash; in Sekunden.</h2>
-      <p>Recruiting AI strukturiert Bewerbungsunterlagen automatisch:
-        nachvollziehbar, fair und ohne automatische Personalentscheidung.</p>
-    </div>
-  </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script>
-  (function(){
-    if(!window.THREE){return;}
-    var canvas=document.getElementById('c'); var band=canvas.parentElement;
-    var renderer=new THREE.WebGLRenderer({canvas:canvas,alpha:true,antialias:true});
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-    var scene=new THREE.Scene();
-    var camera=new THREE.PerspectiveCamera(45,1,0.1,100); camera.position.set(0,0,6.2);
-    var group=new THREE.Group(); group.position.x=1.7; group.rotation.z=0.32; group.rotation.x=0.16;
-    scene.add(group);
-    var R=1.65;
-    var wire=new THREE.LineSegments(
-      new THREE.WireframeGeometry(new THREE.SphereGeometry(R,30,20)),
-      new THREE.LineBasicMaterial({color:0x9AA3AD,transparent:true,opacity:0.30}));
-    group.add(wire);
-    var N=440, pos=[], ga=Math.PI*(3-Math.sqrt(5)), i;
-    for(i=0;i<N;i++){var y=1-(i/(N-1))*2; var rr=Math.sqrt(1-y*y); var th=ga*i;
-      pos.push(Math.cos(th)*rr*R, y*R, Math.sin(th)*rr*R);}
-    var dg=new THREE.BufferGeometry();
-    dg.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
-    var dots=new THREE.Points(dg, new THREE.PointsMaterial(
-      {color:0xE7E2D7,size:0.045,transparent:true,opacity:0.9}));
-    group.add(dots);
-    function sp(){var u=Math.random(),v=Math.random();var th=2*Math.PI*u;var ph=Math.acos(2*v-1);
-      return new THREE.Vector3(R*Math.sin(ph)*Math.cos(th),R*Math.cos(ph),R*Math.sin(ph)*Math.sin(th));}
-    for(var k=0;k<16;k++){var a=sp(),b=sp();
-      var mid=a.clone().add(b).multiplyScalar(0.5).setLength(R*1.42);
-      var curve=new THREE.QuadraticBezierCurve3(a,mid,b);
-      var g=new THREE.BufferGeometry().setFromPoints(curve.getPoints(42));
-      group.add(new THREE.Line(g, new THREE.LineBasicMaterial(
-        {color:0xBE5B2A,transparent:true,opacity:0.55})));}
-    function ring(r0,r1,op){var rg=new THREE.RingGeometry(r0,r1,90);
-      var m=new THREE.MeshBasicMaterial({color:0xC9A37A,side:THREE.DoubleSide,
-        transparent:true,opacity:op});
-      var mesh=new THREE.Mesh(rg,m); mesh.rotation.x=Math.PI/2; return mesh;}
-    var rings=new THREE.Group();
-    rings.add(ring(2.25,2.38,0.50)); rings.add(ring(2.55,2.62,0.30));
-    rings.add(ring(2.80,2.84,0.18));
-    rings.rotation.x=0.52; group.add(rings);
-    function size(){var w=band.clientWidth,h=band.clientHeight;
-      renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix();}
-    size(); window.addEventListener('resize',size);
-    function loop(){requestAnimationFrame(loop);
-      group.rotation.y+=0.0016; dots.rotation.y-=0.0006;
-      renderer.render(scene,camera);}
-    loop();
-  })();
-  </script>
-</body></html>
-"""
-
-
-# ---- Navigation rendern + Seiten-Routing -----------------------------------
-
-render_top_nav()
-
-_page = st.session_state.nav_page
-if _page == "home":
-    render_home()
-elif _page == "produkt":
-    render_produkt()
-elif _page == "ablauf":
-    render_ablauf()
-elif _page == "referenzen":
-    render_referenzen()
-elif _page == "preise":
-    render_preise()
-elif _page == "ueber":
-    render_ueber()
-elif _page == "kontakt":
-    render_kontakt()
-
-if _page != "workspace":
-    _footer()
-    st.stop()
-
-# --- Ab hier: Workspace (bestehende App-Logik, unverändert) ---
-
-# ---- KPI-Karten (echte Daten aus der App) ----
-
-total_candidates = len(st.session_state.candidates)
-total_gaps = sum(
-    len((c.get("quality") or {}).get("missing_information") or [])
-    + len((c.get("quality") or {}).get("unclear_information") or [])
-    for c in st.session_state.candidates
-)
-total_questions = sum(
-    len((c.get("followups") or {}).get("questions") or [])
-    for c in st.session_state.candidates
-)
-# Gefundene Anforderungen (Summe über alle Kandidaten, bestehende Funktion)
-total_found = 0
-if st.session_state.job_profile:
-    for c in st.session_state.candidates:
-        total_found += status_counts(
-            evaluate_candidate_requirements(
-                st.session_state.job_profile, c["data"]
-            )
-        )["Gefunden"]
-
-st.markdown(
-    '<div class="dashboard-header"><div><h1>Dashboard</h1>'
-    '<div class="subtitle">Übersicht Ihrer Bewerbungen und Analysen</div>'
-    "</div></div>",
-    unsafe_allow_html=True,
-)
-
-kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-with kpi1:
-    st.markdown(
-        f"""
-        <div class="kpi-card teal">
-            <div class="kpi-icon">📄</div>
-            <div class="kpi-value teal">{total_candidates}</div>
-            <div class="kpi-label">Analysierte Bewerbungen</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-with kpi2:
-    st.markdown(
-        f"""
-        <div class="kpi-card blue">
-            <div class="kpi-icon">✅</div>
-            <div class="kpi-value blue">{total_found}</div>
-            <div class="kpi-label">Gefundene Anforderungen</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-with kpi3:
-    st.markdown(
-        f"""
-        <div class="kpi-card orange">
-            <div class="kpi-icon">🔍</div>
-            <div class="kpi-value orange">{total_gaps}</div>
-            <div class="kpi-label">Klärungsbedarf</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-with kpi4:
-    st.markdown(
-        f"""
-        <div class="kpi-card green">
-            <div class="kpi-icon">💬</div>
-            <div class="kpi-value green">{total_questions}</div>
-            <div class="kpi-label">Vorbereitete Rückfragen</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-# ---- Dashboard-Grid: Letzte Bewerbungen | AI Activity Feed ----
-# Der Activity Feed ist eine rein optische Zusammenfassung der letzten
-# Audit-Log-Einträge — das Audit Log selbst bleibt unverändert.
-
-_ACTIVITY_ICONS = [
-    ("Stellenprofil analysiert", "📋"),
-    ("fachlich prüfbare", "✅"),
-    ("nicht automatisch prüfbare", "🧩"),
-    ("PDF hochgeladen", "📤"),
-    ("Text extrahiert", "📄"),
-    ("CV analysiert", "🤖"),
-    ("Informationslücken", "🔍"),
-    ("Rückfragen erzeugt", "💬"),
-    ("Rückfrage", "💬"),
-    ("Anforderungen abgeglichen", "⚖️"),
-    ("Klärungspunkte", "🧩"),
-    ("Abdeckungsgrad", "⚖️"),
-    ("Feedback", "📝"),
-]
-
-
-def _activity_icon(action: str) -> str:
-    for key, icon in _ACTIVITY_ICONS:
-        if key.lower() in (action or "").lower():
-            return icon
-    return "•"
-
-
-dash_left, dash_right = st.columns([1.25, 1], gap="medium")
-
-with dash_left:
-    if st.session_state.candidates:
-        with st.container(border=True):
-            st.markdown(
-                '<div class="kmu-card-title">Letzte Bewerbungen</div>',
-                unsafe_allow_html=True,
-            )
-            for c in st.session_state.candidates[-5:][::-1]:
-                cv = c["data"]
-                q = c.get("quality") or {}
-                has_gaps = bool(
-                    q.get("missing_information") or q.get("unclear_information")
-                )
-                badge_cls = "kmu-badge-warn" if has_gaps else "kmu-badge-ok"
-                badge_lbl = (
-                    "Klärungsbedarf" if has_gaps else "Analyse abgeschlossen"
-                )
-                name = cv.get("name") or "(ohne Name)"
-                first_role = ""
-                if cv.get("experience"):
-                    first_role = cv["experience"][0].get("role", "")
-                st.markdown(
-                    f"""
-                    <div class="kmu-list-item">
-                        <div class="kmu-list-avatar">{initials_for(name)}</div>
-                        <div style="flex:1">
-                            <div class="kmu-list-name">{name}</div>
-                            <div class="kmu-list-file">{first_role or c['filename']}</div>
-                        </div>
-                        <span class="kmu-badge {badge_cls}">● {badge_lbl}</span>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-    else:
-        st.caption(
-            "Noch keine Bewerbungen analysiert. Lade unten Lebensläufe hoch."
-        )
-
-with dash_right:
-    _recent_log = load_audit_log()[-7:][::-1]
-    with st.container(border=True):
+    for idx, (pid, lbl, _icn) in enumerate(NAV_ITEMS):
+        with cols[1 + idx]:
+            wrap_cls = "nav-btn-wrap active" if active == pid else "nav-btn-wrap"
+            st.markdown(f'<div class="{wrap_cls}">', unsafe_allow_html=True)
+            if st.button(lbl, key=f"nav_{pid}", use_container_width=True):
+                goto(pid)
+            st.markdown("</div>", unsafe_allow_html=True)
+    with cols[5]:
+        st.markdown('<div class="nav-btn-wrap">', unsafe_allow_html=True)
+        _has_popover = hasattr(st, "popover")
+        _menu_ctx = st.popover("Mehr") if _has_popover else st.expander("Mehr")
+        with _menu_ctx:
+            st.caption("Schnellzugriff")
+            if st.button("Einstellungen", key="mn_settings", use_container_width=True):
+                pass
+            if st.button("Hilfe & Support", key="mn_help", use_container_width=True):
+                pass
+            st.divider()
+            if st.button("Sign out", key="mn_signout", use_container_width=True):
+                pass
+        st.markdown("</div>", unsafe_allow_html=True)
+    with cols[6]:
         st.markdown(
-            '<div class="kmu-card-title">AI Activity '
-            '<small>● live</small></div>',
+            """
+            <div class="user-chip">
+              <span class="av">GF</span>
+              <span><b>Geschäftsführer</b><small>Pro Plan</small></span>
+            </div>
+            """,
             unsafe_allow_html=True,
         )
-        if _recent_log:
-            feed_rows = []
-            for i, entry in enumerate(_recent_log):
-                ts = entry.get("timestamp", "")
-                t_disp = ts.split("T", 1)[1][:5] if "T" in ts else ts
-                action = entry.get("action", "")
-                target = entry.get("target", "")
-                feed_rows.append(
-                    f'<div class="feed-item" style="animation-delay:{i * 0.06}s">'
-                    f'<span class="feed-ic">{_activity_icon(action)}</span>'
-                    f'<span class="feed-body"><b>{action}</b>'
-                    f'<small>{target}</small></span>'
-                    f'<span class="feed-time">{t_disp}</span></div>'
-                )
-            st.markdown("".join(feed_rows), unsafe_allow_html=True)
-        else:
-            st.caption("Noch keine Agent-Aktivität.")
 
 
 # ---------------------------------------------------------------------------
-# Zentrale Upload-/Start-Card (verschoben aus der Sidebar)
+# Page-Building-Blocks
 # ---------------------------------------------------------------------------
 
-with st.container(border=True):
+
+def page_header(eyebrow: str, title_html: str, lead: str) -> None:
     st.markdown(
-        '<div class="kmu-card-title">Stellenprofil &amp; Bewerbungen</div>',
+        f'<div class="ph"><span class="eyebrow">{eyebrow}</span>'
+        f"<h1>{title_html}</h1><div class=\"lead\">{lead}</div></div>",
         unsafe_allow_html=True,
     )
 
-    # Transiente Statusmeldungen, die einen st.rerun() überleben
+
+def section_header(title: str, sub: str = "", right: str = "") -> None:
+    right_html = f'<div class="right">{right}</div>' if right else ""
+    sub_html = f'<div class="sub">{sub}</div>' if sub else ""
+    st.markdown(
+        f'<div class="sec"><div class="sec-head"><div><h2>{title}</h2>'
+        f"{sub_html}</div>{right_html}</div></div>",
+        unsafe_allow_html=True,
+    )
+
+
+def render_workflow() -> None:
+    steps = [
+        ("upload", "Stelle hochladen", "Stellenanzeige einfügen."),
+        ("clipboard", "Stellenprofil-Agent", "Prüfbare Anforderungen."),
+        ("file", "CV-Agent", "Lebensläufe strukturieren."),
+        ("scale", "Anforderungsabgleich", "Gefunden / teilweise / nicht."),
+        ("puzzle", "Informationslücken", "Fehlende Angaben."),
+        ("message", "Rückfragen", "Höflich vorbereitet."),
+    ]
+    cells = ""
+    for i, (icn, name, desc) in enumerate(steps):
+        is_final = "is-final" if i == len(steps) - 1 else ""
+        cells += (
+            f'<div class="wf-step {is_final}">'
+            f'<div class="wf-ic">{ic(icn, "md")}</div>'
+            f"<b>{name}</b><small>{desc}</small></div>"
+        )
+    st.markdown(f'<div class="wf">{cells}</div>', unsafe_allow_html=True)
+
+
+def hil_note(text: str) -> None:
+    st.markdown(
+        f'<div class="hil-line"><span class="ic">{ic("shield", "md")}</span>'
+        f"<span>{text}</span></div>",
+        unsafe_allow_html=True,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Render: Dashboard
+# ---------------------------------------------------------------------------
+
+
+def render_dashboard() -> None:
+    total_candidates = len(st.session_state.candidates)
+    total_gaps = sum(
+        len((c.get("quality") or {}).get("missing_information") or [])
+        + len((c.get("quality") or {}).get("unclear_information") or [])
+        for c in st.session_state.candidates
+    )
+    total_questions = sum(
+        len((c.get("followups") or {}).get("questions") or [])
+        for c in st.session_state.candidates
+    )
+    total_found = 0
+    if st.session_state.job_profile:
+        for c in st.session_state.candidates:
+            total_found += status_counts(
+                evaluate_candidate_requirements(
+                    st.session_state.job_profile, c["data"]
+                )
+            )["Gefunden"]
+
+    # Hero
+    st.markdown(
+        f"""
+        <div class="hero">
+          <div class="hero-in">
+            <span class="hero-eye"><span class="sp"></span>AI Workspace · live</span>
+            <h1>Bewerbungen verstehen.<br/><em>Menschen</em> entscheiden.</h1>
+            <div class="sub">Vier spezialisierte Agenten strukturieren Lebensläufe,
+            prüfen fachliche Anforderungen und bereiten Rückfragen vor — ohne
+            automatische Personalentscheidung.</div>
+            <div class="hero-trust">
+              <span><span class="ic">{ic("check-circle", "md")}</span> Multi-Agent-Analyse</span>
+              <span><span class="ic">{ic("shield", "md")}</span> Human-in-the-Loop</span>
+              <span><span class="ic">{ic("log", "md")}</span> Vollständig auditierbar</span>
+            </div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    # Hero CTAs (real buttons)
+    ca, cb, _spacer = st.columns([1.4, 1.4, 4])
+    with ca:
+        if st.button("Recruiting starten", key="hero_recruiting", type="primary", use_container_width=True):
+            goto("recruiting")
+    with cb:
+        if st.button("Kandidaten ansehen", key="hero_kandidaten", use_container_width=True):
+            goto("kandidaten")
+
+    # KPI Strip
+    st.markdown('<div class="sec">', unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <div class="kpi-grid">
+          <div class="kpi">
+            <div class="kpi-head"><div class="kpi-ic purple">{ic("file", "md")}</div>
+              <div class="kpi-label">Bewerbungen</div></div>
+            <div class="kpi-value">{total_candidates}</div>
+            <div class="kpi-delta">{ic("trend-up","sm")}&nbsp;analysiert</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-head"><div class="kpi-ic indigo">{ic("check-circle", "md")}</div>
+              <div class="kpi-label">Anforderungen gefunden</div></div>
+            <div class="kpi-value">{total_found}</div>
+            <div class="kpi-delta">über alle Kandidaten</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-head"><div class="kpi-ic blue">{ic("puzzle", "md")}</div>
+              <div class="kpi-label">Klärungsbedarf</div></div>
+            <div class="kpi-value">{total_gaps}</div>
+            <div class="kpi-delta">offene Informationslücken</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-head"><div class="kpi-ic teal">{ic("message", "md")}</div>
+              <div class="kpi-label">Rückfragen vorbereitet</div></div>
+            <div class="kpi-value">{total_questions}</div>
+            <div class="kpi-delta">warten auf Freigabe</div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # Workflow status
+    section_header(
+        "Workflow",
+        "Sechs Schritte. Der letzte gehört dem Menschen.",
+        "Multi-Agent",
+    )
+    render_workflow()
+
+    # Two-column: last applicants | activity feed
+    st.markdown('<div class="sec"></div>', unsafe_allow_html=True)
+    dash_left, dash_right = st.columns([1.25, 1], gap="large")
+
+    with dash_left:
+        with st.container(border=True):
+            st.markdown(
+                f'<div class="kmu-card-title">Letzte Bewerbungen'
+                f'<small><span class="ic">{ic("clock","sm")}</span> Upload-Reihenfolge</small></div>',
+                unsafe_allow_html=True,
+            )
+            if st.session_state.candidates:
+                rows = ""
+                for c in st.session_state.candidates[-5:][::-1]:
+                    cv = c["data"]
+                    q = c.get("quality") or {}
+                    has_gaps = bool(
+                        q.get("missing_information") or q.get("unclear_information")
+                    )
+                    badge_cls = "badge-warn" if has_gaps else "badge-ok"
+                    badge_lbl = "Klärungsbedarf" if has_gaps else "Analyse abgeschlossen"
+                    name = cv.get("name") or "(ohne Name)"
+                    first_role = ""
+                    if cv.get("experience"):
+                        first_role = cv["experience"][0].get("role", "")
+                    rows += (
+                        '<div class="app-row">'
+                        f'<div class="app-av">{initials_for(name)}</div>'
+                        '<div>'
+                        f'<div class="app-name">{name}</div>'
+                        f'<div class="app-role">{first_role or c["filename"]}</div>'
+                        '</div>'
+                        f'<span class="badge {badge_cls}">{badge_lbl}</span>'
+                        '</div>'
+                    )
+                st.markdown(f'<div class="applist">{rows}</div>', unsafe_allow_html=True)
+            else:
+                st.caption(
+                    "Noch keine Bewerbungen analysiert. Wechseln Sie zu "
+                    "Recruiting, um Lebensläufe hochzuladen."
+                )
+
+    with dash_right:
+        with st.container(border=True):
+            st.markdown(
+                f'<div class="kmu-card-title">AI Activity'
+                f'<small><span class="gcard-meta"><span class="live"></span> live</span></small></div>',
+                unsafe_allow_html=True,
+            )
+            _recent_log = load_audit_log()[-8:][::-1]
+            if _recent_log:
+                rows = ""
+                for entry in _recent_log:
+                    ts = entry.get("timestamp", "")
+                    t_disp = ts.split("T", 1)[1][:5] if "T" in ts else ts
+                    action = entry.get("action", "")
+                    target = entry.get("target", "")
+                    kind, icn = _activity_kind(action)
+                    rows += (
+                        f'<div class="feed-row {kind}">'
+                        f'<div class="feed-ic">{ic(icn, "md")}</div>'
+                        '<div class="feed-body">'
+                        f'<b>{action}</b><small>{target}</small></div>'
+                        f'<span class="feed-time">{t_disp}</span></div>'
+                    )
+                st.markdown(f'<div class="feed">{rows}</div>', unsafe_allow_html=True)
+            else:
+                st.caption("Noch keine Agent-Aktivität.")
+
+    hil_note("Der Agent strukturiert Informationen. Die Entscheidung trifft der Geschäftsführer.")
+
+
+# ---------------------------------------------------------------------------
+# Render: Recruiting (Upload + Stellenprofil)
+# ---------------------------------------------------------------------------
+
+
+def render_recruiting() -> None:
+    page_header(
+        "Recruiting",
+        "Stellenprofil <em>analysieren</em>. Bewerbungen aufnehmen.",
+        "Geben Sie die Stellenanzeige ein und laden Sie Lebensläufe als PDF hoch. "
+        "Der Workspace strukturiert beides — Sie behalten die Kontrolle.",
+    )
+
+    # Flash messages (preserved across reruns)
     for _level, _msg in st.session_state._flash:
         getattr(st, _level, st.info)(_msg)
     st.session_state._flash = []
 
-    up_left, up_right = st.columns(2)
+    up_left, up_right = st.columns(2, gap="large")
 
     with up_left:
-        st.markdown(
-            '<div class="upload-head"><span class="upload-ic">📋</span>'
-            '<div><div class="upload-title">Stellenprofil</div>'
-            '<div class="upload-desc">Laden Sie die Stellenanzeige hoch '
-            "oder fügen Sie sie ein.</div></div></div>",
-            unsafe_allow_html=True,
-        )
-        job_url = st.text_input(
-            "Stellen-URL (optional, derzeit deaktiviert)",
-            placeholder="https://… (in dieser Demo nicht aktiv)",
-            label_visibility="collapsed",
-        )
-        if job_url.strip():
-            st.caption(
-                "Hinweis: URL-Fetch ist in dieser Demo nicht aktiviert. "
-                "Bitte den Stellentext direkt unten einfügen."
+        with st.container(border=True):
+            st.markdown(
+                f'<div class="uphead"><div class="upic">{ic("clipboard", "md")}</div>'
+                f'<div><div class="uptitle">Stellenprofil</div>'
+                f'<div class="updesc">Stellenanzeige als Text einfügen.</div></div></div>',
+                unsafe_allow_html=True,
             )
-        job_text = st.text_area(
-            "Stellenprofil",
-            height=160,
-            placeholder=(
-                "z. B. Wir suchen einen Python-Entwickler mit SQL und "
-                "Deutsch C1 …"
-            ),
-            label_visibility="collapsed",
-        )
-        if st.button(
-            "Stelle analysieren", type="primary",
-            disabled=not job_text.strip(),
-        ):
-            with st.spinner("Strukturiere Stellenprofil ..."):
-                try:
-                    profile = analyze_job_profile(job_text)
-                    st.session_state.job_profile = profile
-                    st.session_state.job_profile_source = job_text.strip()
-                    st.session_state._coverage_logged = set()
-                    log_audit(
-                        action="Stellenprofil analysiert",
-                        target=profile.get("role", "(ohne Titel)"),
-                        result_type="strukturiertes Stellenprofil",
-                    )
-                    # Aufteilung in prüfbar / nicht prüfbar protokollieren
-                    _all_req = _collect_all_requirements(profile)
-                    _check, _soft = filter_objectively_checkable_requirements(
-                        _all_req
-                    )
-                    log_audit(
-                        action="fachlich prüfbare Anforderungen extrahiert",
-                        target=profile.get("role", "(ohne Titel)"),
-                        result_type=f"{len(_check)} prüfbar",
-                    )
-                    log_audit(
-                        action="nicht automatisch prüfbare Anforderungen erkannt",
-                        target=profile.get("role", "(ohne Titel)"),
-                        result_type=f"{len(_soft)} weich/soft",
-                    )
-                    st.session_state._flash.append(
-                        ("success", "Stellenprofil strukturiert.")
-                    )
-                except Exception as e:  # noqa: BLE001
-                    log_audit(
-                        action="Stellenprofil analysiert",
-                        target="(Haupteingabe)",
-                        result_type=f"Fehler: {e}",
-                    )
-                    st.session_state._flash.append(
-                        ("error", f"Fehler bei der Analyse des Stellenprofils: {e}")
-                    )
-            st.rerun()
-
-        if st.session_state.job_profile and st.button("Stellenprofil löschen"):
-            st.session_state.job_profile = None
-            st.session_state.job_profile_source = ""
-            st.session_state._coverage_logged = set()
-            st.rerun()
+            job_url = st.text_input(
+                "Stellen-URL (optional, derzeit deaktiviert)",
+                placeholder="https://… (in dieser Demo nicht aktiv)",
+                label_visibility="collapsed",
+                key="rec_job_url",
+            )
+            if job_url.strip():
+                st.caption(
+                    "Hinweis: URL-Fetch ist in dieser Demo nicht aktiviert. "
+                    "Bitte den Stellentext direkt unten einfügen."
+                )
+            job_text = st.text_area(
+                "Stellenprofil",
+                height=180,
+                placeholder=(
+                    "z. B. Wir suchen einen Python-Entwickler mit SQL und "
+                    "Deutsch C1 …"
+                ),
+                label_visibility="collapsed",
+                key="rec_job_text",
+            )
+            if st.button(
+                "Stelle analysieren",
+                key="rec_analyze_job",
+                type="primary",
+                disabled=not job_text.strip(),
+                use_container_width=True,
+            ):
+                with st.spinner("Strukturiere Stellenprofil …"):
+                    try:
+                        profile = analyze_job_profile(job_text)
+                        st.session_state.job_profile = profile
+                        st.session_state.job_profile_source = job_text.strip()
+                        st.session_state._coverage_logged = set()
+                        log_audit(
+                            action="Stellenprofil analysiert",
+                            target=profile.get("role", "(ohne Titel)"),
+                            result_type="strukturiertes Stellenprofil",
+                        )
+                        _all_req = _collect_all_requirements(profile)
+                        _check, _soft = filter_objectively_checkable_requirements(_all_req)
+                        log_audit(
+                            action="fachlich prüfbare Anforderungen extrahiert",
+                            target=profile.get("role", "(ohne Titel)"),
+                            result_type=f"{len(_check)} prüfbar",
+                        )
+                        log_audit(
+                            action="nicht automatisch prüfbare Anforderungen erkannt",
+                            target=profile.get("role", "(ohne Titel)"),
+                            result_type=f"{len(_soft)} weich/soft",
+                        )
+                        st.session_state._flash.append(
+                            ("success", "Stellenprofil strukturiert.")
+                        )
+                    except Exception as e:  # noqa: BLE001
+                        log_audit(
+                            action="Stellenprofil analysiert",
+                            target="(Haupteingabe)",
+                            result_type=f"Fehler: {e}",
+                        )
+                        st.session_state._flash.append(
+                            ("error", f"Fehler bei der Analyse des Stellenprofils: {e}")
+                        )
+                st.rerun()
+            if st.session_state.job_profile and st.button(
+                "Stellenprofil löschen",
+                key="rec_clear_job",
+                use_container_width=True,
+            ):
+                st.session_state.job_profile = None
+                st.session_state.job_profile_source = ""
+                st.session_state._coverage_logged = set()
+                st.rerun()
 
     with up_right:
-        st.markdown(
-            '<div class="upload-head"><span class="upload-ic green">📎</span>'
-            '<div><div class="upload-title">Bewerbungen</div>'
-            '<div class="upload-desc">Laden Sie mehrere Lebensläufe '
-            "als PDF hoch.</div></div></div>",
-            unsafe_allow_html=True,
-        )
-        uploaded = st.file_uploader(
-            "PDF-Dateien",
-            type=["pdf"],
-            accept_multiple_files=True,
-            label_visibility="collapsed",
-        )
-
-        if st.button(
-            "Bewerbungen analysieren", type="primary", disabled=not uploaded
-        ):
-            prior_feedback = feedback_block(load_feedback())
-            new_files = [
-                f
-                for f in uploaded
-                if f.name not in st.session_state.processed_files
-            ]
-            if not new_files:
-                st.session_state._flash.append(
-                    ("warning", "Alle ausgewählten Dateien wurden bereits verarbeitet.")
-                )
-                st.rerun()
-            else:
-                progress = st.progress(0.0)
-                ok = 0
-                errors: list[str] = []
-                for i, f in enumerate(new_files, start=1):
-                    with st.spinner(f"Verarbeite {f.name} ..."):
-                        try:
-                            log_audit(
-                                action="PDF hochgeladen",
-                                target=f.name,
-                                result_type="Datei akzeptiert",
-                            )
-                            text = extract_text_from_pdf(f.read())
-                            if not text:
-                                errors.append(
-                                    f"{f.name}: kein Text extrahierbar "
-                                    "(evtl. gescanntes PDF ohne OCR)."
+        with st.container(border=True):
+            st.markdown(
+                f'<div class="uphead"><div class="upic teal">{ic("upload", "md")}</div>'
+                f'<div><div class="uptitle">Bewerbungen</div>'
+                f'<div class="updesc">Mehrere Lebensläufe als PDF.</div></div></div>',
+                unsafe_allow_html=True,
+            )
+            uploaded = st.file_uploader(
+                "PDF-Dateien",
+                type=["pdf"],
+                accept_multiple_files=True,
+                label_visibility="collapsed",
+                key="rec_uploader",
+            )
+            if st.button(
+                "Bewerbungen analysieren",
+                key="rec_analyze_cvs",
+                type="primary",
+                disabled=not uploaded,
+                use_container_width=True,
+            ):
+                prior_feedback = feedback_block(load_feedback())
+                new_files = [
+                    f for f in uploaded
+                    if f.name not in st.session_state.processed_files
+                ]
+                if not new_files:
+                    st.session_state._flash.append(
+                        ("warning", "Alle ausgewählten Dateien wurden bereits verarbeitet.")
+                    )
+                    st.rerun()
+                else:
+                    progress = st.progress(0.0)
+                    ok = 0
+                    errors: list[str] = []
+                    for i, f in enumerate(new_files, start=1):
+                        with st.spinner(f"Verarbeite {f.name} …"):
+                            try:
+                                log_audit(
+                                    action="PDF hochgeladen",
+                                    target=f.name,
+                                    result_type="Datei akzeptiert",
                                 )
+                                text = extract_text_from_pdf(f.read())
+                                if not text:
+                                    errors.append(
+                                        f"{f.name}: kein Text extrahierbar "
+                                        "(evtl. gescanntes PDF ohne OCR)."
+                                    )
+                                    log_audit(
+                                        action="Text extrahiert",
+                                        target=f.name,
+                                        result_type="leer / nicht maschinenlesbar",
+                                    )
+                                    progress.progress(i / len(new_files))
+                                    continue
                                 log_audit(
                                     action="Text extrahiert",
                                     target=f.name,
-                                    result_type="leer / nicht maschinenlesbar",
+                                    result_type=f"{len(text)} Zeichen",
                                 )
-                                progress.progress(i / len(new_files))
-                                continue
-                            log_audit(
-                                action="Text extrahiert",
-                                target=f.name,
-                                result_type=f"{len(text)} Zeichen",
-                            )
-                            data = extract_cv(text, prior_feedback)
-                            log_audit(
-                                action="CV analysiert",
-                                target=data.get("name", "") or f.name,
-                                result_type="strukturierte Felder + Belege",
-                            )
-                            # Informationslücken-Agent
-                            try:
-                                gaps = analyze_information_gaps(text, data)
+                                data = extract_cv(text, prior_feedback)
                                 log_audit(
-                                    action="Informationslücken erkannt",
+                                    action="CV analysiert",
                                     target=data.get("name", "") or f.name,
-                                    result_type=(
-                                        f"{len(gaps['missing_information'])} fehlend, "
-                                        f"{len(gaps['unclear_information'])} unklar"
-                                    ),
+                                    result_type="strukturierte Felder + Belege",
                                 )
-                            except Exception as qe:  # noqa: BLE001
-                                gaps = {
-                                    "missing_information": [],
-                                    "unclear_information": [],
-                                    "suggested_questions": [],
-                                    "_error": str(qe),
-                                }
-                                log_audit(
-                                    action="Informationslücken erkannt",
-                                    target=f.name,
-                                    result_type=f"Fehler: {qe}",
-                                )
-                            # Rückfragen-Agent
-                            try:
-                                followups = generate_follow_up_questions(
-                                    gaps, st.session_state.job_profile
-                                )
-                                log_audit(
-                                    action="Rückfragen erzeugt",
-                                    target=data.get("name", "") or f.name,
-                                    result_type=(
-                                        f"{len(followups['questions'])} Rückfragen "
-                                        "(warten auf Prüfung & Freigabe)"
-                                    ),
-                                )
-                            except Exception as fe:  # noqa: BLE001
-                                followups = {
-                                    "questions": gaps.get("suggested_questions", [])
-                                }
-                                log_audit(
-                                    action="Rückfragen erzeugt",
-                                    target=f.name,
-                                    result_type=f"Fehler: {fe}",
-                                )
-                            st.session_state.candidates.append(
-                                {
-                                    "filename": f.name,
-                                    "data": data,
-                                    "quality": gaps,
-                                    "followups": followups,
-                                }
-                            )
-                            st.session_state.processed_files.add(f.name)
-                            ok += 1
-                            # Abgleich der prüfbaren Anforderungen protokollieren
-                            if st.session_state.job_profile:
-                                _req = evaluate_candidate_requirements(
-                                    st.session_state.job_profile, data
-                                )
-                                _cnt = status_counts(_req)
-                                log_audit(
-                                    action="Anforderungen abgeglichen",
-                                    target=data.get("name", "") or f.name,
-                                    result_type=(
-                                        f"{_cnt['Gefunden']} gefunden, "
-                                        f"{_cnt['Teilweise gefunden']} teilweise, "
-                                        f"{_cnt['Nicht gefunden']} nicht gefunden"
-                                    ),
-                                )
-                                _klaer = _cnt["Teilweise gefunden"]
-                                if _klaer:
+                                try:
+                                    gaps = analyze_information_gaps(text, data)
                                     log_audit(
-                                        action="Klärungspunkte erkannt",
+                                        action="Informationslücken erkannt",
                                         target=data.get("name", "") or f.name,
-                                        result_type=f"{_klaer} Klärungspunkte",
+                                        result_type=(
+                                            f"{len(gaps['missing_information'])} fehlend, "
+                                            f"{len(gaps['unclear_information'])} unklar"
+                                        ),
                                     )
-                        except Exception as e:  # noqa: BLE001
-                            errors.append(f"Fehler bei {f.name}: {e}")
-                            log_audit(
-                                action="CV analysiert",
-                                target=f.name,
-                                result_type=f"Fehler: {e}",
-                            )
-                    progress.progress(i / len(new_files))
-                if ok:
-                    st.session_state._flash.append(
-                        ("success", f"{ok} Lebensläufe analysiert.")
-                    )
-                for err in errors:
-                    st.session_state._flash.append(("error", err))
+                                except Exception as qe:  # noqa: BLE001
+                                    gaps = {
+                                        "missing_information": [],
+                                        "unclear_information": [],
+                                        "suggested_questions": [],
+                                        "_error": str(qe),
+                                    }
+                                    log_audit(
+                                        action="Informationslücken erkannt",
+                                        target=f.name,
+                                        result_type=f"Fehler: {qe}",
+                                    )
+                                try:
+                                    followups = generate_follow_up_questions(
+                                        gaps, st.session_state.job_profile
+                                    )
+                                    log_audit(
+                                        action="Rückfragen erzeugt",
+                                        target=data.get("name", "") or f.name,
+                                        result_type=(
+                                            f"{len(followups['questions'])} Rückfragen "
+                                            "(warten auf Prüfung & Freigabe)"
+                                        ),
+                                    )
+                                except Exception as fe:  # noqa: BLE001
+                                    followups = {
+                                        "questions": gaps.get("suggested_questions", [])
+                                    }
+                                    log_audit(
+                                        action="Rückfragen erzeugt",
+                                        target=f.name,
+                                        result_type=f"Fehler: {fe}",
+                                    )
+                                st.session_state.candidates.append(
+                                    {
+                                        "filename": f.name,
+                                        "data": data,
+                                        "quality": gaps,
+                                        "followups": followups,
+                                    }
+                                )
+                                st.session_state.processed_files.add(f.name)
+                                ok += 1
+                                if st.session_state.job_profile:
+                                    _req = evaluate_candidate_requirements(
+                                        st.session_state.job_profile, data
+                                    )
+                                    _cnt = status_counts(_req)
+                                    log_audit(
+                                        action="Anforderungen abgeglichen",
+                                        target=data.get("name", "") or f.name,
+                                        result_type=(
+                                            f"{_cnt['Gefunden']} gefunden, "
+                                            f"{_cnt['Teilweise gefunden']} teilweise, "
+                                            f"{_cnt['Nicht gefunden']} nicht gefunden"
+                                        ),
+                                    )
+                                    _klaer = _cnt["Teilweise gefunden"]
+                                    if _klaer:
+                                        log_audit(
+                                            action="Klärungspunkte erkannt",
+                                            target=data.get("name", "") or f.name,
+                                            result_type=f"{_klaer} Klärungspunkte",
+                                        )
+                            except Exception as e:  # noqa: BLE001
+                                errors.append(f"Fehler bei {f.name}: {e}")
+                                log_audit(
+                                    action="CV analysiert",
+                                    target=f.name,
+                                    result_type=f"Fehler: {e}",
+                                )
+                        progress.progress(i / len(new_files))
+                    if ok:
+                        st.session_state._flash.append(
+                            ("success", f"{ok} Lebensläufe analysiert.")
+                        )
+                    for err in errors:
+                        st.session_state._flash.append(("error", err))
+                    st.rerun()
+            if st.session_state.candidates and st.button(
+                "Alle Kandidaten löschen",
+                key="rec_clear_cands",
+                use_container_width=True,
+            ):
+                st.session_state.candidates = []
+                st.session_state.processed_files = set()
+                st.session_state.reviewed_questions = {}
+                st.session_state._coverage_logged = set()
                 st.rerun()
 
-        if st.session_state.candidates and st.button("Alle Kandidaten löschen"):
-            st.session_state.candidates = []
-            st.session_state.processed_files = set()
-            st.session_state.reviewed_questions = {}
-            st.session_state._coverage_logged = set()
-            st.rerun()
-
-
-# ---------------------------------------------------------------------------
-# Horizontale Funktionsnavigation (Tabs) + dezente Human-in-the-Loop-Zeile
-# ---------------------------------------------------------------------------
-
-st.markdown(
-    '<div class="hil-line">Der Agent strukturiert Informationen. '
-    "Der Mensch entscheidet."
-    "</div>",
-    unsafe_allow_html=True,
-)
-
-(
-    main_tab_profile,
-    main_tab_candidates,
-    main_tab_questions,
-    main_tab_feedback,
-    main_tab_audit,
-) = st.tabs(
-    [
-        "Stellenprofil",
-        "Kandidatenübersicht",
-        "Rückfragen",
-        "Feedback",
-        "Audit Log",
-    ]
-)
-
-# ---- Tab: Stellenprofil ----
-
-with main_tab_profile:
-    st.markdown(
-        '<div class="kmu-card-title">Strukturiertes Stellenprofil</div>',
-        unsafe_allow_html=True,
+    # Structured job profile (read-only)
+    section_header(
+        "Strukturiertes Stellenprofil",
+        "Strukturierte Anforderungen — keine Bewerber-Bewertung.",
     )
-    st.caption("Strukturierte Anforderungen — keine Bewerber-Bewertung.")
     if st.session_state.job_profile:
         jp = st.session_state.job_profile
-        st.markdown(f"**Rolle:** {jp.get('role') or NICHT_GEFUNDEN}")
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown("**Muss-Kriterien**")
-            if jp.get("must_criteria"):
-                for x in jp["must_criteria"]:
-                    st.markdown(f"- {x}")
-            else:
-                st.caption(NICHT_GEFUNDEN)
-            st.markdown("**Gewünschte Skills**")
-            if jp.get("desired_skills"):
-                for x in jp["desired_skills"]:
-                    st.markdown(f"- {x}")
-            else:
-                st.caption(NICHT_GEFUNDEN)
-            st.markdown("**Gewünschte Zertifikate**")
-            if jp.get("desired_certificates"):
-                for x in jp["desired_certificates"]:
-                    st.markdown(f"- {x}")
-            else:
-                st.caption(NICHT_GEFUNDEN)
-        with c2:
-            st.markdown("**Kann-Kriterien**")
-            if jp.get("nice_criteria"):
-                for x in jp["nice_criteria"]:
-                    st.markdown(f"- {x}")
-            else:
-                st.caption(NICHT_GEFUNDEN)
-            st.markdown("**Gewünschte Sprachen**")
-            if jp.get("desired_languages"):
-                for x in jp["desired_languages"]:
-                    st.markdown(f"- {x}")
-            else:
-                st.caption(NICHT_GEFUNDEN)
-            st.markdown("**Gewünschte Berufserfahrung**")
-            if jp.get("desired_experience"):
-                for x in jp["desired_experience"]:
-                    st.markdown(f"- {x}")
-            else:
-                st.caption(NICHT_GEFUNDEN)
-        with st.expander("Rohdaten (JSON)"):
-            st.json(jp)
+        with st.container(border=True):
+            st.markdown(f"### {jp.get('role') or NICHT_GEFUNDEN}")
+            c1, c2 = st.columns(2)
+            with c1:
+                st.markdown("**Muss-Kriterien**")
+                if jp.get("must_criteria"):
+                    for x in jp["must_criteria"]:
+                        st.markdown(f"- {x}")
+                else:
+                    st.caption(NICHT_GEFUNDEN)
+                st.markdown("**Gewünschte Skills**")
+                if jp.get("desired_skills"):
+                    for x in jp["desired_skills"]:
+                        st.markdown(f"- {x}")
+                else:
+                    st.caption(NICHT_GEFUNDEN)
+                st.markdown("**Gewünschte Zertifikate**")
+                if jp.get("desired_certificates"):
+                    for x in jp["desired_certificates"]:
+                        st.markdown(f"- {x}")
+                else:
+                    st.caption(NICHT_GEFUNDEN)
+            with c2:
+                st.markdown("**Kann-Kriterien**")
+                if jp.get("nice_criteria"):
+                    for x in jp["nice_criteria"]:
+                        st.markdown(f"- {x}")
+                else:
+                    st.caption(NICHT_GEFUNDEN)
+                st.markdown("**Gewünschte Sprachen**")
+                if jp.get("desired_languages"):
+                    for x in jp["desired_languages"]:
+                        st.markdown(f"- {x}")
+                else:
+                    st.caption(NICHT_GEFUNDEN)
+                st.markdown("**Gewünschte Berufserfahrung**")
+                if jp.get("desired_experience"):
+                    for x in jp["desired_experience"]:
+                        st.markdown(f"- {x}")
+                else:
+                    st.caption(NICHT_GEFUNDEN)
+            with st.expander("Rohdaten (JSON)"):
+                st.json(jp)
     else:
-        st.info("Noch kein Stellenprofil hinterlegt.")
+        st.info("Noch kein Stellenprofil hinterlegt — fügen Sie oben einen Stellentext ein.")
+
+    hil_note("Recruiting AI bewertet niemanden. Es strukturiert — Sie entscheiden.")
 
 
-# ---- Tab: Kandidatenübersicht ----
+# ---------------------------------------------------------------------------
+# Render: Kandidaten (Filter, Karten, Detail mit Rückfragen + Feedback)
+# ---------------------------------------------------------------------------
 
-with main_tab_candidates:
-    st.markdown(
-        '<div class="kmu-card-title">Kandidatenübersicht</div>',
-        unsafe_allow_html=True,
+
+def render_kandidaten() -> None:
+    page_header(
+        "Kandidaten",
+        "Strukturierte <em>Profile</em>. Belegte Anforderungen.",
+        "Alle eingelesenen Bewerbungen in Upload-Reihenfolge. Kein Ranking, "
+        "kein Score, keine Sortierung nach Eignung.",
     )
+
     if not st.session_state.candidates:
-        st.info(
-            "Noch keine Kandidaten — bitte zuerst Bewerbungen analysieren."
-        )
-    else:
-        st.caption(
-            "Alle Kandidaten in Upload-Reihenfolge. Keine Bewertung, "
-            "keine Sortierung nach %."
+        with st.container(border=True):
+            st.info(
+                "Noch keine Kandidaten — wechseln Sie zu Recruiting, um Bewerbungen hochzuladen."
+            )
+            if st.button("Zu Recruiting wechseln", key="kand_empty_goto", type="primary"):
+                goto("recruiting")
+        return
+
+    # Filter
+    with st.container(border=True):
+        st.markdown(
+            f'<div class="kmu-card-title">Filter'
+            f'<small><span class="ic">{ic("filter","sm")}</span> objektive Felder</small></div>',
+            unsafe_allow_html=True,
         )
         col1, col2, col3 = st.columns(3)
         with col1:
-            skills_q = st.text_input("Filter: Skills (Komma-getrennt)", "")
+            skills_q = st.text_input("Skills (Komma-getrennt)", "", key="kand_f_skills")
         with col2:
-            languages_q = st.text_input("Filter: Sprachen", "")
+            languages_q = st.text_input("Sprachen", "", key="kand_f_langs")
         with col3:
-            certs_q = st.text_input("Filter: Zertifikate", "")
+            certs_q = st.text_input("Zertifikate", "", key="kand_f_certs")
 
-        filtered = filter_candidates(
-            st.session_state.candidates, skills_q, languages_q, certs_q
+    filtered = filter_candidates(
+        st.session_state.candidates, skills_q, languages_q, certs_q
+    )
+    section_header(
+        "Übersicht",
+        f"{len(filtered)} von {len(st.session_state.candidates)} Kandidaten",
+        "Upload-Reihenfolge",
+    )
+    job_profile_state = st.session_state.job_profile
+    if job_profile_state:
+        for _c in filtered:
+            _cov = calculate_requirement_coverage(job_profile_state, _c["data"])
+            log_coverage_once(_c, _cov, job_profile_state)
+
+    if not filtered:
+        st.write("Keine Bewerber entsprechen den Filtern.")
+        return
+
+    fnames = [c["filename"] for c in filtered]
+    if st.session_state.get("_open_cand") not in fnames:
+        st.session_state._open_cand = fnames[0]
+
+    for _c in filtered:
+        _d = _c["data"]
+        _name = _d.get("name") or "(ohne Name)"
+        _role = ""
+        if _d.get("experience"):
+            _role = _d["experience"][0].get("role", "")
+        _q = _c.get("quality") or {}
+        _has_gaps = bool(
+            _q.get("missing_information") or _q.get("unclear_information")
         )
-        st.markdown(
-            f"**{len(filtered)} von {len(st.session_state.candidates)} Kandidaten**"
-        )
-        job_profile_state = st.session_state.job_profile
-        # Abdeckungsgrad pro Kandidat einmalig protokollieren (kein Spam).
         if job_profile_state:
-            for _c in filtered:
-                _cov = calculate_requirement_coverage(
-                    job_profile_state, _c["data"]
-                )
-                log_coverage_once(_c, _cov, job_profile_state)
-        # Moderne Kandidaten-Karten (statt Tabelle)
-        options = filtered
-        if options:
-            fnames = [c["filename"] for c in filtered]
-            if st.session_state.get("_open_cand") not in fnames:
-                st.session_state._open_cand = fnames[0]
-
-            for _c in filtered:
-                _d = _c["data"]
-                _name = _d.get("name") or "(ohne Name)"
-                _role = ""
-                if _d.get("experience"):
-                    _role = _d["experience"][0].get("role", "")
-                _q = _c.get("quality") or {}
-                _has_gaps = bool(
-                    _q.get("missing_information") or _q.get("unclear_information")
-                )
-                _badge_cls = "kmu-badge-warn" if _has_gaps else "kmu-badge-ok"
-                _badge_lbl = (
-                    "Klärungsbedarf" if _has_gaps else "Analyse abgeschlossen"
-                )
-                if job_profile_state:
-                    _rc = status_counts(
-                        evaluate_candidate_requirements(job_profile_state, _d)
-                    )
-                    _tot = (
-                        _rc["Gefunden"]
-                        + _rc["Teilweise gefunden"]
-                        + _rc["Nicht gefunden"]
-                    )
-                    _metric = f"{_rc['Gefunden']} / {_tot}" if _tot else "—"
-                else:
-                    _metric = "—"
-                _skills = _d.get("skills") or []
-                _skill_badges = " ".join(
-                    f'<span class="kmu-badge kmu-badge-info">{s}</span>'
-                    for s in _skills[:4]
-                ) + (
-                    f' <span class="kmu-badge kmu-badge-muted">+{len(_skills) - 4}</span>'
-                    if len(_skills) > 4
-                    else ""
-                )
-                _klaer_n = len(
-                    _q.get("missing_information") or []
-                ) + len(_q.get("unclear_information") or [])
-                _is_open = _c["filename"] == st.session_state._open_cand
-                with st.container(border=True):
-                    cc = st.columns([3, 1.3, 3, 1.5])
-                    with cc[0]:
-                        st.markdown(
-                            f'<div class="kmu-list-avatar" style="float:left;'
-                            f'margin-right:10px">{initials_for(_name)}</div>'
-                            f'<div class="cand-name">{_name}</div>'
-                            f'<div class="cand-role">{_role or _c["filename"]}</div>',
-                            unsafe_allow_html=True,
-                        )
-                    with cc[1]:
-                        st.markdown(
-                            f'<div class="cand-metric">{_metric}</div>'
-                            '<div class="cand-metric-label">Anforderungen gefunden</div>',
-                            unsafe_allow_html=True,
-                        )
-                    with cc[2]:
-                        _status_badge = (
-                            f'<span class="kmu-badge kmu-badge-warn">'
-                            f"🧩 Klärungsbedarf: {_klaer_n}</span>"
-                            if _klaer_n
-                            else f'<span class="kmu-badge {_badge_cls}">{_badge_lbl}</span>'
-                        )
-                        st.markdown(
-                            f'<div style="margin:2px 0 6px">{_skill_badges or "—"}</div>'
-                            f"{_status_badge}",
-                            unsafe_allow_html=True,
-                        )
-                    with cc[3]:
-                        if st.button(
-                            "Profil geöffnet" if _is_open else "Profil öffnen",
-                            key=f"open_{_c['filename']}",
-                            disabled=_is_open,
-                            use_container_width=True,
-                        ):
-                            st.session_state._open_cand = _c["filename"]
-                            st.rerun()
-
-            st.markdown(
-                '<div class="section-title">Kandidatenprofil</div>',
-                unsafe_allow_html=True,
+            _rc = status_counts(
+                evaluate_candidate_requirements(job_profile_state, _d)
             )
-            selected = next(
-                c
-                for c in filtered
-                if c["filename"] == st.session_state._open_cand
+            _tot = (
+                _rc["Gefunden"]
+                + _rc["Teilweise gefunden"]
+                + _rc["Nicht gefunden"]
             )
-            cv_data = selected["data"]
-            quality = selected.get("quality") or {}
-            followups_q = (selected.get("followups") or {}).get(
-                "questions"
-            ) or []
-            # Neue Kern-Logik: Anforderungen abgleichen (ohne Prozent).
-            req_rows = evaluate_candidate_requirements(
-                st.session_state.job_profile, cv_data
+            _metric_html = (
+                f'<div class="cand-metric"><em>{_rc["Gefunden"]}</em>'
+                f"<span> / {_tot}</span></div>"
+                f'<div class="cand-metric-label">Anforderungen gefunden</div>'
+            ) if _tot else (
+                '<div class="cand-metric">—</div>'
+                '<div class="cand-metric-label">Kein Profil hinterlegt</div>'
             )
-            req_counts = status_counts(req_rows)
-            req_total = len(req_rows)
-            not_checkable = get_not_checkable_requirements(
-                st.session_state.job_profile
-            )
-            klaerung_items = [
-                r for r in req_rows if r["status"] == "Teilweise gefunden"
-            ]
-
-            # ---- Detailfenster (Card, kompakt, mit Badges) ----
-            with st.container(border=True):
-                head_l, head_r = st.columns([3, 1])
-                with head_l:
-                    st.markdown(
-                        f"### {cv_data.get('name') or NICHT_GEFUNDEN}"
-                    )
-                    if cv_data.get("experience"):
-                        first = cv_data["experience"][0]
-                        sub = (
-                            f"{first.get('role', '')} @ "
-                            f"{first.get('company', '')}"
-                        ).strip(" @")
-                        if sub:
-                            st.caption(sub)
-                with head_r:
-                    if req_total:
-                        st.markdown(
-                            f"""
-                            <div class="coverage-box">
-                                <div class="coverage-value">{req_counts['Gefunden']} / {req_total}</div>
-                                <div class="coverage-label">
-                                    Anforderungen gefunden
-                                </div>
-                            </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
-                    else:
-                        st.caption("Kein Stellenprofil hinterlegt.")
-
-                st.divider()
-                col_left, col_right = st.columns(2)
-
-                with col_left:
-                    # Berufserfahrung
-                    st.markdown("**Berufserfahrung**")
-                    exp = cv_data.get("experience") or []
-                    if exp:
-                        for e in exp[:5]:
-                            line = (
-                                f"- {e.get('role') or '?'} @ "
-                                f"{e.get('company') or '?'}"
-                            )
-                            if e.get("period"):
-                                line += f" · {e['period']}"
-                            st.markdown(line)
-                    else:
-                        st.caption(NICHT_GEFUNDEN)
-                    # Ausbildung
-                    st.markdown("**Ausbildung**")
-                    edu = cv_data.get("education") or []
-                    if edu:
-                        for e in edu[:3]:
-                            st.markdown(
-                                f"- {e.get('degree') or '?'}, "
-                                f"{e.get('institution') or '?'}"
-                                + (f" · {e['period']}" if e.get('period') else "")
-                            )
-                    else:
-                        st.caption(NICHT_GEFUNDEN)
-
-                with col_right:
-                    # Skills als Badges
-                    skills = cv_data.get("skills") or []
-                    if skills:
-                        badges = " ".join(
-                            f'<span class="kmu-badge kmu-badge-info">{s}</span>'
-                            for s in skills[:12]
-                        )
-                        more = (
-                            f' <span class="kmu-badge kmu-badge-info">+{len(skills) - 12}</span>'
-                            if len(skills) > 12
-                            else ""
-                        )
-                        st.markdown(
-                            f"**Skills**<br>{badges}{more}",
-                            unsafe_allow_html=True,
-                        )
-                    else:
-                        st.markdown(f"**Skills:** {NICHT_GEFUNDEN}")
-                    # Sprachen
-                    st.markdown(f"**Sprachen:** {_short_languages(cv_data)}")
-                    # Zertifikate
-                    certs = cv_data.get("certificates") or []
-                    st.markdown(
-                        f"**Zertifikate:** "
-                        f"{', '.join(certs) if certs else NICHT_GEFUNDEN}"
-                    )
-
-                # ---- Gefundene Anforderungen (fachlich prüfbar) ----
-                STATUS_ICON_MAP = {
-                    "Gefunden": "✅",
-                    "Teilweise gefunden": "⚠️",
-                    "Nicht gefunden": "❌",
-                }
-                if req_rows:
-                    st.markdown("### Gefundene Anforderungen")
-                    st.caption(
-                        f"Gefunden: **{req_counts['Gefunden']} von "
-                        f"{req_total}** fachlich prüfbaren Anforderungen "
-                        f"·  ✅ {req_counts['Gefunden']}  "
-                        f"⚠️ {req_counts['Teilweise gefunden']}  "
-                        f"❌ {req_counts['Nicht gefunden']}"
-                    )
-                    for r in req_rows:
-                        icon = STATUS_ICON_MAP.get(r["status"], "•")
-                        hinweis = r.get("reason") or ""
-                        with st.expander(
-                            f"{icon} **{r['requirement']}** — "
-                            f"{r['status']} · {hinweis}"
-                        ):
-                            src = r.get("evidence") or find_source_excerpt(
-                                r["requirement"], cv_data
-                            )
-                            if src:
-                                st.markdown("**Fundstelle im Lebenslauf:**")
-                                st.markdown(f"> {src}")
-                            else:
-                                st.caption("Keine konkrete Fundstelle erfasst.")
-
-                # ---- Inline Feedback + Technische Details ----
-                with st.expander("Feedback geben"):
-                    st.caption(
-                        "Feedback verbessert nur die Extraktion, nicht die Auswahl."
-                    )
-                    with st.form("feedback_form", clear_on_submit=True):
-                        category = st.selectbox(
-                            "Art der Korrektur", FEEDBACK_CATEGORIES
-                        )
-                        note = st.text_area(
-                            "Anmerkung",
-                            placeholder=(
-                                "z. B. „SQL wurde übersehen“ oder "
-                                "„Sprache Französisch falsch erkannt“"
-                            ),
-                        )
-                        submitted = st.form_submit_button("Feedback speichern")
-                        if submitted:
-                            if not note.strip():
-                                st.warning("Bitte eine Anmerkung eingeben.")
-                            else:
-                                add_feedback(
-                                    cv_data.get("name", ""), category, note
-                                )
-                                log_audit(
-                                    action="Feedback gespeichert",
-                                    target=cv_data.get("name", "")
-                                    or selected["filename"],
-                                    result_type=category,
-                                )
-                                st.success("Feedback gespeichert.")
-
-                with st.expander("Technische Details (JSON)"):
-                    st.json(cv_data)
         else:
-            st.write("Keine Bewerber entsprechen den Filtern.")
-
-# ---- Tab: Rückfragen (Human-in-the-Loop) ----
-
-with main_tab_questions:
-    st.markdown(
-        '<div class="kmu-card-title">Vorgeschlagene Rückfragen</div>',
-        unsafe_allow_html=True,
-    )
-    st.caption(
-        "Vorschläge des Rückfragen-Agenten. "
-        "**Es wird keine E-Mail automatisch versendet.**"
-    )
-    any_questions = False
-    for c in st.session_state.candidates:
-        questions = (c.get("followups") or {}).get("questions") or []
-        if not questions:
-            continue
-        any_questions = True
-        fname = c["filename"]
-        reviewed_set = st.session_state.reviewed_questions.setdefault(
-            fname, set()
+            _metric_html = (
+                '<div class="cand-metric">—</div>'
+                '<div class="cand-metric-label">Kein Profil hinterlegt</div>'
+            )
+        _skills = _d.get("skills") or []
+        _skill_badges = "".join(
+            f'<span class="badge badge-info">{s}</span>'
+            for s in _skills[:4]
+        ) + (
+            f'<span class="badge badge-muted">+{len(_skills) - 4}</span>'
+            if len(_skills) > 4 else ""
         )
-        with st.expander(
-            f"{c['data'].get('name') or '(ohne Name)'} — "
-            f"{len(questions)} Rückfrage(n)"
-        ):
-            for i, q in enumerate(questions):
-                is_reviewed = i in reviewed_set
-                row_class = "question-row reviewed" if is_reviewed else "question-row"
-                tag = (
-                    '<span class="kmu-badge kmu-badge-ok">geprüft</span>'
-                    if is_reviewed
-                    else '<span class="kmu-badge kmu-badge-info">offen</span>'
-                )
+        _klaer_n = len(
+            _q.get("missing_information") or []
+        ) + len(_q.get("unclear_information") or [])
+        _status_badge = (
+            f'<span class="badge badge-warn">Klärungsbedarf · {_klaer_n}</span>'
+            if _klaer_n
+            else '<span class="badge badge-ok">Analyse abgeschlossen</span>'
+        )
+        _is_open = _c["filename"] == st.session_state._open_cand
+        with st.container(border=True):
+            cc = st.columns([2.6, 1.1, 2.6, 1.3])
+            with cc[0]:
                 st.markdown(
-                    f'<div class="{row_class}">{q} &nbsp; {tag}</div>',
+                    f'<div class="cand-id">'
+                    f'<div class="app-av">{initials_for(_name)}</div>'
+                    "<div>"
+                    f'<div class="cand-name">{_name}</div>'
+                    f'<div class="cand-role">{_role or _c["filename"]}</div>'
+                    "</div></div>",
                     unsafe_allow_html=True,
                 )
-                btn_col1, btn_col2 = st.columns([1, 1])
-                with btn_col1:
+            with cc[1]:
+                st.markdown(_metric_html, unsafe_allow_html=True)
+            with cc[2]:
+                _skills_html = _skill_badges or (
+                    '<span class="badge badge-muted">keine Skills erfasst</span>'
+                )
+                st.markdown(
+                    f'<div class="cand-skills">{_skills_html}</div>'
+                    f'<div class="mt-2">{_status_badge}</div>',
+                    unsafe_allow_html=True,
+                )
+            with cc[3]:
+                if st.button(
+                    "Profil geöffnet" if _is_open else "Profil öffnen",
+                    key=f"open_{_c['filename']}",
+                    disabled=_is_open,
+                    use_container_width=True,
+                    type="primary" if not _is_open else "secondary",
+                ):
+                    st.session_state._open_cand = _c["filename"]
+                    st.rerun()
+
+    # ---- Detail ----
+    selected = next(
+        c for c in filtered if c["filename"] == st.session_state._open_cand
+    )
+    cv_data = selected["data"]
+    followups_q = (selected.get("followups") or {}).get("questions") or []
+    req_rows = evaluate_candidate_requirements(
+        st.session_state.job_profile, cv_data
+    )
+    req_counts = status_counts(req_rows)
+    req_total = len(req_rows)
+    klaerung_items = [r for r in req_rows if r["status"] == "Teilweise gefunden"]
+
+    section_header(
+        "Kandidatenprofil",
+        cv_data.get("name") or "(ohne Name)",
+        "Belege im Lebenslauf",
+    )
+    with st.container(border=True):
+        head_l, head_r = st.columns([3, 2])
+        with head_l:
+            st.markdown(f"### {cv_data.get('name') or NICHT_GEFUNDEN}")
+            if cv_data.get("experience"):
+                first = cv_data["experience"][0]
+                sub = (
+                    f"{first.get('role', '')} · {first.get('company', '')}"
+                ).strip(" ·")
+                if sub:
+                    st.caption(sub)
+        with head_r:
+            if req_total:
+                pct = int(round((req_counts["Gefunden"] / req_total) * 100))
+                st.markdown(
+                    f"""
+                    <div class="cov">
+                      <div>
+                        <div class="cov-num"><em>{req_counts['Gefunden']}</em> / {req_total}</div>
+                        <div class="cov-label">Anforderungen gefunden</div>
+                      </div>
+                      <div class="cov-bar"><i style="width:{pct}%"></i></div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.caption("Kein Stellenprofil hinterlegt.")
+
+        st.divider()
+        col_left, col_right = st.columns(2)
+        with col_left:
+            st.markdown("**Berufserfahrung**")
+            exp = cv_data.get("experience") or []
+            if exp:
+                for e in exp[:5]:
+                    line = f"- {e.get('role') or '?'} @ {e.get('company') or '?'}"
+                    if e.get("period"):
+                        line += f" · {e['period']}"
+                    st.markdown(line)
+            else:
+                st.caption(NICHT_GEFUNDEN)
+            st.markdown("**Ausbildung**")
+            edu = cv_data.get("education") or []
+            if edu:
+                for e in edu[:3]:
+                    st.markdown(
+                        f"- {e.get('degree') or '?'}, "
+                        f"{e.get('institution') or '?'}"
+                        + (f" · {e['period']}" if e.get('period') else "")
+                    )
+            else:
+                st.caption(NICHT_GEFUNDEN)
+        with col_right:
+            skills = cv_data.get("skills") or []
+            if skills:
+                badges = "".join(
+                    f'<span class="badge badge-info">{s}</span>'
+                    for s in skills[:14]
+                )
+                more = (
+                    f'<span class="badge badge-info">+{len(skills) - 14}</span>'
+                    if len(skills) > 14 else ""
+                )
+                st.markdown(
+                    f"**Skills**<br/><div class=\"cand-skills mt-2\">{badges}{more}</div>",
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(f"**Skills:** {NICHT_GEFUNDEN}")
+            st.markdown(f"**Sprachen:** {_short_languages(cv_data)}")
+            certs = cv_data.get("certificates") or []
+            st.markdown(
+                f"**Zertifikate:** "
+                f"{', '.join(certs) if certs else NICHT_GEFUNDEN}"
+            )
+
+        STATUS_BADGE_MAP = {
+            "Gefunden": "badge-ok",
+            "Teilweise gefunden": "badge-warn",
+            "Nicht gefunden": "badge-err",
+        }
+        if req_rows:
+            st.markdown("### Gefundene Anforderungen")
+            st.caption(
+                f"Gefunden: **{req_counts['Gefunden']} von {req_total}** · "
+                f"teilweise {req_counts['Teilweise gefunden']} · "
+                f"nicht gefunden {req_counts['Nicht gefunden']}"
+            )
+            for r in req_rows:
+                cls = STATUS_BADGE_MAP.get(r["status"], "badge-muted")
+                hinweis = r.get("reason") or ""
+                with st.expander(f"{r['requirement']} — {r['status']} · {hinweis}"):
+                    st.markdown(
+                        f'<span class="badge {cls}">{r["status"]}</span>',
+                        unsafe_allow_html=True,
+                    )
+                    src = r.get("evidence") or find_source_excerpt(
+                        r["requirement"], cv_data
+                    )
+                    if src:
+                        st.markdown("**Fundstelle im Lebenslauf:**")
+                        st.markdown(f"> {src}")
+                    else:
+                        st.caption("Keine konkrete Fundstelle erfasst.")
+
+    # ---- Rückfragen (Human-in-the-Loop) ----
+    section_header(
+        "Rückfragen",
+        "Vom Rückfragen-Agenten vorbereitet — niemals automatisch versendet.",
+        "Human-in-the-Loop",
+    )
+    if not followups_q:
+        with st.container(border=True):
+            st.info("Keine offenen Rückfragevorschläge für diesen Kandidaten.")
+    else:
+        with st.container(border=True):
+            fname = selected["filename"]
+            reviewed_set = st.session_state.reviewed_questions.setdefault(fname, set())
+            for i, q in enumerate(followups_q):
+                is_reviewed = i in reviewed_set
+                tag = (
+                    '<span class="badge badge-ok">geprüft</span>'
+                    if is_reviewed
+                    else '<span class="badge badge-info">offen</span>'
+                )
+                cls = "qrow reviewed" if is_reviewed else "qrow"
+                st.markdown(
+                    f'<div class="{cls}"><span>{q}</span>{tag}</div>',
+                    unsafe_allow_html=True,
+                )
+                bc1, bc2, _bc3 = st.columns([1.3, 1.5, 3])
+                with bc1:
                     if not is_reviewed and st.button(
                         "Rückfrage prüfen",
                         key=f"check_{fname}_{i}",
+                        use_container_width=True,
                     ):
                         log_audit(
                             action="Rückfrage geprüft",
-                            target=c["data"].get("name", "") or fname,
+                            target=cv_data.get("name", "") or fname,
                             result_type=q[:80],
                         )
-                        st.toast(
-                            "Rückfrage markiert als geprüft.", icon="✅"
-                        )
-                with btn_col2:
+                        st.toast("Rückfrage markiert als geprüft.", icon="✅")
+                with bc2:
                     if not is_reviewed and st.button(
                         "Als geprüft markieren",
                         key=f"mark_{fname}_{i}",
+                        type="primary",
+                        use_container_width=True,
                     ):
                         reviewed_set.add(i)
                         log_audit(
                             action="Rückfrage als geprüft markiert",
-                            target=c["data"].get("name", "") or fname,
+                            target=cv_data.get("name", "") or fname,
                             result_type=q[:80],
                         )
                         st.rerun()
-    if not any_questions:
-        st.info("Keine offenen Rückfragevorschläge.")
 
-# ---- Tab: Feedback (Gesamtübersicht) ----
-
-with main_tab_feedback:
-    st.markdown(
-        '<div class="kmu-card-title">Feedback-Übersicht</div>',
-        unsafe_allow_html=True,
-    )
-    st.caption("Feedback verbessert nur die Extraktion, nicht die Auswahl.")
-    entries = load_feedback()
-    if entries:
-        st.dataframe(
-            pd.DataFrame(entries),
-            use_container_width=True,
-            hide_index=True,
-        )
-        st.caption(f"{len(entries)} Einträge.")
-    else:
-        st.info("Noch kein Feedback vorhanden.")
-
-# ---- Tab: Audit Log ----
-
-with main_tab_audit:
-    st.markdown(
-        '<div class="kmu-card-title">Audit-Log</div>',
-        unsafe_allow_html=True,
-    )
-    st.caption(f"Autonomie-Stufe: {AUTONOMY_LEVEL}")
-    log_entries = load_audit_log()
-    if log_entries:
-        # Timeline / Activity-Feed (neueste zuerst)
-        tl_items = []
-        for entry in log_entries[-40:][::-1]:
-            ts = entry.get("timestamp", "")
-            # Uhrzeit aus ISO-Timestamp extrahieren (HH:MM), Fallback ts
-            t_disp = ts
-            if "T" in ts:
-                t_disp = ts.split("T", 1)[1][:5]
-            action = entry.get("action", "")
-            target = entry.get("target", "")
-            result = entry.get("result_type", "")
-            sub = " · ".join(x for x in [target, result] if x)
-            tl_items.append(
-                f'<div class="tl-item"><div class="tl-dot"></div>'
-                f'<div class="tl-time">{t_disp}</div>'
-                f'<div class="tl-action">{action}</div>'
-                f'<div class="tl-target">{sub}</div></div>'
+    # ---- Inline Feedback + JSON ----
+    with st.expander("Feedback zu diesem Kandidaten geben"):
+        st.caption("Feedback verbessert nur die Extraktion, nicht die Auswahl.")
+        with st.form("feedback_form", clear_on_submit=True):
+            category = st.selectbox("Art der Korrektur", FEEDBACK_CATEGORIES)
+            note = st.text_area(
+                "Anmerkung",
+                placeholder=(
+                    "z. B. „SQL wurde übersehen“ oder "
+                    "„Sprache Französisch falsch erkannt“"
+                ),
             )
-        st.markdown(
-            '<div class="timeline">' + "".join(tl_items) + "</div>",
-            unsafe_allow_html=True,
-        )
-        with st.expander("Tabellenansicht"):
+            submitted = st.form_submit_button("Feedback speichern", type="primary")
+            if submitted:
+                if not note.strip():
+                    st.warning("Bitte eine Anmerkung eingeben.")
+                else:
+                    add_feedback(cv_data.get("name", ""), category, note)
+                    log_audit(
+                        action="Feedback gespeichert",
+                        target=cv_data.get("name", "") or selected["filename"],
+                        result_type=category,
+                    )
+                    st.success("Feedback gespeichert.")
+
+    with st.expander("Technische Details (JSON)"):
+        st.json(cv_data)
+
+
+# ---------------------------------------------------------------------------
+# Render: Audit Log
+# ---------------------------------------------------------------------------
+
+
+def render_audit_log() -> None:
+    page_header(
+        "Audit Log",
+        "Jeder Schritt <em>nachvollziehbar</em>.",
+        "Vollständige Timeline der Agentenaktivität, plus gesammeltes Feedback "
+        "und Tabellenansicht zum Export.",
+    )
+
+    log_entries = load_audit_log()
+    tab_tl, tab_fb, tab_tab = st.tabs(["Timeline", "Feedback", "Tabellenansicht"])
+
+    with tab_tl:
+        st.caption(f"Autonomie-Stufe: {AUTONOMY_LEVEL}")
+        if not log_entries:
+            st.info("Audit-Log ist leer.")
+        else:
+            tl_items = []
+            for entry in log_entries[-50:][::-1]:
+                ts = entry.get("timestamp", "")
+                t_disp = ts.split("T", 1)[1][:5] if "T" in ts else ts
+                action = entry.get("action", "")
+                target = entry.get("target", "")
+                result = entry.get("result_type", "")
+                sub = " · ".join(x for x in [target, result] if x)
+                kind = ""
+                a_l = action.lower()
+                r_l = (result or "").lower()
+                if "fehler" in a_l or "fehler" in r_l:
+                    kind = "is-err"
+                elif "erkannt" in a_l or "extrahiert" in a_l or "abgeglichen" in a_l:
+                    kind = "is-ok"
+                elif "klärung" in a_l or "rückfrage" in a_l:
+                    kind = "is-warn"
+                tl_items.append(
+                    f'<div class="tl-item {kind}"><div class="tl-dot"></div>'
+                    f'<div class="tl-time">{t_disp}</div>'
+                    f'<div class="tl-action">{action}</div>'
+                    f'<div class="tl-target">{sub}</div></div>'
+                )
+            st.markdown(
+                f'<div class="tl">{"".join(tl_items)}</div>',
+                unsafe_allow_html=True,
+            )
+
+    with tab_fb:
+        st.caption("Feedback verbessert nur die Extraktion, nicht die Auswahl.")
+        entries = load_feedback()
+        if entries:
+            st.dataframe(
+                pd.DataFrame(entries),
+                use_container_width=True,
+                hide_index=True,
+            )
+            st.caption(f"{len(entries)} Einträge.")
+        else:
+            st.info("Noch kein Feedback vorhanden.")
+
+    with tab_tab:
+        if log_entries:
             st.dataframe(
                 pd.DataFrame(log_entries),
                 use_container_width=True,
                 hide_index=True,
             )
-    else:
-        st.info("Audit-Log ist leer.")
+        else:
+            st.info("Audit-Log ist leer.")
+
+
+# ---------------------------------------------------------------------------
+# App-Shell: Top-Nav rendern, Seite routen, Footer-Hinweis
+# ---------------------------------------------------------------------------
+
+st.markdown('<div class="shell-nav-wrap">', unsafe_allow_html=True)
+render_top_nav()
+st.markdown("</div>", unsafe_allow_html=True)
+
+_page = st.session_state.nav_page
+if _page == "dashboard":
+    render_dashboard()
+elif _page == "recruiting":
+    render_recruiting()
+elif _page == "kandidaten":
+    render_kandidaten()
+elif _page == "audit":
+    render_audit_log()
+else:
+    render_dashboard()
 
 st.caption(
     "Der Mensch entscheidet. Recruiting AI strukturiert Informationen — "
