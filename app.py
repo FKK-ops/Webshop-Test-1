@@ -776,17 +776,19 @@ def render_intro() -> None:
       spline-viewer{
         position:absolute; top:50%; left:50%;
         width:100vw; height:100vh; display:block;
-        transform:translate(-50%,-50%) scale(1.7);
+        /* the orb sits slightly left in the scene's own composition, so nudge
+           the canvas right to visually centre it */
+        transform:translate(-43%,-50%) scale(1.7);
         transform-origin:center center;
       }
       @media (max-width:900px){
-        spline-viewer{ transform:translate(-50%,-50%) scale(2.4); }
+        spline-viewer{ transform:translate(-43%,-50%) scale(2.4); }
       }
       /* transparent full-screen click target -> advance on click anywhere
          (incl. the scene's own "JOIN US NOW") */
       .catcher{position:absolute; inset:0; z-index:3; background:transparent;}
       .scroll{
-        position:absolute; bottom:34px; left:50%; transform:translateX(-50%);
+        position:absolute; bottom:6vh; left:0; right:0; margin:0 auto; width:max-content;
         color:#6b5bd0; font-size:.76rem; letter-spacing:.2em; text-transform:uppercase;
         display:flex; flex-direction:column; align-items:center; gap:10px; cursor:pointer;
         animation:fadeUp 1.1s ease both .4s; z-index:4; pointer-events:none;
