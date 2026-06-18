@@ -537,6 +537,7 @@ def init_state() -> None:
         "analysis_done": False,
         "selected_candidate": None,
         "email_drafts": {},
+        "intro_done": False,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -690,9 +691,6 @@ iframe[title="streamlit_components.v1.html.html"]{
   border:none !important;
   display:block;
 }
-
-/* Section that follows the hero -> feels like a separate "screen" */
-.hero-next{ scroll-margin-top:0; padding-top:18px; }
 </style>
 """
 
@@ -738,57 +736,139 @@ def render_nav() -> None:
     st.markdown("<hr style='border:none;border-top:1px solid rgba(124,92,255,.12);margin:6px 0 4px;'>", unsafe_allow_html=True)
 
 
-def render_hero() -> None:
-    """Fullscreen, full-bleed hero. The Spline scene fills the entire viewport;
-    the page sections live below and are revealed by scrolling."""
-    hero_html = """
+def render_intro() -> None:
+    """Immersive fullscreen intro gate.
+
+    On first load this is the ONLY thing rendered — no navbar, no header,
+    no page content. Clicking the CTA, scrolling, or pressing a key slides
+    the hero smoothly upward and reloads the app with `?started=1`, which
+    reveals the actual website (navbar + sections).
+    """
+    # Page-specific CSS: hide all Streamlit chrome and remove padding so the
+    # hero truly fills the viewport with nothing below the fold.
+    st.markdown(
+        """
+        <style>
+          header[data-testid="stHeader"]{display:none !important;}
+          [data-testid="stToolbar"]{display:none !important;}
+          [data-testid="stDecoration"]{display:none !important;}
+          .block-container{padding:0 !important; max-width:100% !important;}
+          [data-testid="stAppViewContainer"]{overflow:hidden !important;}
+          footer{display:none !important;}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    intro_html = """
     <style>
       html,body{margin:0;padding:0;height:100%;overflow:hidden;background:transparent;
         font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;}
       .hero{
         position:relative; height:100vh; width:100vw; overflow:hidden;
+        transition:transform .85s cubic-bezier(.76,0,.24,1), opacity .85s ease;
         background:
-          radial-gradient(900px 500px at 20% 10%, rgba(124,92,255,.18), transparent 60%),
-          radial-gradient(800px 500px at 90% 90%, rgba(34,211,238,.16), transparent 55%),
-          linear-gradient(180deg,#fbfbff 0%, #f3f4fc 100%);
+          radial-gradient(900px 520px at 18% 12%, rgba(124,92,255,.20), transparent 60%),
+          radial-gradient(820px 520px at 88% 88%, rgba(34,211,238,.16), transparent 55%),
+          linear-gradient(180deg,#fbfbff 0%, #f1f2fb 100%);
       }
+      .hero.lift{ transform:translateY(-100%); opacity:0; }
       spline-viewer{position:absolute; inset:0; width:100%; height:100%;}
-      /* subtle vignette so the scene blends into the page edges */
-      .veil{position:absolute; inset:0; pointer-events:none;
-        background:radial-gradient(120% 80% at 50% 40%, transparent 60%, rgba(243,244,252,.65) 100%);}
-      .scroll{
-        position:absolute; bottom:30px; left:50%; transform:translateX(-50%);
-        color:#6b5bd0; font-size:.78rem; letter-spacing:.18em; text-transform:uppercase;
-        display:flex; flex-direction:column; align-items:center; gap:10px;
-        animation:fadeUp 1s ease both .4s;
+      /* readability scrim on the left where the copy sits */
+      .scrim{position:absolute; inset:0; pointer-events:none;
+        background:linear-gradient(90deg, rgba(251,251,255,.86) 0%, rgba(251,251,255,.45) 32%, transparent 60%);}
+      .copy{
+        position:absolute; top:50%; left:clamp(24px,8vw,140px); transform:translateY(-50%);
+        max-width:560px; z-index:2;
       }
-      .arrow{ width:20px;height:20px;border-right:2px solid #6b5bd0;
+      .badge{
+        display:inline-flex; align-items:center; gap:8px;
+        background:rgba(124,92,255,.10); border:1px solid rgba(124,92,255,.22);
+        color:#6b5bd0; font-size:.8rem; font-weight:700; letter-spacing:.04em;
+        padding:7px 15px; border-radius:999px; margin-bottom:22px;
+        animation:fadeUp .8s ease both;
+      }
+      .title{
+        font-size:clamp(2.8rem,6.5vw,5rem); font-weight:900; line-height:1.02;
+        letter-spacing:-.03em; margin:0; color:#0f1226; animation:fadeUp .9s ease both .08s;
+      }
+      .title .grad{
+        background:linear-gradient(120deg,#7c5cff,#3b82f6,#22d3ee);
+        -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+      }
+      .sub{ margin-top:22px; color:#4a5070; font-size:1.18rem; line-height:1.6;
+        animation:fadeUp 1s ease both .16s; }
+      .cta{
+        display:inline-flex; align-items:center; gap:10px; margin-top:30px; cursor:pointer;
+        background:linear-gradient(135deg,#7c5cff,#3b82f6); color:#fff; text-decoration:none;
+        font-weight:700; font-size:1.05rem; padding:15px 30px; border-radius:16px;
+        box-shadow:0 16px 40px rgba(124,92,255,.40); transition:transform .25s ease, filter .25s ease;
+        animation:fadeUp 1.05s ease both .24s;
+      }
+      .cta:hover{ transform:translateY(-3px); filter:brightness(1.07); }
+      .cta .ar{ transition:transform .25s ease; }
+      .cta:hover .ar{ transform:translateX(4px); }
+      .scroll{
+        position:absolute; bottom:34px; left:50%; transform:translateX(-50%);
+        color:#6b5bd0; font-size:.76rem; letter-spacing:.2em; text-transform:uppercase;
+        display:flex; flex-direction:column; align-items:center; gap:10px; cursor:pointer;
+        animation:fadeUp 1.1s ease both .4s; z-index:2;
+      }
+      .arrow{ width:18px;height:18px;border-right:2px solid #6b5bd0;
         border-bottom:2px solid #6b5bd0; transform:rotate(45deg);
         animation:bob 1.8s infinite ease-in-out; }
       @keyframes bob{0%,100%{transform:rotate(45deg) translate(0,0);opacity:.4;}
-        50%{transform:rotate(45deg) translate(5px,5px);opacity:1;}}
+        50%{transform:rotate(45deg) translate(4px,4px);opacity:1;}}
       @keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
     </style>
     <script type="module"
       src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
-    <div class="hero">
+    <div class="hero" id="hero">
       <spline-viewer
         url="https://prod.spline.design/Ji0hiX2hb-mU5zX1/scene.splinecode"
         events-target="global"></spline-viewer>
-      <div class="veil"></div>
-      <div class="scroll"><span>Scrollen</span><div class="arrow"></div></div>
+      <div class="scrim"></div>
+      <div class="copy">
+        <div class="badge">✦ Recruiting AI · Multi-Agent HR</div>
+        <h1 class="title">Recruiting <span class="grad">AI</span></h1>
+        <p class="sub">Sechs spezialisierte KI-Agenten lesen Stellenprofile und
+           Lebensläufe, prüfen Anforderungen und decken Informationslücken auf —
+           die finale Entscheidung bleibt immer bei dir.</p>
+        <a class="cta" id="cta" href="#">Demo starten <span class="ar">→</span></a>
+      </div>
+      <div class="scroll" id="scrollind"><span>Scroll to Explore</span><div class="arrow"></div></div>
     </div>
+    <script>
+      (function(){
+        var fired = false;
+        function reveal(){
+          if(fired) return; fired = true;
+          var hero = document.getElementById('hero');
+          hero.classList.add('lift');
+          setTimeout(function(){
+            try{
+              var base = window.parent.location.pathname;
+              window.parent.location.href = base + '?started=1';
+            }catch(e){
+              window.location.href = '?started=1';
+            }
+          }, 780);
+        }
+        document.getElementById('cta').addEventListener('click', function(e){ e.preventDefault(); reveal(); });
+        document.getElementById('scrollind').addEventListener('click', reveal);
+        window.addEventListener('wheel', function(e){ if(e.deltaY > 4) reveal(); }, {passive:true});
+        var sy = null;
+        window.addEventListener('touchstart', function(e){ sy = e.touches[0].clientY; }, {passive:true});
+        window.addEventListener('touchmove', function(e){
+          if(sy !== null && (sy - e.touches[0].clientY) > 28) reveal();
+        }, {passive:true});
+        window.addEventListener('keydown', function(e){
+          if(e.key==='ArrowDown' || e.key===' ' || e.key==='Enter' || e.key==='PageDown') reveal();
+        });
+      })();
+    </script>
     """
-    components.html(hero_html, height=800, scrolling=False)
-
-    # Functional CTA (Streamlit native -> can switch pages). Sits at the very
-    # top of the next "screen", clearly separated from the hero panel.
-    st.markdown('<div class="hero-next"></div>', unsafe_allow_html=True)
-    cta1, cta2, cta3 = st.columns([1, 1.1, 1])
-    with cta2:
-        if st.button("🚀  Demo starten", type="primary", use_container_width=True):
-            st.session_state.page = "workspace"
-            st.rerun()
+    components.html(intro_html, height=900, scrolling=False)
 
 
 def _card(icon: str, title: str, body: str, delay: float = 0.0, num: str = "") -> str:
@@ -901,7 +981,23 @@ def render_home_sections() -> None:
 
 
 def render_home() -> None:
-    render_hero()
+    # The immersive hero is the intro gate (render_intro). After the intro
+    # transition, the home page shows a compact header followed by the
+    # marketing sections.
+    st.markdown(
+        '<div class="section reveal" style="margin-top:6px;">'
+        '<span class="eyebrow">Recruiting AI · Multi-Agent HR</span>'
+        "<h2>Bewerbungen verstehen. Menschen entscheiden.</h2>"
+        '<p class="lead">Sechs spezialisierte KI-Agenten lesen Stellenprofile und '
+        "Lebensläufe, prüfen Anforderungen und decken Informationslücken auf — "
+        "die finale Entscheidung bleibt immer bei dir.</p></div>",
+        unsafe_allow_html=True,
+    )
+    h1, h2, h3 = st.columns([1, 1, 3])
+    with h1:
+        if st.button("🚀  Demo starten", type="primary", use_container_width=True, key="home_demo"):
+            st.session_state.page = "workspace"
+            st.rerun()
     render_home_sections()
 
 
@@ -1267,8 +1363,19 @@ def main() -> None:
     )
     st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
     init_state()
-    render_nav()
 
+    # --- Intro gate -------------------------------------------------------
+    # On first load show ONLY the immersive fullscreen hero. The intro is
+    # dismissed via the CTA / scroll (which sets ?started=1) or once the user
+    # has already entered the app in this session.
+    started = ("started" in st.query_params) or st.session_state.intro_done
+    if not started:
+        render_intro()
+        return
+    st.session_state.intro_done = True
+
+    # --- Actual website (revealed after the intro) ------------------------
+    render_nav()
     if st.session_state.page == "candidate":
         render_candidate_detail()
     elif st.session_state.page == "workspace":
