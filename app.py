@@ -765,54 +765,21 @@ def render_intro() -> None:
       html,body{margin:0;padding:0;height:100%;overflow:hidden;background:transparent;
         font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;}
       .hero{
-        position:relative; height:100vh; width:100vw; overflow:hidden;
+        position:relative; height:100vh; width:100vw; overflow:hidden; cursor:pointer;
         transition:transform .85s cubic-bezier(.76,0,.24,1), opacity .85s ease;
-        background:
-          radial-gradient(900px 520px at 18% 12%, rgba(124,92,255,.20), transparent 60%),
-          radial-gradient(820px 520px at 88% 88%, rgba(34,211,238,.16), transparent 55%),
-          linear-gradient(180deg,#fbfbff 0%, #f1f2fb 100%);
+        background:linear-gradient(180deg,#fbfbff 0%, #f1f2fb 100%);
       }
       .hero.lift{ transform:translateY(-100%); opacity:0; }
-      spline-viewer{position:absolute; inset:0; width:100%; height:100%;}
-      /* readability scrim on the left where the copy sits */
-      .scrim{position:absolute; inset:0; pointer-events:none;
-        background:linear-gradient(90deg, rgba(251,251,255,.86) 0%, rgba(251,251,255,.45) 32%, transparent 60%);}
-      .copy{
-        position:absolute; top:50%; left:clamp(24px,8vw,140px); transform:translateY(-50%);
-        max-width:560px; z-index:2;
-      }
-      .badge{
-        display:inline-flex; align-items:center; gap:8px;
-        background:rgba(124,92,255,.10); border:1px solid rgba(124,92,255,.22);
-        color:#6b5bd0; font-size:.8rem; font-weight:700; letter-spacing:.04em;
-        padding:7px 15px; border-radius:999px; margin-bottom:22px;
-        animation:fadeUp .8s ease both;
-      }
-      .title{
-        font-size:clamp(2.8rem,6.5vw,5rem); font-weight:900; line-height:1.02;
-        letter-spacing:-.03em; margin:0; color:#0f1226; animation:fadeUp .9s ease both .08s;
-      }
-      .title .grad{
-        background:linear-gradient(120deg,#7c5cff,#3b82f6,#22d3ee);
-        -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
-      }
-      .sub{ margin-top:22px; color:#4a5070; font-size:1.18rem; line-height:1.6;
-        animation:fadeUp 1s ease both .16s; }
-      .cta{
-        display:inline-flex; align-items:center; gap:10px; margin-top:30px; cursor:pointer;
-        background:linear-gradient(135deg,#7c5cff,#3b82f6); color:#fff; text-decoration:none;
-        font-weight:700; font-size:1.05rem; padding:15px 30px; border-radius:16px;
-        box-shadow:0 16px 40px rgba(124,92,255,.40); transition:transform .25s ease, filter .25s ease;
-        animation:fadeUp 1.05s ease both .24s;
-      }
-      .cta:hover{ transform:translateY(-3px); filter:brightness(1.07); }
-      .cta .ar{ transition:transform .25s ease; }
-      .cta:hover .ar{ transform:translateX(4px); }
+      /* Spline graphic fills the entire viewport */
+      spline-viewer{position:absolute; inset:0; width:100%; height:100%; display:block;}
+      /* transparent full-screen click target -> advance on click anywhere
+         (incl. the scene's own "JOIN US NOW") */
+      .catcher{position:absolute; inset:0; z-index:3; background:transparent;}
       .scroll{
         position:absolute; bottom:34px; left:50%; transform:translateX(-50%);
         color:#6b5bd0; font-size:.76rem; letter-spacing:.2em; text-transform:uppercase;
         display:flex; flex-direction:column; align-items:center; gap:10px; cursor:pointer;
-        animation:fadeUp 1.1s ease both .4s; z-index:2;
+        animation:fadeUp 1.1s ease both .4s; z-index:4; pointer-events:none;
       }
       .arrow{ width:18px;height:18px;border-right:2px solid #6b5bd0;
         border-bottom:2px solid #6b5bd0; transform:rotate(45deg);
@@ -827,24 +794,15 @@ def render_intro() -> None:
       <spline-viewer
         url="https://prod.spline.design/Ji0hiX2hb-mU5zX1/scene.splinecode"
         events-target="global"></spline-viewer>
-      <div class="scrim"></div>
-      <div class="copy">
-        <div class="badge">✦ Recruiting AI · Multi-Agent HR</div>
-        <h1 class="title">Recruiting <span class="grad">AI</span></h1>
-        <p class="sub">Sechs spezialisierte KI-Agenten lesen Stellenprofile und
-           Lebensläufe, prüfen Anforderungen und decken Informationslücken auf —
-           die finale Entscheidung bleibt immer bei dir.</p>
-        <a class="cta" id="cta" href="#">Demo starten <span class="ar">→</span></a>
-      </div>
-      <div class="scroll" id="scrollind"><span>Scroll to Explore</span><div class="arrow"></div></div>
+      <div class="catcher" id="catcher"></div>
+      <div class="scroll"><span>Scroll to Explore</span><div class="arrow"></div></div>
     </div>
     <script>
       (function(){
         var fired = false;
         function reveal(){
           if(fired) return; fired = true;
-          var hero = document.getElementById('hero');
-          hero.classList.add('lift');
+          document.getElementById('hero').classList.add('lift');
           setTimeout(function(){
             try{
               var base = window.parent.location.pathname;
@@ -854,8 +812,7 @@ def render_intro() -> None:
             }
           }, 780);
         }
-        document.getElementById('cta').addEventListener('click', function(e){ e.preventDefault(); reveal(); });
-        document.getElementById('scrollind').addEventListener('click', reveal);
+        document.getElementById('catcher').addEventListener('click', reveal);
         window.addEventListener('wheel', function(e){ if(e.deltaY > 4) reveal(); }, {passive:true});
         var sy = null;
         window.addEventListener('touchstart', function(e){ sy = e.touches[0].clientY; }, {passive:true});
