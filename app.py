@@ -669,6 +669,30 @@ h1,h2,h3{ color:var(--rai-ink); letter-spacing:-.02em; }
 
 .tag{ display:inline-block; background:rgba(59,130,246,.10); color:#2563eb; border-radius:8px;
   padding:3px 9px; font-size:.78rem; font-weight:600; margin:3px 4px 0 0; }
+
+/* Smooth scrolling between the hero panel and the page sections */
+html{ scroll-behavior:smooth; }
+
+/* ---- Fullscreen, full-bleed hero (Spline) — no iframe box ---- */
+/* The hero is the only components.html iframe on the landing page, so we can
+   safely stretch it to cover the whole viewport and break it out of the
+   centered, padded block-container. */
+.element-container:has(iframe[title="streamlit_components.v1.html.html"]){
+  width:100vw !important;
+  margin-left:calc(50% - 50vw) !important;
+  margin-right:calc(50% - 50vw) !important;
+  height:100vh !important;
+  margin-top:-1.2rem;            /* pull up under the nav, removes the gap */
+}
+iframe[title="streamlit_components.v1.html.html"]{
+  width:100vw !important;
+  height:100vh !important;
+  border:none !important;
+  display:block;
+}
+
+/* Section that follows the hero -> feels like a separate "screen" */
+.hero-next{ scroll-margin-top:0; padding-top:18px; }
 </style>
 """
 
@@ -715,53 +739,33 @@ def render_nav() -> None:
 
 
 def render_hero() -> None:
-    """Fullscreen hero with a cleanly embedded Spline scene (no iframe box)."""
+    """Fullscreen, full-bleed hero. The Spline scene fills the entire viewport;
+    the page sections live below and are revealed by scrolling."""
     hero_html = """
     <style>
-      html,body{margin:0;padding:0;height:100%;overflow:hidden;
+      html,body{margin:0;padding:0;height:100%;overflow:hidden;background:transparent;
         font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;}
       .hero{
-        position:relative; height:620px; width:100%; border-radius:28px; overflow:hidden;
+        position:relative; height:100vh; width:100vw; overflow:hidden;
         background:
-          radial-gradient(900px 500px at 20% 10%, rgba(124,92,255,.55), transparent 60%),
-          radial-gradient(800px 500px at 90% 90%, rgba(34,211,238,.40), transparent 55%),
-          linear-gradient(135deg,#0b0f2a 0%,#1b1147 45%,#0e2a4d 100%);
+          radial-gradient(900px 500px at 20% 10%, rgba(124,92,255,.18), transparent 60%),
+          radial-gradient(800px 500px at 90% 90%, rgba(34,211,238,.16), transparent 55%),
+          linear-gradient(180deg,#fbfbff 0%, #f3f4fc 100%);
       }
       spline-viewer{position:absolute; inset:0; width:100%; height:100%;}
-      .overlay{
-        position:absolute; inset:0; display:flex; flex-direction:column;
-        justify-content:center; align-items:center; text-align:center;
-        padding:0 26px; pointer-events:none;
-      }
-      .badge{
-        display:inline-flex; align-items:center; gap:8px; pointer-events:auto;
-        background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25);
-        backdrop-filter:blur(8px); color:#e9e9ff; font-size:.82rem; font-weight:600;
-        padding:8px 16px; border-radius:999px; margin-bottom:22px;
-        animation:fadeUp .8s ease both;
-      }
-      .title{
-        font-size:clamp(2.4rem,6vw,4.6rem); font-weight:900; line-height:1.04;
-        color:#fff; letter-spacing:-.03em; margin:0; text-shadow:0 6px 40px rgba(0,0,0,.35);
-        animation:fadeUp .9s ease both .1s;
-      }
-      .title .grad{
-        background:linear-gradient(120deg,#c4b5fd,#67e8f9,#93c5fd);
-        -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
-      }
-      .sub{
-        margin-top:20px; max-width:600px; color:rgba(255,255,255,.82);
-        font-size:1.12rem; line-height:1.6; animation:fadeUp 1s ease both .2s;
-      }
+      /* subtle vignette so the scene blends into the page edges */
+      .veil{position:absolute; inset:0; pointer-events:none;
+        background:radial-gradient(120% 80% at 50% 40%, transparent 60%, rgba(243,244,252,.65) 100%);}
       .scroll{
-        position:absolute; bottom:26px; left:50%; transform:translateX(-50%);
-        color:rgba(255,255,255,.7); font-size:.8rem; letter-spacing:.16em; text-transform:uppercase;
-        display:flex; flex-direction:column; align-items:center; gap:8px; animation:fadeUp 1s ease both .4s;
+        position:absolute; bottom:30px; left:50%; transform:translateX(-50%);
+        color:#6b5bd0; font-size:.78rem; letter-spacing:.18em; text-transform:uppercase;
+        display:flex; flex-direction:column; align-items:center; gap:10px;
+        animation:fadeUp 1s ease both .4s;
       }
-      .arrow{ width:22px;height:22px;border-right:2px solid rgba(255,255,255,.7);
-        border-bottom:2px solid rgba(255,255,255,.7); transform:rotate(45deg);
+      .arrow{ width:20px;height:20px;border-right:2px solid #6b5bd0;
+        border-bottom:2px solid #6b5bd0; transform:rotate(45deg);
         animation:bob 1.8s infinite ease-in-out; }
-      @keyframes bob{0%,100%{transform:rotate(45deg) translate(0,0);opacity:.5;}
+      @keyframes bob{0%,100%{transform:rotate(45deg) translate(0,0);opacity:.4;}
         50%{transform:rotate(45deg) translate(5px,5px);opacity:1;}}
       @keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
     </style>
@@ -771,19 +775,15 @@ def render_hero() -> None:
       <spline-viewer
         url="https://prod.spline.design/Ji0hiX2hb-mU5zX1/scene.splinecode"
         events-target="global"></spline-viewer>
-      <div class="overlay">
-        <div class="badge">✦ Recruiting AI · Multi-Agent Screening</div>
-        <h1 class="title">Bewerbungen <span class="grad">verstehen</span>.<br>Menschen <span class="grad">entscheiden</span>.</h1>
-        <p class="sub">Sechs spezialisierte KI-Agenten lesen Stellenprofile und Lebensläufe,
-           prüfen Anforderungen und decken Informationslücken auf — die finale
-           Entscheidung bleibt immer bei dir.</p>
-      </div>
-      <div class="scroll"><span>Demo starten</span><div class="arrow"></div></div>
+      <div class="veil"></div>
+      <div class="scroll"><span>Scrollen</span><div class="arrow"></div></div>
     </div>
     """
-    components.html(hero_html, height=640, scrolling=False)
+    components.html(hero_html, height=800, scrolling=False)
 
-    # Functional CTA (Streamlit native -> can switch pages)
+    # Functional CTA (Streamlit native -> can switch pages). Sits at the very
+    # top of the next "screen", clearly separated from the hero panel.
+    st.markdown('<div class="hero-next"></div>', unsafe_allow_html=True)
     cta1, cta2, cta3 = st.columns([1, 1.1, 1])
     with cta2:
         if st.button("🚀  Demo starten", type="primary", use_container_width=True):
