@@ -770,8 +770,18 @@ def render_intro() -> None:
         background:linear-gradient(180deg,#fbfbff 0%, #f1f2fb 100%);
       }
       .hero.lift{ transform:translateY(-100%); opacity:0; }
-      /* Spline graphic fills the entire viewport */
-      spline-viewer{position:absolute; inset:0; width:100%; height:100%; display:block;}
+      /* Spline graphic fills the entire viewport, scaled up to "cover" the
+         screen (object-fit: cover behaviour) so the orb + wave dominate and
+         no empty white space remains around the scene. */
+      spline-viewer{
+        position:absolute; top:50%; left:50%;
+        width:100vw; height:100vh; display:block;
+        transform:translate(-50%,-50%) scale(1.7);
+        transform-origin:center center;
+      }
+      @media (max-width:900px){
+        spline-viewer{ transform:translate(-50%,-50%) scale(2.4); }
+      }
       /* transparent full-screen click target -> advance on click anywhere
          (incl. the scene's own "JOIN US NOW") */
       .catcher{position:absolute; inset:0; z-index:3; background:transparent;}
