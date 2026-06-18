@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import io
 import re
+import urllib.parse
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
@@ -386,6 +387,35 @@ def rueckfragen_agent(candidate: Candidate, gaps: list) -> list:
     return questions
 
 
+def generate_email(candidate: Candidate, selected_questions: list) -> tuple:
+    """Compose a polite follow-up e-mail draft from the selected questions.
+
+    Deterministic, template-based generation (no API key required). The draft
+    is NEVER sent automatically — it is only prepared for human review.
+    """
+    to = candidate.email or "bewerber@example.com"
+    subject = "Rückfragen zu Ihrer Bewerbung"
+    lines = [
+        f"Sehr geehrte/r {candidate.name},",
+        "",
+        "vielen Dank für Ihre Bewerbung und Ihr Interesse an der ausgeschriebenen "
+        "Position. Um Ihre Unterlagen vollständig und fair bewerten zu können, "
+        "hätten wir noch einige kurze Rückfragen an Sie:",
+        "",
+    ]
+    for i, q in enumerate(selected_questions, 1):
+        lines.append(f"{i}. {q}")
+    lines += [
+        "",
+        "Über eine kurze Rückmeldung würden wir uns sehr freuen. Bei Fragen stehen "
+        "wir Ihnen jederzeit gern zur Verfügung.",
+        "",
+        "Mit freundlichen Grüßen",
+        "Ihr Recruiting-Team",
+    ]
+    return to, subject, "\n".join(lines)
+
+
 # --- Agent 6: Audit-Log -----------------------------------------------------
 
 def audit(agent: str, action: str, detail: str = "") -> None:
@@ -506,6 +536,7 @@ def init_state() -> None:
         "audit": [],
         "analysis_done": False,
         "selected_candidate": None,
+        "email_drafts": {},
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -1040,50 +1071,10 @@ def render_workspace() -> None:
                         )
                         if st.button(f"Profil ansehen — {cand.name}", key=f"sel_{cand.id}", use_container_width=True):
                             st.session_state.selected_candidate = cand.id
+                            st.session_state.page = "candidate"
                             st.rerun()
             else:
                 st.caption("Noch kein Abgleich durchgeführt — klicke auf „Anforderungsabgleich starten“.")
-
-            # Candidate detail view
-            if st.session_state.selected_candidate:
-                cand = next((c for c in st.session_state.candidates if c.id == st.session_state.selected_candidate), None)
-                if cand:
-                    st.markdown("---")
-                    st.markdown(f"### 👤 {cand.name}")
-                    m1, m2, m3, m4 = st.columns(4)
-                    m1.metric("Skills erkannt", len(cand.skills))
-                    m2.metric("Berufserfahrung", f"{cand.years} J." if cand.years is not None else "?")
-                    m3.metric("Abschluss", cand.education_label)
-                    m4.metric("Sprachen", len(cand.languages))
-                    st.caption(f"Quelle: {cand.source} · Kontakt: {cand.email or 'nicht gefunden'}")
-
-                    st.markdown("#### Qualifikationscheckliste")
-                    if cand.matches:
-                        for m in cand.matches:
-                            label_txt, pill = STATUS_META.get(m.status, ("?", "pill-open"))
-                            imp = "Muss" if m.importance == "muss" else "Kann"
-                            st.markdown(
-                                f'<div class="cand" style="margin-bottom:8px;display:flex;'
-                                f'justify-content:space-between;align-items:center;">'
-                                f'<span><b>{m.label}</b> <span class="meta">· {imp} · {m.note}</span></span>'
-                                f'<span class="pill {pill}">{label_txt}</span></div>',
-                                unsafe_allow_html=True,
-                            )
-                    else:
-                        st.caption("Noch kein Abgleich für diesen Kandidaten.")
-
-                    if cand.gaps:
-                        st.markdown("#### 🧩 Informationslücken")
-                        for g in cand.gaps:
-                            st.markdown(f"- **{g.requirement_label}** — {g.description}")
-                    if cand.questions:
-                        st.markdown("#### 💬 Vorgeschlagene Rückfragen")
-                        for q in cand.questions:
-                            st.markdown(f"- {q}")
-
-                    if st.button("✕ Detailansicht schließen"):
-                        st.session_state.selected_candidate = None
-                        st.rerun()
 
     # --- Tab 4: Informationslücken ---
     with tabs[3]:
@@ -1105,17 +1096,71 @@ def render_workspace() -> None:
     # --- Tab 5: Rückfragen ---
     with tabs[4]:
         st.subheader("Rückfragen-Agent")
+        st.caption("Wähle pro Bewerber:in die gewünschten Rückfragen aus und generiere daraus "
+                   "einen E-Mail-Entwurf. Die E-Mail wird **nicht** automatisch versendet.")
         if not st.session_state.analysis_done:
             st.info("Bitte zuerst den Anforderungsabgleich starten (Tab ③).")
         else:
             any_q = False
             for cand in st.session_state.candidates:
-                if cand.questions:
-                    any_q = True
-                    st.markdown(f"**An {cand.name}:**")
-                    for q in cand.questions:
-                        st.markdown(f"- {q}")
-                    st.markdown("")
+                if not cand.questions:
+                    continue
+                any_q = True
+                with st.expander(f"💬  {cand.name}  ·  {len(cand.questions)} mögliche Rückfrage(n)", expanded=False):
+                    st.markdown("**Rückfragen auswählen:**")
+                    selected = []
+                    for idx, q in enumerate(cand.questions):
+                        if st.checkbox(q, key=f"q_{cand.id}_{idx}"):
+                            selected.append(q)
+
+                    if st.button("✉️ Rückfragen-E-Mail generieren", key=f"genmail_{cand.id}", type="primary"):
+                        if selected:
+                            to, subject, body = generate_email(cand, selected)
+                            ver = st.session_state.email_drafts.get(cand.id, {}).get("ver", 0) + 1
+                            st.session_state.email_drafts[cand.id] = {
+                                "to": to, "subject": subject, "body": body, "ver": ver,
+                            }
+                            audit(
+                                "Rückfragen-Agent",
+                                "E-Mail-Entwurf erstellt",
+                                f"{len(selected)} Rückfrage(n) für {cand.name} zusammengestellt (nicht versendet).",
+                            )
+                        else:
+                            st.warning("Bitte mindestens eine Rückfrage auswählen.")
+
+                    # --- E-Mail-Fenster (Entwurf, wird NICHT gesendet) ---
+                    draft = st.session_state.email_drafts.get(cand.id)
+                    if draft:
+                        ver = draft["ver"]
+                        st.markdown(
+                            '<div class="cand" style="margin-top:14px;border:1px solid rgba(124,92,255,.25);">'
+                            '<div style="display:flex;align-items:center;gap:8px;font-weight:700;color:#0f1226;">'
+                            '✉️ E-Mail-Entwurf <span class="pill pill-part">Entwurf · nicht gesendet</span></div>'
+                            '</div>',
+                            unsafe_allow_html=True,
+                        )
+                        to = st.text_input("An", value=draft["to"], key=f"emailto_{cand.id}_{ver}")
+                        subject = st.text_input("Betreff", value=draft["subject"], key=f"emailsub_{cand.id}_{ver}")
+                        body = st.text_area("Nachricht", value=draft["body"], height=320, key=f"emailbody_{cand.id}_{ver}")
+
+                        mailto = (
+                            "mailto:" + urllib.parse.quote(to)
+                            + "?subject=" + urllib.parse.quote(subject)
+                            + "&body=" + urllib.parse.quote(body)
+                        )
+                        st.markdown(
+                            f'<a href="{mailto}" target="_blank" style="display:inline-block;'
+                            "text-decoration:none;background:linear-gradient(135deg,#7c5cff,#3b82f6);"
+                            "color:#fff;font-weight:600;padding:.6rem 1.2rem;border-radius:14px;"
+                            'box-shadow:0 12px 30px rgba(124,92,255,.40);">📧 In E-Mail-Programm öffnen</a>'
+                            '<span class="meta" style="margin-left:12px;">Öffnet deinen Mail-Client mit '
+                            "vorausgefülltem Entwurf — Versand bestätigst du selbst.</span>",
+                            unsafe_allow_html=True,
+                        )
+                        if st.button("🗑️ Entwurf verwerfen", key=f"deldraft_{cand.id}"):
+                            st.session_state.email_drafts.pop(cand.id, None)
+                            st.rerun()
+
             if not any_q:
                 st.success("Keine Rückfragen nötig — alle Angaben vollständig.")
 
@@ -1139,6 +1184,76 @@ def render_workspace() -> None:
                 st.rerun()
 
 
+def render_candidate_detail() -> None:
+    """Dedicated full-page candidate profile (opened via 'Profil ansehen')."""
+    cand = next(
+        (c for c in st.session_state.candidates if c.id == st.session_state.selected_candidate),
+        None,
+    )
+
+    if st.button("← Zurück zur Kandidatenübersicht"):
+        st.session_state.page = "workspace"
+        st.rerun()
+
+    if not cand:
+        st.warning("Kandidat:in nicht gefunden.")
+        return
+
+    met = sum(1 for m in cand.matches if m.status == "erfuellt")
+    total = len(cand.matches)
+    st.markdown(
+        f'<div class="section" style="margin-top:14px;">'
+        f'<span class="eyebrow">Kandidatenprofil</span>'
+        f"<h2>👤 {cand.name}</h2>"
+        f'<p class="lead">Quelle: {cand.source} · Kontakt: {cand.email or "nicht gefunden"} · '
+        f'{met}/{total} Anforderungen erfüllt · {len(cand.gaps)} Informationslücke(n)</p></div>',
+        unsafe_allow_html=True,
+    )
+
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Skills erkannt", len(cand.skills))
+    m2.metric("Berufserfahrung", f"{cand.years} J." if cand.years is not None else "?")
+    m3.metric("Abschluss", cand.education_label)
+    m4.metric("Sprachen", len(cand.languages))
+
+    if cand.skills:
+        skills_html = "".join(f'<span class="tag">{s}</span>' for s in cand.skills)
+        st.markdown(f'<div style="margin:10px 0 4px;">{skills_html}</div>', unsafe_allow_html=True)
+
+    st.markdown("#### Qualifikationscheckliste")
+    if cand.matches:
+        for m in cand.matches:
+            label_txt, pill = STATUS_META.get(m.status, ("?", "pill-open"))
+            imp = "Muss" if m.importance == "muss" else "Kann"
+            st.markdown(
+                f'<div class="cand" style="margin-bottom:8px;display:flex;'
+                f'justify-content:space-between;align-items:center;">'
+                f'<span><b>{m.label}</b> <span class="meta">· {imp} · {m.note}</span></span>'
+                f'<span class="pill {pill}">{label_txt}</span></div>',
+                unsafe_allow_html=True,
+            )
+    else:
+        st.caption("Noch kein Abgleich für diese:n Kandidat:in durchgeführt.")
+
+    if cand.gaps:
+        st.markdown("#### 🧩 Informationslücken")
+        for g in cand.gaps:
+            st.markdown(f"- **{g.requirement_label}** — {g.description}")
+    if cand.questions:
+        st.markdown("#### 💬 Vorgeschlagene Rückfragen")
+        for q in cand.questions:
+            st.markdown(f"- {q}")
+        st.caption("Rückfragen auswählen und als E-Mail-Entwurf generieren kannst du im Tab ⑤ Rückfragen.")
+
+    st.markdown(
+        '<div class="hitl" style="margin-top:18px;padding:14px 20px;">'
+        "⚖️ <b>Human-in-the-Loop:</b> Diese Ansicht zeigt nur extrahierte Daten — "
+        "keine Bewertung, keine Empfehlung. Die Entscheidung triffst du."
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
+
 # =============================================================================
 #  MAIN
 # =============================================================================
@@ -1154,7 +1269,9 @@ def main() -> None:
     init_state()
     render_nav()
 
-    if st.session_state.page == "workspace":
+    if st.session_state.page == "candidate":
+        render_candidate_detail()
+    elif st.session_state.page == "workspace":
         render_workspace()
     else:
         render_home()
