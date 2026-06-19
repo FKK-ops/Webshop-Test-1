@@ -893,19 +893,31 @@ _HF = "https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/"
 IMG_ORB = _HF + "hf_20260618_184056_8486b8b4-b288-4344-996a-53ea801af5bc.png"
 IMG_DATA = _HF + "hf_20260618_184103_c3dd220e-bda5-4964-8a2d-0e87b9fd77dd.png"
 IMG_WAVE = _HF + "hf_20260618_184108_568fd0ad-6da7-4830-962a-35a70bf8d220.png"
-# Animated versions (image-to-video, Higgsfield kling3_0_turbo)
-VID_DATA = _HF + "hf_20260619_102521_6592ffb8-6f72-4837-a5b7-89a38bf69a99.mp4"
-VID_WAVE = _HF + "hf_20260619_102419_4a2111d2-680f-44ee-912c-d878fe534397.mp4"
+
+# Spline scene used as the visual in the "Das Problem" section
+SPLINE_PROBLEM = "https://prod.spline.design/e7Xmgzkuyb4IkB-P/scene.splinecode"
 
 
-def _video(src: str, poster: str, alt: str) -> str:
-    """Scroll-scrubbed inline video: playback position is driven by scroll
-    (see render_scroll_reveal). Muted, no autoplay; still image as poster."""
-    return (
-        f'<div class="media-wrap"><video class="scrub" muted playsinline preload="auto" '
-        f'poster="{poster}" style="width:100%;height:auto;display:block;">'
-        f'<source src="{src}" type="video/mp4"></video></div>'
-    )
+def render_spline_embed(url: str, height: int = 440) -> None:
+    """Embed a Spline scene as a rounded, glassy media card."""
+    html = (
+        """
+        <style>
+          html,body{margin:0;padding:0;background:transparent;overflow:hidden;}
+          .splinecard{position:relative; width:100%; height:__H__px; border-radius:28px;
+            overflow:hidden; border:1px solid rgba(124,92,255,.12);
+            box-shadow:0 36px 90px rgba(31,38,93,.18);
+            background:linear-gradient(160deg,#f6f5ff 0%,#eef0fb 60%,#eafaff 100%);}
+          spline-viewer{position:absolute; inset:0; width:100%; height:100%;}
+        </style>
+        <script type="module"
+          src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
+        <div class="splinecard">
+          <spline-viewer url="__URL__" events-target="global"></spline-viewer>
+        </div>
+        """
+    ).replace("__H__", str(height)).replace("__URL__", url)
+    components.html(html, height=height + 8, scrolling=False)
 
 
 def render_scroll_reveal() -> None:
@@ -939,42 +951,6 @@ def render_scroll_reveal() -> None:
             }catch(err){}
           }
           setTimeout(run, 60);
-        })();
-
-        /* Scroll-scrubbed videos: tie currentTime to scroll position so the
-           video plays forward on scroll-down and reverses on scroll-up. A
-           continuous rAF loop reads each video's viewport position (works
-           regardless of which element is the scroll container). */
-        (function(){
-          function init(){
-            try{
-              var pw = window.parent, doc = pw.document;
-              var vids = doc.querySelectorAll('video.scrub:not(.scrub-bound)');
-              if(!vids.length){ setTimeout(init, 200); return; }
-              vids.forEach(function(v){
-                v.classList.add('scrub-bound');
-                v.removeAttribute('autoplay'); v.removeAttribute('loop');
-                v.pause();
-                try{ v.currentTime = 0.001; }catch(e){}
-              });
-              function update(){
-                var vh = pw.innerHeight || 800;
-                vids.forEach(function(v){
-                  var d = v.duration;
-                  if(!d || !isFinite(d)) return;
-                  var r = v.getBoundingClientRect();
-                  var total = vh + r.height;
-                  var p = (vh - r.top) / total;        // 0 = entering bottom, 1 = leaving top
-                  if(p < 0) p = 0; if(p > 1) p = 1;
-                  var t = p * (d - 0.05);
-                  if(Math.abs(v.currentTime - t) > 0.015){ try{ v.currentTime = t; }catch(e){} }
-                });
-                pw.requestAnimationFrame(update);
-              }
-              pw.requestAnimationFrame(update);
-            }catch(err){}
-          }
-          setTimeout(init, 80);
         })();
         </script>
         """,
@@ -1014,19 +990,21 @@ def render_home() -> None:
     )
     _main_cta("🚀  Demo starten", "cta_top")
 
-    # 2) Problem — big type, few elements, whitespace
-    st.markdown(
-        '<div class="story reveal"><div class="split">'
-        "<div>"
-        '<div class="kicker">Das Problem</div>'
-        '<h2 class="display">5–10 Stunden<br><span class="g">pro Stelle.</span></h2>'
-        '<p class="big">Ohne eigene HR-Abteilung wird jede Ausschreibung zur Belastung: '
-        "unterschiedliche CV-Formate, fehlende Angaben, keine nachvollziehbare Bewertung.</p>"
-        "</div>"
-        + _video(VID_DATA, IMG_DATA, "CV-Analyse")
-        + "</div></div>",
-        unsafe_allow_html=True,
-    )
+    # 2) Problem — big type + Spline visual
+    pcol1, pcol2 = st.columns([1.02, 0.98], gap="large")
+    with pcol1:
+        st.markdown(
+            '<div class="story reveal">'
+            '<div class="kicker">Das Problem</div>'
+            '<h2 class="display">5–10 Stunden<br><span class="g">pro Stelle.</span></h2>'
+            '<p class="big">Ohne eigene HR-Abteilung wird jede Ausschreibung zur Belastung: '
+            "unterschiedliche CV-Formate, fehlende Angaben, keine nachvollziehbare Bewertung.</p>"
+            "</div>",
+            unsafe_allow_html=True,
+        )
+    with pcol2:
+        st.markdown("<div style='height:130px;'></div>", unsafe_allow_html=True)
+        render_spline_embed(SPLINE_PROBLEM, height=420)
     st.markdown(
         '<div class="story reveal" style="padding-top:30px;"><div class="stats">'
         '<div class="stat"><div class="n">5–10 h</div><div class="l">Sichtungsaufwand pro Stelle</div></div>'
@@ -1078,8 +1056,8 @@ def render_home() -> None:
         '<p class="big">Saubere Kandidatenprofile, eine transparente Qualifikationscheckliste und ein '
         "lückenloses Audit Log — Human-in-the-Loop by Design. Keine Rangfolge, keine Empfehlung.</p>"
         "</div>"
-        + _video(VID_WAVE, IMG_WAVE, "Ergebnisse")
-        + "</div></div>",
+        f'<div class="media-wrap"><img src="{IMG_WAVE}" alt="Ergebnisse"></div>'
+        "</div></div>",
         unsafe_allow_html=True,
     )
 
