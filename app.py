@@ -745,13 +745,19 @@ iframe[title="streamlit_components.v1.html.html"]{ width:100vw !important; borde
 /* horizontal scroll gallery (Raycast-style) */
 .bleed{ width:100vw; margin-left:calc(50% - 50vw); }
 .hscroll{ display:flex; gap:24px; overflow-x:auto; scroll-snap-type:x mandatory;
-  -webkit-overflow-scrolling:touch; padding:10px max(24px,calc(50vw - 530px)) 30px; }
+  -webkit-overflow-scrolling:touch; padding:12px 48px 34px;
+  /* soft fade on the left and right edges */
+  -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 110px, #000 calc(100% - 110px), transparent 100%);
+  mask-image:linear-gradient(90deg, transparent 0, #000 110px, #000 calc(100% - 110px), transparent 100%); }
 .hscroll::-webkit-scrollbar{ height:8px; }
 .hscroll::-webkit-scrollbar-thumb{ background:rgba(124,92,255,.28); border-radius:99px; }
 .hscroll::-webkit-scrollbar-track{ background:transparent; }
-.hcard{ flex:0 0 300px; scroll-snap-align:start; border-radius:24px; overflow:hidden;
-  background:#fff; border:1px solid rgba(124,92,255,.12); box-shadow:0 16px 44px rgba(31,38,93,.09);
+/* show ~3 cards at a time */
+.hcard{ flex:0 0 calc((100vw - 144px) / 3); max-width:560px; scroll-snap-align:center;
+  border-radius:24px; overflow:hidden; background:#fff; border:1px solid rgba(124,92,255,.12);
+  box-shadow:0 16px 44px rgba(31,38,93,.09);
   transition:transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease; }
+@media(max-width:760px){ .hcard{ flex:0 0 80vw; } }
 .hcard:hover{ transform:translateY(-6px); box-shadow:0 28px 64px rgba(124,92,255,.18); }
 .hcard img{ width:100%; height:300px; object-fit:cover; display:block;
   background:linear-gradient(160deg,#f6f5ff,#eafaff); }
@@ -759,6 +765,12 @@ iframe[title="streamlit_components.v1.html.html"]{ width:100vw !important; borde
 .hcard .cap .k{ font-size:.74rem; font-weight:800; letter-spacing:.12em; color:var(--rai-blue); }
 .hcard .cap h4{ margin:6px 0 6px; font-size:1.08rem; font-weight:800; color:var(--rai-ink); }
 .hcard .cap p{ margin:0; color:var(--rai-muted); font-size:.92rem; line-height:1.5; }
+
+/* Problem section: text overlaid on the full-bleed Spline background */
+.problem-wrap{ position:relative; z-index:3; margin-top:-620px; height:620px; pointer-events:none; }
+.problem-copy{ max-width:1060px; margin:0 auto; padding-top:70px; position:relative; }
+.problem-copy:before{ content:""; position:absolute; inset:-30px -60px auto -60px; height:340px; z-index:-1;
+  background:radial-gradient(90% 80% at 0% 25%, rgba(250,250,255,.92), rgba(250,250,255,.45) 45%, transparent 72%); }
 
 /* final cta band */
 .cta-band{ text-align:center; padding:70px 40px; border-radius:34px; margin:40px auto 0; max-width:1060px;
@@ -1019,17 +1031,17 @@ def render_home() -> None:
     )
     _main_cta("🚀  Demo starten", "cta_top")
 
-    # 2) Problem — big type + large Spline background graphic
+    # 2) Problem — text overlaid on a full-bleed Spline background graphic
+    render_spline_embed(SPLINE_PROBLEM, height=620)
     st.markdown(
-        '<div class="story reveal" style="padding-bottom:0;">'
+        '<div class="problem-wrap reveal"><div class="problem-copy">'
         '<div class="kicker">Das Problem</div>'
         '<h2 class="display">5–10 Stunden<br><span class="g">pro Stelle.</span></h2>'
         '<p class="big">Ohne eigene HR-Abteilung wird jede Ausschreibung zur Belastung: '
         "unterschiedliche CV-Formate, fehlende Angaben, keine nachvollziehbare Bewertung.</p>"
-        "</div>",
+        "</div></div>",
         unsafe_allow_html=True,
     )
-    render_spline_embed(SPLINE_PROBLEM, height=560)
     st.markdown(
         '<div class="story reveal" style="padding-top:30px;"><div class="stats">'
         '<div class="stat"><div class="n">5–10 h</div><div class="l">Sichtungsaufwand pro Stelle</div></div>'
