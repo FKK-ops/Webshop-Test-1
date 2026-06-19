@@ -677,13 +677,21 @@ h1,h2,h3{ color:var(--rai-ink); letter-spacing:-.02em; }
 html{ scroll-behavior:smooth; }
 body{ overflow-x:hidden; }
 
-/* Full-bleed component iframes (Spline background graphics span the viewport) */
+/* Full-bleed component iframes (Spline background graphics span the viewport).
+   Streamlit gives the component iframe the title "st.iframe" in some versions
+   and "streamlit_components.v1.html.html" in others — cover both, and make the
+   iframe transparent so no white box shows around the scene. */
+.element-container:has(iframe[title="st.iframe"]),
 .element-container:has(iframe[title="streamlit_components.v1.html.html"]){
   width:100vw !important;
   margin-left:calc(50% - 50vw) !important;
   margin-right:calc(50% - 50vw) !important;
 }
-iframe[title="streamlit_components.v1.html.html"]{ width:100vw !important; border:none !important; }
+iframe[title="st.iframe"],
+iframe[title="streamlit_components.v1.html.html"]{
+  width:100vw !important; border:none !important; background:transparent !important;
+  color-scheme:normal;
+}
 
 /* ===================== Premium scroll-storytelling ===================== */
 .story{ max-width:1060px; margin:0 auto; padding:120px 0 24px; }
@@ -769,8 +777,8 @@ iframe[title="streamlit_components.v1.html.html"]{ width:100vw !important; borde
 /* Problem section: text overlaid on the full-bleed Spline background */
 .problem-wrap{ position:relative; z-index:3; margin-top:-620px; height:620px; pointer-events:none; }
 .problem-copy{ max-width:1060px; margin:0 auto; padding-top:70px; position:relative; }
-.problem-copy:before{ content:""; position:absolute; inset:-30px -60px auto -60px; height:340px; z-index:-1;
-  background:radial-gradient(90% 80% at 0% 25%, rgba(250,250,255,.92), rgba(250,250,255,.45) 45%, transparent 72%); }
+.problem-copy .display{ text-shadow:0 2px 24px rgba(255,255,255,.6); }
+.problem-copy .big{ text-shadow:0 1px 16px rgba(255,255,255,.7); }
 
 /* final cta band */
 .cta-band{ text-align:center; padding:70px 40px; border-radius:34px; margin:40px auto 0; max-width:1060px;
@@ -835,12 +843,15 @@ def render_intro() -> None:
           [data-testid="stAppViewContainer"]{overflow:hidden !important;}
           footer{display:none !important;}
           /* Full-bleed, fullscreen hero iframe (only on the intro page) */
+          .element-container:has(iframe[title="st.iframe"]),
           .element-container:has(iframe[title="streamlit_components.v1.html.html"]){
             width:100vw !important; margin-left:calc(50% - 50vw) !important;
             margin-right:calc(50% - 50vw) !important; height:100vh !important;
           }
+          iframe[title="st.iframe"],
           iframe[title="streamlit_components.v1.html.html"]{
-            width:100vw !important; height:100vh !important; border:none !important; display:block;
+            width:100vw !important; height:100vh !important; border:none !important;
+            display:block; background:transparent !important;
           }
         </style>
         """,
