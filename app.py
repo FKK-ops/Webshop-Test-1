@@ -938,7 +938,7 @@ IMG_STEP_ANALYZE = _HF + "hf_20260619_105345_3d63247e-224a-4452-9886-fc6bafea6e9
 IMG_STEP_DECIDE = _HF + "hf_20260619_105350_b7e7816d-3170-4cfb-9f07-be85ce02fce0.png"
 
 # Spline scene used as the visual in the "Das Problem" section
-SPLINE_PROBLEM = "https://prod.spline.design/e7Xmgzkuyb4IkB-P/scene.splinecode"
+SPLINE_PROBLEM = "https://prod.spline.design/4PF4J4YenOXJHe4A/scene.splinecode"
 
 
 def render_spline_embed(url: str, height: int = 560) -> None:
@@ -949,10 +949,10 @@ def render_spline_embed(url: str, height: int = 560) -> None:
         <style>
           html,body{margin:0;padding:0;background:transparent;overflow:hidden;}
           .splinebg{position:relative; width:100%; height:__H__px; background:transparent; overflow:hidden;}
-          /* scale the scene up so the wave spans edge-to-edge with no side gap */
+          /* scale the scene up so the ribbon spans edge-to-edge with no side gap */
           spline-viewer{position:absolute; top:50%; left:50%;
             width:100%; height:100%;
-            transform:translate(-50%,-50%) scale(1.4); transform-origin:center center;}
+            transform:translate(-50%,-50%) scale(1.1); transform-origin:center center;}
         </style>
         <script type="module"
           src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
