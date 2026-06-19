@@ -775,8 +775,8 @@ iframe[title="streamlit_components.v1.html.html"]{
 .hcard .cap p{ margin:0; color:var(--rai-muted); font-size:.92rem; line-height:1.5; }
 
 /* Problem section: text overlaid on the full-bleed Spline background */
-.problem-wrap{ position:relative; z-index:3; margin-top:-620px; height:620px; pointer-events:none; }
-.problem-copy{ max-width:1060px; margin:0 auto; padding-top:70px; position:relative; }
+.problem-wrap{ position:relative; z-index:3; margin-top:-420px; height:420px; pointer-events:none; }
+.problem-copy{ max-width:1060px; margin:0 auto; padding-top:54px; position:relative; }
 .problem-copy .display{ text-shadow:0 2px 24px rgba(255,255,255,.6); }
 .problem-copy .big{ text-shadow:0 1px 16px rgba(255,255,255,.7); }
 
@@ -1055,7 +1055,7 @@ def render_home() -> None:
     _main_cta("🚀  Demo starten", "cta_top")
 
     # 2) Problem — text overlaid on a full-bleed Spline background graphic
-    render_spline_embed(SPLINE_PROBLEM, height=620)
+    render_spline_embed(SPLINE_PROBLEM, height=420)
     st.markdown(
         '<div class="problem-wrap reveal"><div class="problem-copy">'
         '<div class="kicker">Das Problem</div>'
@@ -1066,7 +1066,7 @@ def render_home() -> None:
         unsafe_allow_html=True,
     )
     st.markdown(
-        '<div class="story reveal" style="padding-top:30px;"><div class="stats">'
+        '<div class="story reveal" style="padding-top:0;"><div class="stats">'
         '<div class="stat"><div class="n">5–10 h</div><div class="l">Sichtungsaufwand pro Stelle</div></div>'
         '<div class="stat"><div class="n">100 %</div><div class="l">der Schritte im Audit Log</div></div>'
         '<div class="stat"><div class="n">0</div><div class="l">automatische Entscheidungen</div></div>'
