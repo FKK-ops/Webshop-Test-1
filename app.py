@@ -959,7 +959,16 @@ def render_spline_embed(url: str, height: int = 560) -> None:
         """
         <style>
           html,body{margin:0;padding:0;background:transparent;overflow:hidden;}
-          .splinebg{position:relative; width:100%; height:__H__px; background:transparent; overflow:hidden;}
+          .splinebg{position:relative; width:100%; height:__H__px; background:transparent; overflow:hidden;
+            /* soft fade on all edges so the ribbon blends cleanly into the page */
+            -webkit-mask-image:
+              linear-gradient(180deg, transparent 0%, #000 22%, #000 78%, transparent 100%),
+              linear-gradient(90deg, transparent 0%, #000 7%, #000 93%, transparent 100%);
+            -webkit-mask-composite:source-in;
+            mask-image:
+              linear-gradient(180deg, transparent 0%, #000 22%, #000 78%, transparent 100%),
+              linear-gradient(90deg, transparent 0%, #000 7%, #000 93%, transparent 100%);
+            mask-composite:intersect;}
           /* scale the scene up so the ribbon spans edge-to-edge with no side gap */
           spline-viewer{position:absolute; top:50%; left:50%;
             width:100%; height:100%;
