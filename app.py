@@ -948,8 +948,11 @@ def render_spline_embed(url: str, height: int = 560) -> None:
         """
         <style>
           html,body{margin:0;padding:0;background:transparent;overflow:hidden;}
-          .splinebg{position:relative; width:100%; height:__H__px; background:transparent;}
-          spline-viewer{position:absolute; inset:0; width:100%; height:100%;}
+          .splinebg{position:relative; width:100%; height:__H__px; background:transparent; overflow:hidden;}
+          /* scale the scene up so the wave spans edge-to-edge with no side gap */
+          spline-viewer{position:absolute; top:50%; left:50%;
+            width:100%; height:100%;
+            transform:translate(-50%,-50%) scale(1.4); transform-origin:center center;}
         </style>
         <script type="module"
           src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
