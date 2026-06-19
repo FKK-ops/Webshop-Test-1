@@ -1054,17 +1054,17 @@ def render_home() -> None:
     )
     _main_cta("🚀  Demo starten", "cta_top")
 
-    # 2) Problem — text overlaid on a full-bleed Spline background graphic
-    render_spline_embed(SPLINE_PROBLEM, height=420)
+    # 2) Problem — text first, the full-bleed Spline ribbon sits below it
     st.markdown(
-        '<div class="problem-wrap reveal"><div class="problem-copy">'
+        '<div class="story reveal" style="padding-bottom:0;">'
         '<div class="kicker">Das Problem</div>'
         '<h2 class="display">5–10 Stunden<br><span class="g">pro Stelle.</span></h2>'
         '<p class="big">Ohne eigene HR-Abteilung wird jede Ausschreibung zur Belastung: '
         "unterschiedliche CV-Formate, fehlende Angaben, keine nachvollziehbare Bewertung.</p>"
-        "</div></div>",
+        "</div>",
         unsafe_allow_html=True,
     )
+    render_spline_embed(SPLINE_PROBLEM, height=420)
     st.markdown(
         '<div class="story reveal" style="padding-top:0;"><div class="stats">'
         '<div class="stat"><div class="n">5–10 h</div><div class="l">Sichtungsaufwand pro Stelle</div></div>'
