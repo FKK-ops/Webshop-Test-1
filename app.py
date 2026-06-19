@@ -893,6 +893,18 @@ _HF = "https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/"
 IMG_ORB = _HF + "hf_20260618_184056_8486b8b4-b288-4344-996a-53ea801af5bc.png"
 IMG_DATA = _HF + "hf_20260618_184103_c3dd220e-bda5-4964-8a2d-0e87b9fd77dd.png"
 IMG_WAVE = _HF + "hf_20260618_184108_568fd0ad-6da7-4830-962a-35a70bf8d220.png"
+# Animated versions (image-to-video, Higgsfield kling3_0_turbo)
+VID_DATA = _HF + "hf_20260619_102521_6592ffb8-6f72-4837-a5b7-89a38bf69a99.mp4"
+VID_WAVE = _HF + "hf_20260619_102419_4a2111d2-680f-44ee-912c-d878fe534397.mp4"
+
+
+def _video(src: str, poster: str, alt: str) -> str:
+    """Autoplaying, muted, looping inline video with the still image as poster."""
+    return (
+        f'<div class="media-wrap"><video autoplay loop muted playsinline '
+        f'poster="{poster}" style="width:100%;height:auto;display:block;">'
+        f'<source src="{src}" type="video/mp4"></video></div>'
+    )
 
 
 def render_scroll_reveal() -> None:
@@ -974,8 +986,8 @@ def render_home() -> None:
         '<p class="big">Ohne eigene HR-Abteilung wird jede Ausschreibung zur Belastung: '
         "unterschiedliche CV-Formate, fehlende Angaben, keine nachvollziehbare Bewertung.</p>"
         "</div>"
-        f'<div class="media-wrap"><img src="{IMG_DATA}" alt="CV-Analyse"></div>'
-        "</div></div>",
+        + _video(VID_DATA, IMG_DATA, "CV-Analyse")
+        + "</div></div>",
         unsafe_allow_html=True,
     )
     st.markdown(
@@ -1029,8 +1041,8 @@ def render_home() -> None:
         '<p class="big">Saubere Kandidatenprofile, eine transparente Qualifikationscheckliste und ein '
         "lückenloses Audit Log — Human-in-the-Loop by Design. Keine Rangfolge, keine Empfehlung.</p>"
         "</div>"
-        f'<div class="media-wrap"><img src="{IMG_WAVE}" alt="Ergebnisse"></div>'
-        "</div></div>",
+        + _video(VID_WAVE, IMG_WAVE, "Ergebnisse")
+        + "</div></div>",
         unsafe_allow_html=True,
     )
 
