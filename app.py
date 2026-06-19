@@ -675,6 +675,15 @@ h1,h2,h3{ color:var(--rai-ink); letter-spacing:-.02em; }
 
 /* Smooth scrolling between sections */
 html{ scroll-behavior:smooth; }
+body{ overflow-x:hidden; }
+
+/* Full-bleed component iframes (Spline background graphics span the viewport) */
+.element-container:has(iframe[title="streamlit_components.v1.html.html"]){
+  width:100vw !important;
+  margin-left:calc(50% - 50vw) !important;
+  margin-right:calc(50% - 50vw) !important;
+}
+iframe[title="streamlit_components.v1.html.html"]{ width:100vw !important; border:none !important; }
 
 /* ===================== Premium scroll-storytelling ===================== */
 .story{ max-width:1060px; margin:0 auto; padding:120px 0 24px; }
@@ -732,6 +741,24 @@ html{ scroll-behavior:smooth; }
 .price .badge-pop{ align-self:flex-start; font-size:.72rem; font-weight:800; letter-spacing:.08em;
   text-transform:uppercase; color:#fff; background:linear-gradient(135deg,#7c5cff,#3b82f6);
   padding:5px 12px; border-radius:999px; margin-bottom:12px; }
+
+/* horizontal scroll gallery (Raycast-style) */
+.bleed{ width:100vw; margin-left:calc(50% - 50vw); }
+.hscroll{ display:flex; gap:24px; overflow-x:auto; scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch; padding:10px max(24px,calc(50vw - 530px)) 30px; }
+.hscroll::-webkit-scrollbar{ height:8px; }
+.hscroll::-webkit-scrollbar-thumb{ background:rgba(124,92,255,.28); border-radius:99px; }
+.hscroll::-webkit-scrollbar-track{ background:transparent; }
+.hcard{ flex:0 0 300px; scroll-snap-align:start; border-radius:24px; overflow:hidden;
+  background:#fff; border:1px solid rgba(124,92,255,.12); box-shadow:0 16px 44px rgba(31,38,93,.09);
+  transition:transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease; }
+.hcard:hover{ transform:translateY(-6px); box-shadow:0 28px 64px rgba(124,92,255,.18); }
+.hcard img{ width:100%; height:300px; object-fit:cover; display:block;
+  background:linear-gradient(160deg,#f6f5ff,#eafaff); }
+.hcard .cap{ padding:18px 20px; }
+.hcard .cap .k{ font-size:.74rem; font-weight:800; letter-spacing:.12em; color:var(--rai-blue); }
+.hcard .cap h4{ margin:6px 0 6px; font-size:1.08rem; font-weight:800; color:var(--rai-ink); }
+.hcard .cap p{ margin:0; color:var(--rai-muted); font-size:.92rem; line-height:1.5; }
 
 /* final cta band */
 .cta-band{ text-align:center; padding:70px 40px; border-radius:34px; margin:40px auto 0; max-width:1060px;
@@ -893,31 +920,33 @@ _HF = "https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/"
 IMG_ORB = _HF + "hf_20260618_184056_8486b8b4-b288-4344-996a-53ea801af5bc.png"
 IMG_DATA = _HF + "hf_20260618_184103_c3dd220e-bda5-4964-8a2d-0e87b9fd77dd.png"
 IMG_WAVE = _HF + "hf_20260618_184108_568fd0ad-6da7-4830-962a-35a70bf8d220.png"
+# Step visuals (isometric, 3:4) for the horizontal scroll gallery
+IMG_STEP_UPLOAD = _HF + "hf_20260619_105340_e82eb3e8-ca18-4a12-a2a4-0a17fa185ae7.png"
+IMG_STEP_ANALYZE = _HF + "hf_20260619_105345_3d63247e-224a-4452-9886-fc6bafea6e9c.png"
+IMG_STEP_DECIDE = _HF + "hf_20260619_105350_b7e7816d-3170-4cfb-9f07-be85ce02fce0.png"
 
 # Spline scene used as the visual in the "Das Problem" section
 SPLINE_PROBLEM = "https://prod.spline.design/e7Xmgzkuyb4IkB-P/scene.splinecode"
 
 
-def render_spline_embed(url: str, height: int = 440) -> None:
-    """Embed a Spline scene as a rounded, glassy media card."""
+def render_spline_embed(url: str, height: int = 560) -> None:
+    """Embed a Spline scene as a large, borderless background graphic
+    (transparent — no card, no box) that blends into the section."""
     html = (
         """
         <style>
           html,body{margin:0;padding:0;background:transparent;overflow:hidden;}
-          .splinecard{position:relative; width:100%; height:__H__px; border-radius:28px;
-            overflow:hidden; border:1px solid rgba(124,92,255,.12);
-            box-shadow:0 36px 90px rgba(31,38,93,.18);
-            background:linear-gradient(160deg,#f6f5ff 0%,#eef0fb 60%,#eafaff 100%);}
+          .splinebg{position:relative; width:100%; height:__H__px; background:transparent;}
           spline-viewer{position:absolute; inset:0; width:100%; height:100%;}
         </style>
         <script type="module"
           src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
-        <div class="splinecard">
+        <div class="splinebg">
           <spline-viewer url="__URL__" events-target="global"></spline-viewer>
         </div>
         """
     ).replace("__H__", str(height)).replace("__URL__", url)
-    components.html(html, height=height + 8, scrolling=False)
+    components.html(html, height=height + 4, scrolling=False)
 
 
 def render_scroll_reveal() -> None:
@@ -990,21 +1019,17 @@ def render_home() -> None:
     )
     _main_cta("🚀  Demo starten", "cta_top")
 
-    # 2) Problem — big type + Spline visual
-    pcol1, pcol2 = st.columns([1.02, 0.98], gap="large")
-    with pcol1:
-        st.markdown(
-            '<div class="story reveal">'
-            '<div class="kicker">Das Problem</div>'
-            '<h2 class="display">5–10 Stunden<br><span class="g">pro Stelle.</span></h2>'
-            '<p class="big">Ohne eigene HR-Abteilung wird jede Ausschreibung zur Belastung: '
-            "unterschiedliche CV-Formate, fehlende Angaben, keine nachvollziehbare Bewertung.</p>"
-            "</div>",
-            unsafe_allow_html=True,
-        )
-    with pcol2:
-        st.markdown("<div style='height:130px;'></div>", unsafe_allow_html=True)
-        render_spline_embed(SPLINE_PROBLEM, height=420)
+    # 2) Problem — big type + large Spline background graphic
+    st.markdown(
+        '<div class="story reveal" style="padding-bottom:0;">'
+        '<div class="kicker">Das Problem</div>'
+        '<h2 class="display">5–10 Stunden<br><span class="g">pro Stelle.</span></h2>'
+        '<p class="big">Ohne eigene HR-Abteilung wird jede Ausschreibung zur Belastung: '
+        "unterschiedliche CV-Formate, fehlende Angaben, keine nachvollziehbare Bewertung.</p>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
+    render_spline_embed(SPLINE_PROBLEM, height=560)
     st.markdown(
         '<div class="story reveal" style="padding-top:30px;"><div class="stats">'
         '<div class="stat"><div class="n">5–10 h</div><div class="l">Sichtungsaufwand pro Stelle</div></div>'
@@ -1035,6 +1060,32 @@ def render_home() -> None:
         unsafe_allow_html=True,
     )
 
+    # 3b) Horizontal scroll gallery (Raycast-style) with Higgsfield visuals
+    st.markdown(
+        '<div class="story reveal" style="padding-bottom:8px;">'
+        '<div class="kicker">Im Detail</div>'
+        '<h2 class="display">Drei Schritte. <span class="g">Ein Flow.</span></h2>'
+        '<p class="big">Scrolle horizontal durch den Ablauf.</p></div>',
+        unsafe_allow_html=True,
+    )
+
+    def _hcard(img: str, k: str, title: str, body: str) -> str:
+        return (
+            f'<div class="hcard"><img src="{img}" alt="{title}" loading="lazy">'
+            f'<div class="cap"><div class="k">{k}</div><h4>{title}</h4><p>{body}</p></div></div>'
+        )
+
+    st.markdown(
+        '<div class="bleed reveal"><div class="hscroll">'
+        + _hcard(IMG_STEP_UPLOAD, "SCHRITT 01", "Hochladen", "Stelle & Lebensläufe rein — als PDF oder Text.")
+        + _hcard(IMG_STEP_ANALYZE, "SCHRITT 02", "Analysieren", "CV-Agent strukturiert, Matching-Agent prüft jede Anforderung.")
+        + _hcard(IMG_STEP_DECIDE, "SCHRITT 03", "Entscheiden", "Der Mensch wählt — nie der Algorithmus.")
+        + _hcard(IMG_ORB, "SYSTEM", "Multi-Agent", "Sechs Agenten, ein sauberer, nachvollziehbarer Flow.")
+        + _hcard(IMG_WAVE, "TRANSPARENZ", "Audit Log", "Jeder Verarbeitungsschritt lückenlos dokumentiert.")
+        + "</div></div>",
+        unsafe_allow_html=True,
+    )
+
     # 4) Demo — invite into the workspace (single CTA)
     st.markdown(
         '<div class="story reveal" style="text-align:center;">'
@@ -1056,7 +1107,7 @@ def render_home() -> None:
         '<p class="big">Saubere Kandidatenprofile, eine transparente Qualifikationscheckliste und ein '
         "lückenloses Audit Log — Human-in-the-Loop by Design. Keine Rangfolge, keine Empfehlung.</p>"
         "</div>"
-        f'<div class="media-wrap"><img src="{IMG_WAVE}" alt="Ergebnisse"></div>'
+        f'<div class="media-wrap"><img src="{IMG_DATA}" alt="Strukturierte Kandidatendaten"></div>'
         "</div></div>",
         unsafe_allow_html=True,
     )
