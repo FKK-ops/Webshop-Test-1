@@ -899,9 +899,10 @@ VID_WAVE = _HF + "hf_20260619_102419_4a2111d2-680f-44ee-912c-d878fe534397.mp4"
 
 
 def _video(src: str, poster: str, alt: str) -> str:
-    """Autoplaying, muted, looping inline video with the still image as poster."""
+    """Scroll-scrubbed inline video: playback position is driven by scroll
+    (see render_scroll_reveal). Muted, no autoplay; still image as poster."""
     return (
-        f'<div class="media-wrap"><video autoplay loop muted playsinline '
+        f'<div class="media-wrap"><video class="scrub" muted playsinline preload="auto" '
         f'poster="{poster}" style="width:100%;height:auto;display:block;">'
         f'<source src="{src}" type="video/mp4"></video></div>'
     )
@@ -938,6 +939,42 @@ def render_scroll_reveal() -> None:
             }catch(err){}
           }
           setTimeout(run, 60);
+        })();
+
+        /* Scroll-scrubbed videos: tie currentTime to scroll position so the
+           video plays forward on scroll-down and reverses on scroll-up. A
+           continuous rAF loop reads each video's viewport position (works
+           regardless of which element is the scroll container). */
+        (function(){
+          function init(){
+            try{
+              var pw = window.parent, doc = pw.document;
+              var vids = doc.querySelectorAll('video.scrub:not(.scrub-bound)');
+              if(!vids.length){ setTimeout(init, 200); return; }
+              vids.forEach(function(v){
+                v.classList.add('scrub-bound');
+                v.removeAttribute('autoplay'); v.removeAttribute('loop');
+                v.pause();
+                try{ v.currentTime = 0.001; }catch(e){}
+              });
+              function update(){
+                var vh = pw.innerHeight || 800;
+                vids.forEach(function(v){
+                  var d = v.duration;
+                  if(!d || !isFinite(d)) return;
+                  var r = v.getBoundingClientRect();
+                  var total = vh + r.height;
+                  var p = (vh - r.top) / total;        // 0 = entering bottom, 1 = leaving top
+                  if(p < 0) p = 0; if(p > 1) p = 1;
+                  var t = p * (d - 0.05);
+                  if(Math.abs(v.currentTime - t) > 0.015){ try{ v.currentTime = t; }catch(e){} }
+                });
+                pw.requestAnimationFrame(update);
+              }
+              pw.requestAnimationFrame(update);
+            }catch(err){}
+          }
+          setTimeout(init, 80);
         })();
         </script>
         """,
