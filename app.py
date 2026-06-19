@@ -628,9 +628,11 @@ h1,h2,h3{ color:var(--rai-ink); letter-spacing:-.02em; }
 .card p{ color:var(--rai-muted); font-size:.96rem; line-height:1.55; margin:0; }
 .step-num{ font-size:.8rem;font-weight:800;color:var(--rai-blue);letter-spacing:.1em; }
 
-/* Reveal animation */
+/* Scroll reveal (driven by an IntersectionObserver — see render_scroll_reveal) */
 @keyframes fadeUp{ from{opacity:0; transform:translateY(26px);} to{opacity:1; transform:translateY(0);} }
-.reveal{ animation:fadeUp .7s cubic-bezier(.2,.8,.2,1) both; }
+.reveal{ opacity:0; transform:translateY(36px);
+  transition:opacity .85s ease, transform .85s cubic-bezier(.2,.8,.2,1); }
+.reveal.reveal-in{ opacity:1; transform:none; }
 
 /* Buttons (Streamlit) */
 .stButton > button{
@@ -671,69 +673,107 @@ h1,h2,h3{ color:var(--rai-ink); letter-spacing:-.02em; }
 .tag{ display:inline-block; background:rgba(59,130,246,.10); color:#2563eb; border-radius:8px;
   padding:3px 9px; font-size:.78rem; font-weight:600; margin:3px 4px 0 0; }
 
-/* Smooth scrolling between the hero panel and the page sections */
+/* Smooth scrolling between sections */
 html{ scroll-behavior:smooth; }
 
-/* ---- Fullscreen, full-bleed hero (Spline) — no iframe box ---- */
-/* The hero is the only components.html iframe on the landing page, so we can
-   safely stretch it to cover the whole viewport and break it out of the
-   centered, padded block-container. */
-.element-container:has(iframe[title="streamlit_components.v1.html.html"]){
-  width:100vw !important;
-  margin-left:calc(50% - 50vw) !important;
-  margin-right:calc(50% - 50vw) !important;
-  height:100vh !important;
-  margin-top:-1.2rem;            /* pull up under the nav, removes the gap */
-}
-iframe[title="streamlit_components.v1.html.html"]{
-  width:100vw !important;
-  height:100vh !important;
-  border:none !important;
-  display:block;
-}
+/* ===================== Premium scroll-storytelling ===================== */
+.story{ max-width:1060px; margin:0 auto; padding:120px 0 24px; }
+.story.first{ padding-top:56px; }
+.kicker{ font-size:.8rem; font-weight:800; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--rai-purple); margin-bottom:18px; }
+.display{ font-size:clamp(2.5rem,5.4vw,4.6rem); font-weight:900; letter-spacing:-.035em;
+  line-height:1.02; color:var(--rai-ink); margin:0; }
+.display .g{ background:linear-gradient(120deg,#7c5cff,#3b82f6,#22d3ee);
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.story .big{ font-size:1.28rem; line-height:1.65; color:var(--rai-muted); max-width:640px; margin:26px 0 0; }
+.story .small{ font-size:1.04rem; line-height:1.6; color:var(--rai-muted); max-width:560px; margin:18px 0 0; }
+
+.split{ display:grid; grid-template-columns:1.02fr .98fr; gap:64px; align-items:center; }
+.split.rev{ grid-template-columns:.98fr 1.02fr; }
+@media(max-width:900px){ .split,.split.rev{ grid-template-columns:1fr; gap:34px; } }
+
+.media-wrap{ border-radius:30px; overflow:hidden; border:1px solid rgba(124,92,255,.12);
+  box-shadow:0 36px 90px rgba(31,38,93,.18); line-height:0; }
+.media-wrap img{ width:100%; height:auto; display:block; }
+
+/* big stat row */
+.stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:30px; }
+@media(max-width:900px){ .stats{ grid-template-columns:1fr; gap:18px; } }
+.stat .n{ font-size:clamp(2.4rem,4.6vw,3.4rem); font-weight:900; letter-spacing:-.03em;
+  background:linear-gradient(120deg,#7c5cff,#22d3ee); -webkit-background-clip:text;
+  background-clip:text; -webkit-text-fill-color:transparent; }
+.stat .l{ color:var(--rai-muted); font-size:1.02rem; margin-top:6px; }
+
+/* clean numbered steps */
+.steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+@media(max-width:900px){ .steps{ grid-template-columns:1fr; } }
+.stepcard{ padding:30px 26px; border-radius:24px; background:rgba(255,255,255,.7);
+  border:1px solid rgba(124,92,255,.10); box-shadow:0 14px 40px rgba(31,38,93,.07);
+  transition:transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease; }
+.stepcard:hover{ transform:translateY(-6px); box-shadow:0 28px 64px rgba(124,92,255,.16); }
+.stepcard .k{ font-size:.82rem; font-weight:800; letter-spacing:.12em; color:var(--rai-blue); }
+.stepcard h3{ font-size:1.2rem; font-weight:800; margin:12px 0 8px; }
+.stepcard p{ color:var(--rai-muted); font-size:.98rem; line-height:1.55; margin:0; }
+
+/* pricing */
+.pricing{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; align-items:stretch; }
+@media(max-width:900px){ .pricing{ grid-template-columns:1fr; } }
+.price{ display:flex; flex-direction:column; padding:34px 30px; border-radius:26px;
+  background:rgba(255,255,255,.72); border:1px solid rgba(124,92,255,.12);
+  box-shadow:0 16px 44px rgba(31,38,93,.08); }
+.price.feat{ background:linear-gradient(160deg,rgba(124,92,255,.10),rgba(34,211,238,.08));
+  border:1px solid rgba(124,92,255,.30); box-shadow:0 26px 70px rgba(124,92,255,.20); }
+.price .pn{ font-weight:800; font-size:1.05rem; color:var(--rai-ink); }
+.price .pp{ font-size:2.6rem; font-weight:900; letter-spacing:-.03em; margin:10px 0 2px; color:var(--rai-ink); }
+.price .pp small{ font-size:.95rem; font-weight:600; color:var(--rai-muted); }
+.price ul{ list-style:none; padding:0; margin:18px 0 0; }
+.price li{ color:var(--rai-muted); font-size:.98rem; padding:7px 0 7px 26px; position:relative; }
+.price li:before{ content:"✓"; position:absolute; left:0; color:#0f9d6b; font-weight:800; }
+.price .badge-pop{ align-self:flex-start; font-size:.72rem; font-weight:800; letter-spacing:.08em;
+  text-transform:uppercase; color:#fff; background:linear-gradient(135deg,#7c5cff,#3b82f6);
+  padding:5px 12px; border-radius:999px; margin-bottom:12px; }
+
+/* final cta band */
+.cta-band{ text-align:center; padding:70px 40px; border-radius:34px; margin:40px auto 0; max-width:1060px;
+  background:linear-gradient(140deg,rgba(124,92,255,.12),rgba(34,211,238,.10));
+  border:1px solid rgba(124,92,255,.20); }
 </style>
 """
 
 
 def render_nav() -> None:
-    """Top navigation bar (functional, Streamlit-native buttons)."""
+    """Clean top navigation: brand on the left, a single primary CTA on the
+    right (one main action, no button clutter)."""
+    brand, spacer, cta = st.columns([3, 2, 1.5])
+    with brand:
+        st.markdown(
+            """
+            <div style="display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;
+                        color:#0f1226;padding-top:6px;">
+              <span style="width:30px;height:30px;border-radius:9px;display:inline-flex;align-items:center;
+                           justify-content:center;background:linear-gradient(135deg,#7c5cff,#22d3ee);
+                           color:#fff;font-size:16px;">✦</span>
+              Recruiting&nbsp;AI
+              <span style="font-size:.72rem;font-weight:600;color:#7c5cff;background:rgba(124,92,255,.10);
+                           padding:3px 9px;border-radius:999px;margin-left:6px;">Multi-Agent HR</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with cta:
+        if st.session_state.page == "home":
+            if st.button("Workspace öffnen →", type="primary", use_container_width=True, key="nav_cta"):
+                st.session_state.page = "workspace"
+                st.rerun()
+        else:
+            if st.button("← Startseite", use_container_width=True, key="nav_home"):
+                st.session_state.page = "home"
+                st.session_state.selected_candidate = None
+                st.rerun()
     st.markdown(
-        """
-        <div style="display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;
-                    color:#0f1226;margin-bottom:2px;">
-          <span style="width:30px;height:30px;border-radius:9px;display:inline-flex;align-items:center;
-                       justify-content:center;background:linear-gradient(135deg,#7c5cff,#22d3ee);
-                       color:#fff;font-size:16px;">✦</span>
-          Recruiting&nbsp;AI
-          <span style="font-size:.72rem;font-weight:600;color:#7c5cff;background:rgba(124,92,255,.10);
-                       padding:3px 9px;border-radius:999px;margin-left:6px;">Multi-Agent HR</span>
-        </div>
-        """,
+        "<hr style='border:none;border-top:1px solid rgba(124,92,255,.12);margin:4px 0 10px;'>",
         unsafe_allow_html=True,
     )
-    c1, c2, c3, c4, c5 = st.columns([1, 1, 1, 1, 1.4])
-    with c1:
-        if st.button("Produkt", use_container_width=True):
-            st.session_state.page = "home"
-            st.rerun()
-    with c2:
-        if st.button("Workflow", use_container_width=True):
-            st.session_state.page = "home"
-            st.rerun()
-    with c3:
-        if st.button("Features", use_container_width=True):
-            st.session_state.page = "home"
-            st.rerun()
-    with c4:
-        if st.button("Sicherheit", use_container_width=True):
-            st.session_state.page = "home"
-            st.rerun()
-    with c5:
-        label = "Workspace öffnen →" if st.session_state.page == "home" else "← Zur Startseite"
-        if st.button(label, type="primary", use_container_width=True):
-            st.session_state.page = "workspace" if st.session_state.page == "home" else "home"
-            st.rerun()
-    st.markdown("<hr style='border:none;border-top:1px solid rgba(124,92,255,.12);margin:6px 0 4px;'>", unsafe_allow_html=True)
 
 
 def render_intro() -> None:
@@ -755,6 +795,14 @@ def render_intro() -> None:
           .block-container{padding:0 !important; max-width:100% !important;}
           [data-testid="stAppViewContainer"]{overflow:hidden !important;}
           footer{display:none !important;}
+          /* Full-bleed, fullscreen hero iframe (only on the intro page) */
+          .element-container:has(iframe[title="streamlit_components.v1.html.html"]){
+            width:100vw !important; margin-left:calc(50% - 50vw) !important;
+            margin-right:calc(50% - 50vw) !important; height:100vh !important;
+          }
+          iframe[title="streamlit_components.v1.html.html"]{
+            width:100vw !important; height:100vh !important; border:none !important; display:block;
+          }
         </style>
         """,
         unsafe_allow_html=True,
@@ -840,134 +888,187 @@ def render_intro() -> None:
     components.html(intro_html, height=900, scrolling=False)
 
 
-def _card(icon: str, title: str, body: str, delay: float = 0.0, num: str = "") -> str:
-    head = f'<div class="step-num">{num}</div>' if num else f'<div class="ic">{icon}</div>'
-    return (
-        f'<div class="card reveal" style="animation-delay:{delay}s">'
-        f"{head}<h3>{title}</h3><p>{body}</p></div>"
+# --- Higgsfield brand visuals (generated, hosted on CDN) --------------------
+_HF = "https://d8j0ntlcm91z4.cloudfront.net/user_33IJIDZ0cOmwdzXkCP5nbQryjVC/"
+IMG_ORB = _HF + "hf_20260618_184056_8486b8b4-b288-4344-996a-53ea801af5bc.png"
+IMG_DATA = _HF + "hf_20260618_184103_c3dd220e-bda5-4964-8a2d-0e87b9fd77dd.png"
+IMG_WAVE = _HF + "hf_20260618_184108_568fd0ad-6da7-4830-962a-35a70bf8d220.png"
+
+
+def render_scroll_reveal() -> None:
+    """Wire an IntersectionObserver onto the parent document's `.reveal`
+    elements so sections fade/slide in smoothly as they enter the viewport.
+
+    Runs inside a 0-height component iframe (same-origin), with a safety
+    timeout that force-reveals everything so content is never stuck hidden.
+    """
+    components.html(
+        """
+        <script>
+        (function(){
+          function run(){
+            try{
+              var doc = window.parent.document;
+              var els = doc.querySelectorAll('.reveal:not(.reveal-bound)');
+              if(!els.length){ setTimeout(run, 150); return; }
+              els.forEach(function(el){ el.classList.add('reveal-bound'); });
+              if('IntersectionObserver' in window.parent){
+                var io = new window.parent.IntersectionObserver(function(entries){
+                  entries.forEach(function(e){
+                    if(e.isIntersecting){ e.target.classList.add('reveal-in'); io.unobserve(e.target); }
+                  });
+                }, {threshold:0.10, rootMargin:'0px 0px -7% 0px'});
+                els.forEach(function(el){ io.observe(el); });
+                setTimeout(function(){ els.forEach(function(el){ el.classList.add('reveal-in'); }); }, 2800);
+              } else {
+                els.forEach(function(el){ el.classList.add('reveal-in'); });
+              }
+            }catch(err){}
+          }
+          setTimeout(run, 60);
+        })();
+        </script>
+        """,
+        height=0,
     )
 
 
-def render_home_sections() -> None:
-    """Marketing sections: Problem, Workflow, Features, Human-in-the-loop, CTA."""
-
-    # --- Problem ---
-    st.markdown(
-        '<div class="section reveal"><span class="eyebrow">Das Problem</span>'
-        "<h2>Bewerbungssichtung kostet kleine Teams den ganzen Tag.</h2>"
-        '<p class="lead">Ohne eigene HR-Abteilung wird jede Ausschreibung zur Belastung. '
-        "Genau hier setzt Recruiting AI an.</p></div>",
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        '<div class="grid grid-3">'
-        + _card("⏳", "5–10 Stunden Aufwand", "Manuelles Sichten von Lebensläufen frisst pro Stelle einen ganzen Arbeitstag.", 0.05)
-        + _card("📄", "Uneinheitliche CV-Formate", "PDFs, Word, Freitext — jede Bewerbung sieht anders aus und muss neu interpretiert werden.", 0.12)
-        + _card("❓", "Fehlende Informationen", "Wichtige Angaben fehlen oder sind unklar — Rückfragen gehen unter.", 0.19)
-        + "</div>"
-        + '<div class="grid grid-3" style="margin-top:20px;">'
-        + _card("🏢", "Keine HR-Abteilung", "Geschäftsführung und Fachabteilung entscheiden nebenbei — ohne strukturierten Prozess.", 0.05)
-        + _card("⚖️", "Inkonsistente Bewertung", "Jede Person prüft anders. Vergleichbarkeit und Nachvollziehbarkeit fehlen.", 0.12)
-        + _card("🕵️", "Keine Nachvollziehbarkeit", "Warum wurde wer eingeladen? Ohne Dokumentation bleibt nichts belegbar.", 0.19)
-        + "</div>",
-        unsafe_allow_html=True,
-    )
-
-    # --- Workflow ---
-    st.markdown(
-        '<div class="section reveal"><span class="eyebrow">So funktioniert es</span>'
-        "<h2>Ein klarer Workflow vom Stellenprofil bis zur Entscheidung.</h2>"
-        '<p class="lead">Die Agenten bereiten alles strukturiert auf — du behältst die Kontrolle.</p></div>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        '<div class="grid grid-3">'
-        + _card("", "Stelle hochladen", "Stellenprofil einfügen — der Agent extrahiert messbare Anforderungen.", 0.05, "SCHRITT 01")
-        + _card("", "Bewerbungen hochladen", "Lebensläufe als PDF oder Text hochladen — strukturierte Extraktion je Kandidat.", 0.12, "SCHRITT 02")
-        + _card("", "CV-Agent analysiert", "Skills, Erfahrung, Ausbildung und Sprachen werden automatisch erkannt.", 0.19, "SCHRITT 03")
-        + "</div>"
-        + '<div class="grid grid-3" style="margin-top:20px;">'
-        + _card("", "Anforderungen prüfen", "Jede Anforderung wird transparent gegen die CV-Daten abgeglichen.", 0.05, "SCHRITT 04")
-        + _card("", "Lücken erkennen", "Fehlende oder unklare Angaben werden sichtbar gemacht.", 0.12, "SCHRITT 05")
-        + _card("", "Mensch entscheidet", "Die Geschäftsführung trifft die finale Entscheidung — datenbasiert, nie automatisch.", 0.19, "SCHRITT 06")
-        + "</div>",
-        unsafe_allow_html=True,
-    )
-
-    # --- Features / Agents ---
-    st.markdown(
-        '<div class="section reveal"><span class="eyebrow">Die Agenten</span>'
-        "<h2>Sechs spezialisierte Agenten. Eine saubere Pipeline.</h2>"
-        '<p class="lead">Jeder Agent hat genau eine Aufgabe — das macht das System nachvollziehbar und überprüfbar.</p></div>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        '<div class="grid grid-3">'
-        + _card("🎯", "Stellenprofil-Agent", "Extrahiert messbare Anforderungen aus der Stellenbeschreibung.", 0.05)
-        + _card("📑", "CV-Agent", "Liest Lebensläufe und strukturiert Skills, Erfahrung & Ausbildung.", 0.10)
-        + _card("🔗", "Matching-Agent", "Gleicht jede Anforderung transparent gegen die CV-Daten ab.", 0.15)
-        + "</div>"
-        + '<div class="grid grid-3" style="margin-top:20px;">'
-        + _card("🧩", "Informationslücken-Agent", "Findet fehlende oder unklare Angaben in den Bewerbungen.", 0.05)
-        + _card("💬", "Rückfragen-Agent", "Formuliert höfliche, gezielte Rückfragen an Kandidat:innen.", 0.10)
-        + _card("🛡️", "Audit Log", "Dokumentiert jeden Verarbeitungsschritt lückenlos und nachvollziehbar.", 0.15)
-        + "</div>",
-        unsafe_allow_html=True,
-    )
-
-    # --- Human in the loop ---
-    st.markdown(
-        '<div class="section reveal"><span class="eyebrow">Sicherheit & Verantwortung</span>'
-        "<h2>Human-in-the-Loop by Design.</h2></div>",
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        '<div class="hitl reveal">'
-        "<h3 style='margin-top:0'>Der Agent liefert Daten. Der Mensch entscheidet.</h3>"
-        "<p style='color:#5b6178;font-size:1.02rem;line-height:1.6;margin-bottom:0'>"
-        "Recruiting AI erstellt <b>keine</b> automatische Einstellungsentscheidung, "
-        "<b>kein</b> Ranking und <b>keine</b> finale Empfehlung. Die Agenten extrahieren und "
-        "vergleichen ausschließlich Informationen. Wer eingeladen wird, entscheidet immer ein Mensch."
-        "</p></div>",
-        unsafe_allow_html=True,
-    )
-
-    # --- Final CTA ---
-    st.markdown("<div class='section'></div>", unsafe_allow_html=True)
-    st.markdown(
-        '<div class="glass reveal" style="text-align:center;background:'
-        "linear-gradient(135deg,rgba(124,92,255,.10),rgba(34,211,238,.08));\">"
-        "<h2 style='font-size:2rem;margin:0 0 10px;'>Bereit, deinen ersten Screening-Lauf zu starten?</h2>"
-        "<p style='color:#5b6178;font-size:1.05rem;margin:0 0 4px;'>Lade Demo-Daten oder deine eigenen Bewerbungen in den Workspace.</p>"
-        "</div>",
-        unsafe_allow_html=True,
-    )
-    b1, b2, b3 = st.columns([1, 1.1, 1])
-    with b2:
-        if st.button("Workspace öffnen  →", type="primary", use_container_width=True, key="final_cta"):
+def _main_cta(label: str, key: str) -> None:
+    """The single, centered primary call-to-action -> opens the workspace."""
+    c1, c2, c3 = st.columns([1, 1.2, 1])
+    with c2:
+        if st.button(label, type="primary", use_container_width=True, key=key):
             st.session_state.page = "workspace"
             st.rerun()
+
+
+def _step(num: str, title: str, body: str) -> str:
+    return (
+        f'<div class="stepcard"><div class="k">SCHRITT {num}</div>'
+        f"<h3>{title}</h3><p>{body}</p></div>"
+    )
 
 
 def render_home() -> None:
-    # The immersive hero is the intro gate (render_intro). After the intro
-    # transition, the home page shows a compact header followed by the
-    # marketing sections.
+    """Premium scroll-storytelling landing page (revealed after the intro):
+    Problem -> Lösung -> Demo -> Ergebnisse -> Pricing, with one main CTA."""
+
+    # 1) One clear message + the single main CTA
     st.markdown(
-        '<div class="section reveal" style="margin-top:6px;">'
-        '<span class="eyebrow">Recruiting AI · Multi-Agent HR</span>'
-        "<h2>Bewerbungen verstehen. Menschen entscheiden.</h2>"
-        '<p class="lead">Sechs spezialisierte KI-Agenten lesen Stellenprofile und '
-        "Lebensläufe, prüfen Anforderungen und decken Informationslücken auf — "
-        "die finale Entscheidung bleibt immer bei dir.</p></div>",
+        '<div class="story first reveal">'
+        '<div class="kicker">Recruiting AI · Multi-Agent HR</div>'
+        '<h1 class="display">Bewerbungen verstehen.<br><span class="g">Menschen entscheiden.</span></h1>'
+        '<p class="big">Sechs spezialisierte KI-Agenten lesen Stellenprofile und Lebensläufe, '
+        "prüfen Anforderungen und decken Informationslücken auf — die Entscheidung bleibt bei dir.</p>"
+        "</div>",
         unsafe_allow_html=True,
     )
-    h1, h2, h3 = st.columns([1, 1, 3])
-    with h1:
-        if st.button("🚀  Demo starten", type="primary", use_container_width=True, key="home_demo"):
-            st.session_state.page = "workspace"
-            st.rerun()
-    render_home_sections()
+    _main_cta("🚀  Demo starten", "cta_top")
+
+    # 2) Problem — big type, few elements, whitespace
+    st.markdown(
+        '<div class="story reveal"><div class="split">'
+        "<div>"
+        '<div class="kicker">Das Problem</div>'
+        '<h2 class="display">5–10 Stunden<br><span class="g">pro Stelle.</span></h2>'
+        '<p class="big">Ohne eigene HR-Abteilung wird jede Ausschreibung zur Belastung: '
+        "unterschiedliche CV-Formate, fehlende Angaben, keine nachvollziehbare Bewertung.</p>"
+        "</div>"
+        f'<div class="media-wrap"><img src="{IMG_DATA}" alt="CV-Analyse"></div>'
+        "</div></div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div class="story reveal" style="padding-top:30px;"><div class="stats">'
+        '<div class="stat"><div class="n">5–10 h</div><div class="l">Sichtungsaufwand pro Stelle</div></div>'
+        '<div class="stat"><div class="n">100 %</div><div class="l">der Schritte im Audit Log</div></div>'
+        '<div class="stat"><div class="n">0</div><div class="l">automatische Entscheidungen</div></div>'
+        "</div></div>",
+        unsafe_allow_html=True,
+    )
+
+    # 3) Lösung — visual main idea (the orb) + clean steps
+    st.markdown(
+        '<div class="story reveal"><div class="split rev">'
+        f'<div class="media-wrap"><img src="{IMG_ORB}" alt="Recruiting AI"></div>'
+        "<div>"
+        '<div class="kicker">Die Lösung</div>'
+        '<h2 class="display">Ein Agenten-<br><span class="g">team</span>, ein Flow.</h2>'
+        '<p class="big">Vom Stellenprofil bis zur Rückfrage: jeder Agent hat genau eine Aufgabe — '
+        "transparent, überprüfbar, nachvollziehbar.</p>"
+        "</div></div></div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div class="story reveal" style="padding-top:24px;"><div class="steps">'
+        + _step("01", "Stelle & Bewerbungen", "Stellenprofil einfügen, Lebensläufe als PDF oder Text hochladen.")
+        + _step("02", "Analyse & Abgleich", "Der CV-Agent strukturiert die Daten, der Matching-Agent prüft jede Anforderung.")
+        + _step("03", "Lücken & Rückfragen", "Fehlende Angaben werden sichtbar — höfliche Rückfragen entstehen automatisch.")
+        + "</div></div>",
+        unsafe_allow_html=True,
+    )
+
+    # 4) Demo — invite into the workspace (single CTA)
+    st.markdown(
+        '<div class="story reveal" style="text-align:center;">'
+        '<div class="kicker" style="text-align:center;">Live-Demo</div>'
+        '<h2 class="display">Probier es im Workspace.</h2>'
+        '<p class="big" style="margin-left:auto;margin-right:auto;">Lade Demo-Daten oder deine eigenen '
+        "Bewerbungen — analysieren, Kandidatenprofile öffnen, Rückfragen als E-Mail-Entwurf erstellen.</p>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
+    _main_cta("Workspace öffnen  →", "cta_demo")
+
+    # 5) Ergebnisse — outcomes + wave visual
+    st.markdown(
+        '<div class="story reveal"><div class="split">'
+        "<div>"
+        '<div class="kicker">Ergebnisse</div>'
+        '<h2 class="display">Struktur statt<br><span class="g">Bauchgefühl.</span></h2>'
+        '<p class="big">Saubere Kandidatenprofile, eine transparente Qualifikationscheckliste und ein '
+        "lückenloses Audit Log — Human-in-the-Loop by Design. Keine Rangfolge, keine Empfehlung.</p>"
+        "</div>"
+        f'<div class="media-wrap"><img src="{IMG_WAVE}" alt="Ergebnisse"></div>'
+        "</div></div>",
+        unsafe_allow_html=True,
+    )
+
+    # 6) Pricing — simple, one highlighted plan
+    st.markdown(
+        '<div class="story reveal" style="text-align:center;">'
+        '<div class="kicker" style="text-align:center;">Preise</div>'
+        '<h2 class="display">Einfach. Planbar.</h2></div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div class="story reveal" style="padding-top:16px;"><div class="pricing">'
+        '<div class="price"><div class="pn">Starter</div>'
+        '<div class="pp">0€<small> / Demo</small></div>'
+        "<ul><li>Vollständiger Workspace</li><li>Bis zu 5 Bewerbungen</li><li>Audit Log</li></ul></div>"
+        '<div class="price feat"><div class="badge-pop">Beliebt</div><div class="pn">Team</div>'
+        '<div class="pp">49€<small> / Monat</small></div>'
+        "<ul><li>Unbegrenzte Bewerbungen</li><li>Alle sechs Agenten</li><li>Rückfragen-E-Mails</li>"
+        "<li>Priorisierter Support</li></ul></div>"
+        '<div class="price"><div class="pn">Enterprise</div>'
+        '<div class="pp">Auf Anfrage</div>'
+        "<ul><li>SSO &amp; Rollen</li><li>Eigene Modelle / API</li><li>Audit-Export</li></ul></div>"
+        "</div></div>",
+        unsafe_allow_html=True,
+    )
+
+    # Final CTA band (one button)
+    st.markdown(
+        '<div class="cta-band reveal">'
+        '<h2 class="display" style="font-size:clamp(2rem,4vw,3rem);">Bereit für den ersten Screening-Lauf?</h2>'
+        '<p class="big" style="margin:14px auto 0;">Starte in Sekunden — ganz ohne Setup.</p>'
+        "</div>",
+        unsafe_allow_html=True,
+    )
+    _main_cta("🚀  Demo starten", "cta_final")
+    st.markdown("<div style='height:60px;'></div>", unsafe_allow_html=True)
+
+    render_scroll_reveal()
 
 
 # --- Workspace helpers ------------------------------------------------------
