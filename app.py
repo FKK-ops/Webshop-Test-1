@@ -1029,6 +1029,29 @@ def render_scroll_reveal() -> None:
           }
           setTimeout(run, 60);
         })();
+
+        /* Force muted autoplay of background videos. Streamlit-injected
+           <video> tags don't always start on their own (esp. Safari), so we
+           set the muted property and call play() from here. */
+        (function(){
+          function play(){
+            try{
+              var vids = window.parent.document.querySelectorAll('video');
+              vids.forEach(function(v){
+                v.muted = true; v.defaultMuted = true; v.playsInline = true;
+                v.setAttribute('muted',''); v.setAttribute('playsinline','');
+                var pr = v.play(); if(pr && pr.catch){ pr.catch(function(){}); }
+                if(!v.dataset.boundplay){
+                  v.dataset.boundplay = '1';
+                  ['canplay','loadeddata'].forEach(function(ev){
+                    v.addEventListener(ev, function(){ var p=v.play(); if(p&&p.catch) p.catch(function(){}); });
+                  });
+                }
+              });
+            }catch(e){}
+          }
+          [120, 700, 1800].forEach(function(t){ setTimeout(play, t); });
+        })();
         </script>
         """,
         height=0,
