@@ -694,10 +694,17 @@ iframe[title="streamlit_components.v1.html.html"]{
 }
 
 /* ===================== Premium scroll-storytelling ===================== */
-/* Hero background video */
+/* Hero background video (crossfading slideshow of brand clips) */
 .vhero{ position:relative; width:100vw; margin-left:calc(50% - 50vw);
   height:min(78vh,660px); overflow:hidden; }
-.vhero-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
+.vhero-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;
+  opacity:0; animation:heroFade 21s infinite; }
+.vhero-bg.v1{ animation-delay:0s; }
+.vhero-bg.v2{ animation-delay:7s; }
+.vhero-bg.v3{ animation-delay:14s; }
+@keyframes heroFade{
+  0%{opacity:0;} 3%{opacity:1;} 30%{opacity:1;} 34%{opacity:0;} 100%{opacity:0;}
+}
 .vhero-scrim{ position:absolute; inset:0;
   background:
     linear-gradient(90deg, rgba(251,251,255,.94) 0%, rgba(251,251,255,.6) 36%, rgba(251,251,255,0) 64%),
@@ -961,8 +968,16 @@ IMG_STEP_DECIDE = _HF + "hf_20260619_105350_b7e7816d-3170-4cfb-9f07-be85ce02fce0
 # Spline scene used as the visual in the "Das Problem" section
 SPLINE_PROBLEM = "https://prod.spline.design/4PF4J4YenOXJHe4A/scene.splinecode"
 
-# Hero background video (Higgsfield, animated brand orb)
-VID_HERO = _HF + "hf_20260619_134821_ca7b9c43-3c82-4f3c-b519-3a274ceae972.mp4"
+# Hero background: three pastel brand graphics + their animated clips
+IMG_ORB_BG = _HF + "hf_20260620_114055_56c2697b-3f52-4996-b462-754b6e48c590.png"
+IMG_RIBBON_BG = _HF + "hf_20260620_114101_59af61b7-54cf-437c-ae04-5678f48df1de.png"
+IMG_GLASS_BG = _HF + "hf_20260620_114107_7c8ff5fe-e2c2-494a-80d6-72047a304f6e.png"
+# Animated hero clips (Higgsfield image-to-video). Until the videos finish
+# rendering these point at the matching still images (graceful fallback);
+# they are swapped to the .mp4 URLs once available.
+VID_HERO_ORB = IMG_ORB_BG
+VID_HERO_RIBBON = IMG_RIBBON_BG
+VID_HERO_GLASS = IMG_GLASS_BG
 
 
 def render_spline_embed(url: str, height: int = 560) -> None:
@@ -1078,12 +1093,19 @@ def render_home() -> None:
     """Premium scroll-storytelling landing page (revealed after the intro):
     Problem -> Lösung -> Demo -> Ergebnisse -> Pricing, with one main CTA."""
 
-    # 1) Hero with the Higgsfield brand video + one clear message + main CTA
+    # 1) Hero with a crossfading Higgsfield brand-video slideshow + message + CTA
+    def _hvid(src: str, cls: str, poster: str) -> str:
+        return (
+            f'<video class="vhero-bg {cls}" autoplay loop muted playsinline poster="{poster}">'
+            f'<source src="{src}" type="video/mp4"></video>'
+        )
+
     st.markdown(
         '<div class="vhero reveal">'
-        f'<video class="vhero-bg" autoplay loop muted playsinline poster="{IMG_ORB}">'
-        f'<source src="{VID_HERO}" type="video/mp4"></video>'
-        '<div class="vhero-scrim"></div>'
+        + _hvid(VID_HERO_ORB, "v1", IMG_ORB_BG)
+        + _hvid(VID_HERO_RIBBON, "v2", IMG_RIBBON_BG)
+        + _hvid(VID_HERO_GLASS, "v3", IMG_GLASS_BG)
+        + '<div class="vhero-scrim"></div>'
         '<div class="vhero-copy">'
         '<div class="kicker">Recruiting AI · Multi-Agent HR</div>'
         '<h1 class="display">Bewerbungen verstehen.<br><span class="g">Menschen entscheiden.</span></h1>'
