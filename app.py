@@ -850,6 +850,12 @@ iframe[title="streamlit_components.v1.html.html"]{
 .hcard .cap p{ margin:0; color:var(--rai-muted); font-size:.92rem; line-height:1.5; }
 
 /* Problem section: text overlaid on the full-bleed Spline background */
+/* Workspace header: title overlaid on a Spline banner */
+.ws-head{ position:relative; z-index:3; margin-top:-300px; height:300px; pointer-events:none; }
+.ws-copy{ max-width:1180px; margin:0 auto; padding-top:34px; }
+.ws-copy h2{ text-shadow:0 2px 22px rgba(255,255,255,.7); }
+.ws-copy .lead{ text-shadow:0 1px 14px rgba(255,255,255,.8); }
+
 .problem-wrap{ position:relative; z-index:3; margin-top:-420px; height:420px; pointer-events:none; }
 .problem-copy{ max-width:1060px; margin:0 auto; padding-top:54px; position:relative; }
 .problem-copy .display{ text-shadow:0 2px 24px rgba(255,255,255,.6); }
@@ -1330,8 +1336,6 @@ def render_home() -> None:
     _main_cta("🚀  Demo starten", "cta_final")
     st.markdown("<div style='height:60px;'></div>", unsafe_allow_html=True)
 
-    render_scroll_reveal()
-
 
 # --- Workspace helpers ------------------------------------------------------
 
@@ -1344,12 +1348,14 @@ STATUS_META = {
 
 
 def render_workspace() -> None:
+    # Spline graphic as a header background, with the title overlaid on top.
+    render_spline_embed(SPLINE_PROBLEM, height=300)
     st.markdown(
-        '<div class="section reveal" style="margin-top:18px;">'
+        '<div class="ws-head"><div class="ws-copy section" style="margin:0;">'
         '<span class="eyebrow">Recruiting Workspace</span>'
         "<h2>Dein Screening-Arbeitsbereich</h2>"
         '<p class="lead">Stellenprofil definieren, Bewerbungen analysieren und Ergebnisse '
-        "transparent prüfen — die Entscheidung bleibt bei dir.</p></div>",
+        "transparent prüfen — die Entscheidung bleibt bei dir.</p></div></div>",
         unsafe_allow_html=True,
     )
 
@@ -1714,6 +1720,10 @@ def main() -> None:
         render_workspace()
     else:
         render_home()
+
+    # Scroll-reveal observer runs on every page so .reveal elements never
+    # stay hidden (and animate in as they enter the viewport).
+    render_scroll_reveal()
 
 
 if __name__ == "__main__":
