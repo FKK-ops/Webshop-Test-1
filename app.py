@@ -816,8 +816,8 @@ iframe[title="streamlit_components.v1.html.html"]{
   -webkit-mask-composite:xor; mask-composite:exclude;
   opacity:0; pointer-events:none; transition:opacity .35s ease; }
 .stat::after, .price::after{ filter:blur(9px); }   /* soft neon glow layer */
-.stat:hover::before, .stat:hover::after,
-.price:hover::before, .price:hover::after{ opacity:1; animation:ledspin 1.9s linear infinite; }
+.price:hover::before, .price:hover::after{ opacity:1; animation:ledspin 2.5s linear infinite; }
+.stat:hover::before, .stat:hover::after{ opacity:1; animation:ledspin 2.5s linear infinite; }
 .price:hover::after{ opacity:.85; }
 @keyframes ledspin{ to{ --ledangle:360deg; } }
 
