@@ -23,7 +23,9 @@ judgement is always left to a human recruiter.
 
 from __future__ import annotations
 
+import base64
 import io
+import os
 import re
 import urllib.parse
 from dataclasses import dataclass, field
@@ -697,7 +699,11 @@ iframe[title="streamlit_components.v1.html.html"]{
 /* Hero background image (bright pastel brand graphic) — full viewport */
 .vhero{ position:relative; width:100vw; margin-left:calc(50% - 50vw);
   height:calc(100vh - 86px); min-height:560px; overflow:hidden; }
-.vhero-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
+.vhero-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;
+  /* fade the top & bottom so the hero blends smoothly into the sections
+     before and after it (no hard seams) */
+  -webkit-mask-image:linear-gradient(180deg, transparent 0, #000 13%, #000 80%, transparent 100%);
+  mask-image:linear-gradient(180deg, transparent 0, #000 13%, #000 80%, transparent 100%); }
 .vhero-scrim{ position:absolute; inset:0;
   background:
     linear-gradient(90deg, rgba(251,251,255,.94) 0%, rgba(251,251,255,.6) 36%, rgba(251,251,255,0) 64%),
@@ -798,6 +804,34 @@ iframe[title="streamlit_components.v1.html.html"]{
 """
 
 
+def _logo_data_uri() -> Optional[str]:
+    """Return a base64 data URI for a logo file if one exists in the repo."""
+    for path in ("assets/logo.png", "logo.png", "assets/logo.svg", "logo.svg",
+                 "assets/logo.webp", "logo.webp"):
+        if os.path.exists(path):
+            mime = ("image/svg+xml" if path.endswith(".svg")
+                    else "image/webp" if path.endswith(".webp") else "image/png")
+            with open(path, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode()
+            return f"data:{mime};base64,{b64}"
+    return None
+
+
+def _brand_mark(size: int = 32) -> str:
+    """Logo image if available, otherwise the ✦ fallback glyph."""
+    logo = _logo_data_uri()
+    if logo:
+        return (
+            f'<img src="{logo}" alt="Recruiting AI" '
+            f'style="width:{size}px;height:{size}px;border-radius:9px;object-fit:contain;">'
+        )
+    return (
+        f'<span style="width:{size}px;height:{size}px;border-radius:9px;display:inline-flex;'
+        "align-items:center;justify-content:center;background:linear-gradient(135deg,#7c5cff,#22d3ee);"
+        'color:#fff;font-size:16px;">✦</span>'
+    )
+
+
 def render_nav() -> None:
     """Clean top navigation: brand on the left, a single primary CTA on the
     right (one main action, no button clutter)."""
@@ -807,14 +841,12 @@ def render_nav() -> None:
             """
             <div style="display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;
                         color:#0f1226;padding-top:6px;">
-              <span style="width:30px;height:30px;border-radius:9px;display:inline-flex;align-items:center;
-                           justify-content:center;background:linear-gradient(135deg,#7c5cff,#22d3ee);
-                           color:#fff;font-size:16px;">✦</span>
+              __MARK__
               Recruiting&nbsp;AI
               <span style="font-size:.72rem;font-weight:600;color:#7c5cff;background:rgba(124,92,255,.10);
                            padding:3px 9px;border-radius:999px;margin-left:6px;">Multi-Agent HR</span>
             </div>
-            """,
+            """.replace("__MARK__", _brand_mark(32)),
             unsafe_allow_html=True,
         )
     with cta:
