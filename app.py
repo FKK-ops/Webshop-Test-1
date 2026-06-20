@@ -677,7 +677,25 @@ h1,h2,h3{ color:var(--rai-ink); letter-spacing:-.02em; }
 
 /* Smooth scrolling between sections */
 html{ scroll-behavior:smooth; }
-body{ overflow-x:hidden; }
+html, body{ overflow-x:hidden; max-width:100%; }
+
+/* Top navigation dropdown */
+[data-testid="column"]{ overflow:visible !important; }
+.navdrop{ position:relative; display:inline-flex; align-items:center; padding-top:6px; }
+.navdrop .navbtn{ display:inline-flex; align-items:center; gap:7px; cursor:pointer;
+  font-weight:600; font-size:.95rem; color:#0f1226; background:rgba(255,255,255,.7);
+  border:1px solid rgba(124,92,255,.18); padding:8px 16px; border-radius:12px; transition:all .25s ease; }
+.navdrop:hover .navbtn{ border-color:#7c5cff; color:#7c5cff; }
+.navdrop .navbtn .car{ transition:transform .25s ease; }
+.navdrop:hover .navbtn .car{ transform:rotate(180deg); }
+.navdrop .navmenu{ position:absolute; top:calc(100% + 8px); left:0; min-width:220px;
+  background:#fff; border:1px solid rgba(124,92,255,.14); border-radius:16px;
+  box-shadow:0 24px 60px rgba(31,38,93,.18); padding:8px; z-index:2000;
+  opacity:0; visibility:hidden; transform:translateY(8px); transition:all .25s cubic-bezier(.2,.8,.2,1); }
+.navdrop:hover .navmenu{ opacity:1; visibility:visible; transform:translateY(0); }
+.navmenu a{ display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:10px;
+  color:#0f1226; text-decoration:none; font-size:.95rem; font-weight:500; }
+.navmenu a:hover{ background:rgba(124,92,255,.10); color:#7c5cff; }
 
 /* Full-bleed component iframes (Spline background graphics span the viewport).
    Streamlit gives the component iframe the title "st.iframe" in some versions
@@ -700,10 +718,10 @@ iframe[title="streamlit_components.v1.html.html"]{
 .vhero{ position:relative; width:100vw; margin-left:calc(50% - 50vw);
   height:calc(100vh - 86px); min-height:560px; overflow:hidden; }
 .vhero-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;
-  /* fade the top & bottom so the hero blends smoothly into the sections
-     before and after it (no hard seams) */
-  -webkit-mask-image:linear-gradient(180deg, transparent 0, #000 13%, #000 80%, transparent 100%);
-  mask-image:linear-gradient(180deg, transparent 0, #000 13%, #000 80%, transparent 100%); }
+  /* fade the top & (generously) the bottom so the hero blends smoothly into
+     the sections before and after it (no hard seams) */
+  -webkit-mask-image:linear-gradient(180deg, transparent 0, #000 12%, #000 64%, transparent 99%);
+  mask-image:linear-gradient(180deg, transparent 0, #000 12%, #000 64%, transparent 99%); }
 .vhero-scrim{ position:absolute; inset:0;
   background:
     linear-gradient(90deg, rgba(251,251,255,.94) 0%, rgba(251,251,255,.6) 36%, rgba(251,251,255,0) 64%),
@@ -729,13 +747,28 @@ iframe[title="streamlit_components.v1.html.html"]{
   box-shadow:0 36px 90px rgba(31,38,93,.18); line-height:0; }
 .media-wrap img{ width:100%; height:auto; display:block; }
 
-/* big stat row */
-.stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:30px; }
+/* stat widgets (colored, interactive on hover, centered) */
+.stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; max-width:920px; margin:0 auto; }
 @media(max-width:900px){ .stats{ grid-template-columns:1fr; gap:18px; } }
-.stat .n{ font-size:clamp(2.4rem,4.6vw,3.4rem); font-weight:900; letter-spacing:-.03em;
+.stat{ text-align:center; padding:30px 24px; border-radius:24px; background:rgba(255,255,255,.72);
+  border:1px solid rgba(124,92,255,.12); box-shadow:0 14px 40px rgba(31,38,93,.07);
+  transition:transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease, border-color .4s ease; }
+.stat:hover{ transform:translateY(-10px); box-shadow:0 34px 74px rgba(124,92,255,.22);
+  border-color:rgba(124,92,255,.35); }
+.stat .ic{ width:54px;height:54px;margin:0 auto 14px;border-radius:16px;display:flex;
+  align-items:center;justify-content:center;font-size:25px;
+  background:linear-gradient(135deg,#7c5cff,#3b82f6); color:#fff;
+  box-shadow:0 10px 24px rgba(124,92,255,.35);
+  transition:transform .5s cubic-bezier(.2,.8,.2,1); }
+.stat:hover .ic{ transform:translateY(-4px) rotate(-6deg) scale(1.1); }
+.stat.c2 .ic{ background:linear-gradient(135deg,#3b82f6,#22d3ee); box-shadow:0 10px 24px rgba(59,130,246,.35); }
+.stat.c3 .ic{ background:linear-gradient(135deg,#22d3ee,#7c5cff); box-shadow:0 10px 24px rgba(34,211,238,.35); }
+.stat .n{ display:inline-block; font-size:clamp(2.2rem,4.4vw,3.2rem); font-weight:900; letter-spacing:-.03em;
   background:linear-gradient(120deg,#7c5cff,#22d3ee); -webkit-background-clip:text;
-  background-clip:text; -webkit-text-fill-color:transparent; }
-.stat .l{ color:var(--rai-muted); font-size:1.02rem; margin-top:6px; }
+  background-clip:text; -webkit-text-fill-color:transparent;
+  transition:transform .4s cubic-bezier(.2,.8,.2,1); }
+.stat:hover .n{ transform:scale(1.07); }
+.stat .l{ color:var(--rai-muted); font-size:1.0rem; margin-top:6px; }
 
 /* clean numbered steps */
 .steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
@@ -753,9 +786,15 @@ iframe[title="streamlit_components.v1.html.html"]{
 @media(max-width:900px){ .pricing{ grid-template-columns:1fr; } }
 .price{ display:flex; flex-direction:column; padding:34px 30px; border-radius:26px;
   background:rgba(255,255,255,.72); border:1px solid rgba(124,92,255,.12);
-  box-shadow:0 16px 44px rgba(31,38,93,.08); }
-.price.feat{ background:linear-gradient(160deg,rgba(124,92,255,.10),rgba(34,211,238,.08));
+  box-shadow:0 16px 44px rgba(31,38,93,.08);
+  transition:transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease, border-color .4s ease; }
+.price:hover{ transform:translateY(-10px); box-shadow:0 34px 74px rgba(124,92,255,.22);
+  border-color:rgba(124,92,255,.40); }
+.price.p1{ background:linear-gradient(180deg, rgba(124,92,255,.07), rgba(255,255,255,.72)); }
+.price.p3{ background:linear-gradient(180deg, rgba(34,211,238,.07), rgba(255,255,255,.72)); }
+.price.feat{ background:linear-gradient(160deg,rgba(124,92,255,.12),rgba(34,211,238,.09));
   border:1px solid rgba(124,92,255,.30); box-shadow:0 26px 70px rgba(124,92,255,.20); }
+.price.feat:hover{ transform:translateY(-13px); box-shadow:0 40px 84px rgba(124,92,255,.28); }
 .price .pn{ font-weight:800; font-size:1.05rem; color:var(--rai-ink); }
 .price .pp{ font-size:2.6rem; font-weight:900; letter-spacing:-.03em; margin:10px 0 2px; color:var(--rai-ink); }
 .price .pp small{ font-size:.95rem; font-weight:600; color:var(--rai-muted); }
@@ -768,11 +807,15 @@ iframe[title="streamlit_components.v1.html.html"]{
 
 /* horizontal scroll gallery (Raycast-style) */
 .bleed{ width:100vw; margin-left:calc(50% - 50vw); }
+.galfade{ position:relative; }
+/* thick, white fades on the left and right edges */
+.galfade:before, .galfade:after{ content:""; position:absolute; top:0; bottom:0; width:240px;
+  z-index:4; pointer-events:none; }
+.galfade:before{ left:0; background:linear-gradient(90deg, #ffffff 0%, rgba(255,255,255,.92) 30%, rgba(255,255,255,0) 100%); }
+.galfade:after{ right:0; background:linear-gradient(270deg, #ffffff 0%, rgba(255,255,255,.92) 30%, rgba(255,255,255,0) 100%); }
+@media(max-width:760px){ .galfade:before, .galfade:after{ width:90px; } }
 .hscroll{ display:flex; gap:24px; overflow-x:auto; scroll-snap-type:x mandatory;
-  -webkit-overflow-scrolling:touch; padding:12px 48px 34px;
-  /* soft fade on the left and right edges */
-  -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 110px, #000 calc(100% - 110px), transparent 100%);
-  mask-image:linear-gradient(90deg, transparent 0, #000 110px, #000 calc(100% - 110px), transparent 100%); }
+  -webkit-overflow-scrolling:touch; padding:12px 60px 34px; }
 .hscroll::-webkit-scrollbar{ height:8px; }
 .hscroll::-webkit-scrollbar-thumb{ background:rgba(124,92,255,.28); border-radius:99px; }
 .hscroll::-webkit-scrollbar-track{ background:transparent; }
@@ -849,6 +892,22 @@ def render_nav() -> None:
             """.replace("__MARK__", _brand_mark(32)),
             unsafe_allow_html=True,
         )
+    with spacer:
+        if st.session_state.page == "home":
+            st.markdown(
+                """
+                <div class="navdrop">
+                  <span class="navbtn">Menü <span class="car">▾</span></span>
+                  <div class="navmenu">
+                    <a href="#problem">Das Problem</a>
+                    <a href="#loesung">Die Lösung</a>
+                    <a href="#schritte">Schritte</a>
+                    <a href="#preise">Preise</a>
+                  </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
     with cta:
         if st.session_state.page == "home":
             if st.button("Workspace öffnen →", type="primary", use_container_width=True, key="nav_cta"):
@@ -1127,7 +1186,7 @@ def render_home() -> None:
 
     # 2) Problem — text first, the full-bleed Spline ribbon sits below it
     st.markdown(
-        '<div class="story reveal" style="padding-bottom:0;">'
+        '<div class="story reveal" id="problem" style="padding-bottom:0;">'
         '<div class="kicker">Das Problem</div>'
         '<h2 class="display">5–10 Stunden<br><span class="g">pro Stelle.</span></h2>'
         '<p class="big">Ohne eigene HR-Abteilung wird jede Ausschreibung zur Belastung: '
@@ -1138,16 +1197,19 @@ def render_home() -> None:
     render_spline_embed(SPLINE_PROBLEM, height=420)
     st.markdown(
         '<div class="story reveal" style="padding-top:0;"><div class="stats">'
-        '<div class="stat"><div class="n">5–10 h</div><div class="l">Sichtungsaufwand pro Stelle</div></div>'
-        '<div class="stat"><div class="n">100 %</div><div class="l">der Schritte im Audit Log</div></div>'
-        '<div class="stat"><div class="n">0</div><div class="l">automatische Entscheidungen</div></div>'
+        '<div class="stat c1"><div class="ic">⏱️</div><div class="n">5–10 h</div>'
+        '<div class="l">Sichtungsaufwand pro Stelle</div></div>'
+        '<div class="stat c2"><div class="ic">🛡️</div><div class="n">100 %</div>'
+        '<div class="l">der Schritte im Audit Log</div></div>'
+        '<div class="stat c3"><div class="ic">⚖️</div><div class="n">0</div>'
+        '<div class="l">automatische Entscheidungen</div></div>'
         "</div></div>",
         unsafe_allow_html=True,
     )
 
     # 3) Lösung — visual main idea (the orb) + clean steps
     st.markdown(
-        '<div class="story reveal"><div class="split rev">'
+        '<div class="story reveal" id="loesung"><div class="split rev">'
         f'<div class="media-wrap"><img src="{IMG_ORB}" alt="Recruiting AI"></div>'
         "<div>"
         '<div class="kicker">Die Lösung</div>'
@@ -1168,7 +1230,7 @@ def render_home() -> None:
 
     # 3b) Horizontal scroll gallery (Raycast-style) with Higgsfield visuals
     st.markdown(
-        '<div class="story reveal" style="padding-bottom:8px;">'
+        '<div class="story reveal" id="schritte" style="padding-bottom:8px;">'
         '<div class="kicker">Im Detail</div>'
         '<h2 class="display">Drei Schritte. <span class="g">Ein Flow.</span></h2>'
         '<p class="big">Scrolle horizontal durch den Ablauf.</p></div>',
@@ -1182,7 +1244,7 @@ def render_home() -> None:
         )
 
     st.markdown(
-        '<div class="bleed reveal"><div class="hscroll">'
+        '<div class="bleed galfade reveal"><div class="hscroll">'
         + _hcard(IMG_STEP_UPLOAD, "SCHRITT 01", "Hochladen", "Stelle & Lebensläufe rein — als PDF oder Text.")
         + _hcard(IMG_STEP_ANALYZE, "SCHRITT 02", "Analysieren", "CV-Agent strukturiert, Matching-Agent prüft jede Anforderung.")
         + _hcard(IMG_STEP_DECIDE, "SCHRITT 03", "Entscheiden", "Der Mensch wählt — nie der Algorithmus.")
@@ -1220,21 +1282,21 @@ def render_home() -> None:
 
     # 6) Pricing — simple, one highlighted plan
     st.markdown(
-        '<div class="story reveal" style="text-align:center;">'
+        '<div class="story reveal" id="preise" style="text-align:center;">'
         '<div class="kicker" style="text-align:center;">Preise</div>'
         '<h2 class="display">Einfach. Planbar.</h2></div>',
         unsafe_allow_html=True,
     )
     st.markdown(
         '<div class="story reveal" style="padding-top:16px;"><div class="pricing">'
-        '<div class="price"><div class="pn">Starter</div>'
+        '<div class="price p1"><div class="pn">Starter</div>'
         '<div class="pp">0€<small> / Demo</small></div>'
         "<ul><li>Vollständiger Workspace</li><li>Bis zu 5 Bewerbungen</li><li>Audit Log</li></ul></div>"
         '<div class="price feat"><div class="badge-pop">Beliebt</div><div class="pn">Team</div>'
         '<div class="pp">49€<small> / Monat</small></div>'
         "<ul><li>Unbegrenzte Bewerbungen</li><li>Alle sechs Agenten</li><li>Rückfragen-E-Mails</li>"
         "<li>Priorisierter Support</li></ul></div>"
-        '<div class="price"><div class="pn">Enterprise</div>'
+        '<div class="price p3"><div class="pn">Enterprise</div>'
         '<div class="pp">Auf Anfrage</div>'
         "<ul><li>SSO &amp; Rollen</li><li>Eigene Modelle / API</li><li>Audit-Export</li></ul></div>"
         "</div></div>",
