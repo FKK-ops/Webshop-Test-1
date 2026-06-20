@@ -679,6 +679,26 @@ h1,h2,h3{ color:var(--rai-ink); letter-spacing:-.02em; }
 html{ scroll-behavior:smooth; }
 html, body{ overflow-x:hidden; max-width:100%; }
 
+/* Glass navigation bar (only the nav row carries the .navbar-mark) — appears
+   after the intro. Subtle, slow clockwise LED border in the brand colors. */
+[data-testid="stHorizontalBlock"]:has(.navbar-mark){
+  position:sticky; top:10px; z-index:999;
+  background:rgba(255,255,255,.52);
+  backdrop-filter:blur(20px) saturate(1.4); -webkit-backdrop-filter:blur(20px) saturate(1.4);
+  border:1px solid rgba(255,255,255,.65); border-radius:22px;
+  box-shadow:0 18px 50px rgba(31,38,93,.12);
+  padding:8px 20px !important; align-items:center;
+}
+[data-testid="stHorizontalBlock"]:has(.navbar-mark)::before{
+  content:""; position:absolute; inset:0; border-radius:inherit; padding:1.5px;
+  background:conic-gradient(from var(--ledangle),
+    rgba(124,92,255,0) 0deg, rgba(124,92,255,0) 215deg,
+    #7c5cff 285deg, #3b82f6 320deg, #22d3ee 350deg, rgba(34,211,238,0) 360deg);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude;
+  opacity:.5; pointer-events:none; animation:ledspin 9s linear infinite; }
+.navbar-mark{ display:none; }
+
 /* Top navigation dropdown */
 [data-testid="column"]{ overflow:visible !important; }
 .navdrop{ position:relative; display:inline-flex; align-items:center; padding-top:6px; }
@@ -904,6 +924,7 @@ def render_nav() -> None:
     with brand:
         st.markdown(
             """
+            <span class="navbar-mark"></span>
             <div style="display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;
                         color:#0f1226;padding-top:6px;">
               __MARK__
@@ -940,10 +961,7 @@ def render_nav() -> None:
                 st.session_state.page = "home"
                 st.session_state.selected_candidate = None
                 st.rerun()
-    st.markdown(
-        "<hr style='border:none;border-top:1px solid rgba(124,92,255,.12);margin:4px 0 10px;'>",
-        unsafe_allow_html=True,
-    )
+    st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
 
 
 def render_intro() -> None:
