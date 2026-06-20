@@ -694,9 +694,9 @@ iframe[title="streamlit_components.v1.html.html"]{
 }
 
 /* ===================== Premium scroll-storytelling ===================== */
-/* Hero background image (bright pastel brand graphic) */
+/* Hero background image (bright pastel brand graphic) — full viewport */
 .vhero{ position:relative; width:100vw; margin-left:calc(50% - 50vw);
-  height:min(78vh,660px); overflow:hidden; }
+  height:calc(100vh - 86px); min-height:560px; overflow:hidden; }
 .vhero-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
 .vhero-scrim{ position:absolute; inset:0;
   background:
@@ -961,8 +961,8 @@ IMG_STEP_DECIDE = _HF + "hf_20260619_105350_b7e7816d-3170-4cfb-9f07-be85ce02fce0
 # Spline scene used as the visual in the "Das Problem" section
 SPLINE_PROBLEM = "https://prod.spline.design/4PF4J4YenOXJHe4A/scene.splinecode"
 
-# Hero background: bright pastel brand graphic (matches the page gradient)
-IMG_HERO = _HF + "hf_20260620_115515_2cdcf500-4777-4fc7-91fa-69f90617333c.png"
+# Hero background: refined premium brand graphic (matches the page gradient)
+IMG_HERO = _HF + "hf_20260620_120052_d9d42f35-b642-41d2-ab9d-5a0eece17eeb.png"
 
 
 def render_spline_embed(url: str, height: int = 560) -> None:
