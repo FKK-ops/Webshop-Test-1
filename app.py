@@ -694,6 +694,16 @@ iframe[title="streamlit_components.v1.html.html"]{
 }
 
 /* ===================== Premium scroll-storytelling ===================== */
+/* Hero background video */
+.vhero{ position:relative; width:100vw; margin-left:calc(50% - 50vw);
+  height:min(78vh,660px); overflow:hidden; }
+.vhero-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
+.vhero-scrim{ position:absolute; inset:0;
+  background:
+    linear-gradient(90deg, rgba(251,251,255,.94) 0%, rgba(251,251,255,.6) 36%, rgba(251,251,255,0) 64%),
+    linear-gradient(180deg, rgba(251,251,255,.55), transparent 26%, transparent 72%, rgba(251,251,255,.95)); }
+.vhero-copy{ position:absolute; top:50%; left:max(24px, calc(50vw - 530px)); transform:translateY(-50%);
+  max-width:560px; z-index:2; }
 .story{ max-width:1060px; margin:0 auto; padding:120px 0 24px; }
 .story.first{ padding-top:56px; }
 .kicker{ font-size:.8rem; font-weight:800; letter-spacing:.18em; text-transform:uppercase;
@@ -951,6 +961,9 @@ IMG_STEP_DECIDE = _HF + "hf_20260619_105350_b7e7816d-3170-4cfb-9f07-be85ce02fce0
 # Spline scene used as the visual in the "Das Problem" section
 SPLINE_PROBLEM = "https://prod.spline.design/4PF4J4YenOXJHe4A/scene.splinecode"
 
+# Hero background video (Higgsfield, animated brand orb)
+VID_HERO = _HF + "hf_20260619_134821_ca7b9c43-3c82-4f3c-b519-3a274ceae972.mp4"
+
 
 def render_spline_embed(url: str, height: int = 560) -> None:
     """Embed a Spline scene as a large, borderless background graphic
@@ -1042,14 +1055,18 @@ def render_home() -> None:
     """Premium scroll-storytelling landing page (revealed after the intro):
     Problem -> Lösung -> Demo -> Ergebnisse -> Pricing, with one main CTA."""
 
-    # 1) One clear message + the single main CTA
+    # 1) Hero with the Higgsfield brand video + one clear message + main CTA
     st.markdown(
-        '<div class="story first reveal">'
+        '<div class="vhero reveal">'
+        f'<video class="vhero-bg" autoplay loop muted playsinline poster="{IMG_ORB}">'
+        f'<source src="{VID_HERO}" type="video/mp4"></video>'
+        '<div class="vhero-scrim"></div>'
+        '<div class="vhero-copy">'
         '<div class="kicker">Recruiting AI · Multi-Agent HR</div>'
         '<h1 class="display">Bewerbungen verstehen.<br><span class="g">Menschen entscheiden.</span></h1>'
         '<p class="big">Sechs spezialisierte KI-Agenten lesen Stellenprofile und Lebensläufe, '
         "prüfen Anforderungen und decken Informationslücken auf — die Entscheidung bleibt bei dir.</p>"
-        "</div>",
+        "</div></div>",
         unsafe_allow_html=True,
     )
     _main_cta("🚀  Demo starten", "cta_top")
