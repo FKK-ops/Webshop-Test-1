@@ -691,7 +691,11 @@ html, body{ overflow-x:clip; max-width:100%; }
 /* Glass navigation bar (only the nav row carries the .navbar-mark) — appears
    after the intro. Subtle, slow clockwise LED border in the brand colors. */
 [data-testid="stHorizontalBlock"]:has(.navbar-mark){
-  position:sticky; top:14px; z-index:1000;
+  /* fixed (not sticky): Streamlit's scroll container makes sticky unreliable,
+     so we pin the bar to the top of the viewport and center it. It stays
+     visible the whole time while scrolling. */
+  position:fixed; top:14px; left:50%; transform:translateX(-50%);
+  width:min(1180px, calc(100vw - 40px)); z-index:1000;
   background:rgba(255,255,255,.40);
   backdrop-filter:blur(24px) saturate(1.7); -webkit-backdrop-filter:blur(24px) saturate(1.7);
   border:1px solid rgba(255,255,255,.55); border-radius:18px;
@@ -699,6 +703,8 @@ html, body{ overflow-x:clip; max-width:100%; }
   box-shadow:0 10px 34px rgba(31,38,93,.10), inset 0 1px 0 rgba(255,255,255,.65);
   padding:7px 18px !important; align-items:center;
 }
+/* anchor targets clear the fixed bar when jumping via the nav links */
+#problem,#loesung,#schritte,#preise{ scroll-margin-top:100px; }
 [data-testid="stHorizontalBlock"]:has(.navbar-mark)::before{
   content:""; position:absolute; inset:0; border-radius:inherit; padding:1.5px;
   background:conic-gradient(from var(--ledangle),
@@ -756,7 +762,7 @@ iframe[title="streamlit_components.v1.html.html"]{
 .vhero{ position:relative; width:100vw; margin-left:calc(50% - 50vw);
   /* full-screen hero, pulled up behind the floating nav. No box: the image is
      feathered on every edge so it dissolves into the page gradient. */
-  margin-top:-96px; height:100vh; min-height:640px; overflow:hidden; z-index:0; }
+  margin-top:-14px; height:100vh; min-height:640px; overflow:hidden; z-index:0; }
 .vhero-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;
   opacity:.92;
   /* Strong intersecting feather masks so NO edge is ever visible: the bottom
@@ -989,7 +995,11 @@ def render_nav() -> None:
                 st.session_state.page = "home"
                 st.session_state.selected_candidate = None
                 st.rerun()
-    st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+    # The nav is position:fixed (out of flow). On the home page the full-screen
+    # hero tucks up under it, so no spacer is needed; on the other pages we
+    # reserve space so content starts below the floating bar.
+    spacer_h = 0 if st.session_state.page == "home" else 84
+    st.markdown(f"<div style='height:{spacer_h}px;'></div>", unsafe_allow_html=True)
 
 
 def render_intro() -> None:
