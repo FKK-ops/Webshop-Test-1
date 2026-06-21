@@ -717,7 +717,7 @@ html, body{ overflow-x:clip; max-width:100%; }
 
 /* Raycast/Linear-style inline nav links, centered in the bar */
 .navlinks{ display:flex; align-items:center; justify-content:center; gap:4px;
-  flex-wrap:nowrap; }
+  flex-wrap:nowrap; transform:translateY(-2px); }
 .navlinks a{ color:#3b4060; text-decoration:none; font-weight:600; font-size:.93rem;
   padding:7px 14px; border-radius:11px; white-space:nowrap; letter-spacing:-.01em;
   transition:color .2s ease, background .2s ease; }
@@ -786,11 +786,11 @@ iframe[title="streamlit_components.v1.html.html"]{
      and right both fade out over a very wide band, dissolving the wave fully
      into the page gradient (top stays solid behind the nav). */
   -webkit-mask:
-    linear-gradient(180deg, #000 0, #000 34%, rgba(0,0,0,0) 84%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0, #000 9%, #000 34%, rgba(0,0,0,0) 84%),
     linear-gradient(90deg, rgba(0,0,0,0) 0, #000 24%, #000 48%, rgba(0,0,0,0) 86%);
   -webkit-mask-composite:source-in;
           mask-image:
-    linear-gradient(180deg, #000 0, #000 34%, rgba(0,0,0,0) 84%),
+    linear-gradient(180deg, rgba(0,0,0,0) 0, #000 9%, #000 34%, rgba(0,0,0,0) 84%),
     linear-gradient(90deg, rgba(0,0,0,0) 0, #000 24%, #000 48%, rgba(0,0,0,0) 86%);
           mask-composite:intersect; }
 .vhero-scrim{ position:absolute; inset:0; pointer-events:none;
@@ -980,7 +980,7 @@ def render_nav() -> None:
             """
             <span class="navbar-mark"></span>
             <div style="display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;
-                        color:#0f1226;">
+                        color:#0f1226;transform:translateY(-2px);">
               __MARK__
               Recruiting&nbsp;AI
               <span style="font-size:.72rem;font-weight:600;color:#7c5cff;background:rgba(124,92,255,.10);
