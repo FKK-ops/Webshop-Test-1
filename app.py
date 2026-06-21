@@ -723,6 +723,23 @@ html, body{ overflow-x:clip; max-width:100%; }
   transition:color .2s ease, background .2s ease; }
 .navlinks a:hover{ color:#7c5cff; background:rgba(124,92,255,.09); }
 
+/* Perfectly center every navbar column on one baseline (Linear/Vercel style):
+   one fixed bar height, each column is a centered flex box, and all stray
+   Streamlit margins/gaps are zeroed so nothing sits high or low. */
+[data-testid="stHorizontalBlock"]:has(.navbar-mark){ min-height:58px; }
+[data-testid="stHorizontalBlock"]:has(.navbar-mark) [data-testid="column"]{
+  display:flex !important; align-items:center !important; align-self:center !important; }
+[data-testid="stHorizontalBlock"]:has(.navbar-mark) [data-testid="column"] > div,
+[data-testid="stHorizontalBlock"]:has(.navbar-mark) [data-testid="stVerticalBlock"]{
+  width:100%; gap:0 !important; }
+[data-testid="stHorizontalBlock"]:has(.navbar-mark) [data-testid="stElementContainer"],
+[data-testid="stHorizontalBlock"]:has(.navbar-mark) .stMarkdown,
+[data-testid="stHorizontalBlock"]:has(.navbar-mark) .stButton{ margin:0 !important; }
+[data-testid="stHorizontalBlock"]:has(.navbar-mark) .stButton > button{
+  margin:0 !important; line-height:1.1; }
+.navlinks{ line-height:1; }
+.navlinks a{ display:inline-flex; align-items:center; line-height:1; }
+
 /* Top navigation dropdown */
 [data-testid="column"]{ overflow:visible !important; }
 .navdrop{ position:relative; display:inline-flex; align-items:center; padding-top:6px; }
