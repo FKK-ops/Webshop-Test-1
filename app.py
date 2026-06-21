@@ -699,20 +699,21 @@ html, body{ overflow-x:clip; max-width:100%; }
   background:rgba(255,255,255,.40);
   backdrop-filter:blur(24px) saturate(1.7); -webkit-backdrop-filter:blur(24px) saturate(1.7);
   border:1px solid rgba(255,255,255,.55); border-radius:18px;
-  /* soft floating shadow + inner top highlight for real glass depth */
-  box-shadow:0 10px 34px rgba(31,38,93,.10), inset 0 1px 0 rgba(255,255,255,.65);
+  /* soft floating shadow + colored outer glow + inner top highlight */
+  box-shadow:0 12px 36px rgba(31,38,93,.12), 0 0 30px rgba(124,92,255,.22),
+             inset 0 1px 0 rgba(255,255,255,.7);
   padding:7px 18px !important; align-items:center;
 }
 /* anchor targets clear the fixed bar when jumping via the nav links */
 #problem,#loesung,#schritte,#preise{ scroll-margin-top:100px; }
 [data-testid="stHorizontalBlock"]:has(.navbar-mark)::before{
-  content:""; position:absolute; inset:0; border-radius:inherit; padding:1.5px;
+  content:""; position:absolute; inset:0; border-radius:inherit; padding:1.6px;
   background:conic-gradient(from var(--ledangle),
-    rgba(124,92,255,0) 0deg, rgba(124,92,255,0) 215deg,
-    #7c5cff 285deg, #3b82f6 320deg, #22d3ee 350deg, rgba(34,211,238,0) 360deg);
+    #7c5cff 0deg, #a78bfa 70deg, #ffffff 140deg, #60a5fa 215deg, #22d3ee 290deg, #7c5cff 360deg);
   -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite:xor; mask-composite:exclude;
-  opacity:.22; pointer-events:none; animation:ledspin 14s linear infinite; }
+  opacity:.9; pointer-events:none; animation:ledspin 7s linear infinite;
+  filter:drop-shadow(0 0 5px rgba(124,92,255,.5)); }
 .navbar-mark{ display:none; }
 
 /* Raycast/Linear-style inline nav links, centered in the bar */
