@@ -683,7 +683,10 @@ h1,h2,h3{ color:var(--rai-ink); letter-spacing:-.02em; }
 
 /* Smooth scrolling between sections */
 html{ scroll-behavior:smooth; }
-html, body{ overflow-x:hidden; max-width:100%; }
+/* `clip` (not `hidden`) prevents the 100vw hero from creating a horizontal
+   scrollbar WITHOUT turning body into a scroll container — which would break
+   the sticky navbar. */
+html, body{ overflow-x:clip; max-width:100%; }
 
 /* Glass navigation bar (only the nav row carries the .navbar-mark) — appears
    after the intro. Subtle, slow clockwise LED border in the brand colors. */
@@ -748,14 +751,15 @@ iframe[title="streamlit_components.v1.html.html"]{
   margin-top:-96px; height:100vh; min-height:640px; overflow:hidden; z-index:0; }
 .vhero-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;
   /* Two intersecting feather masks: a long bottom fade and a soft left/right
-     edge fade so there are no hard borders — the wave melts into the page bg. */
+     edge fade so there are no hard borders — the wave melts into the page bg.
+     The right and bottom edges feather over a wide band (no visible box). */
   -webkit-mask:
-    linear-gradient(180deg, #000 0, #000 56%, rgba(0,0,0,0) 100%),
-    linear-gradient(90deg, rgba(0,0,0,0) 0, #000 30%, #000 90%, rgba(0,0,0,0) 100%);
+    linear-gradient(180deg, #000 0, #000 46%, rgba(0,0,0,0) 96%),
+    linear-gradient(90deg, rgba(0,0,0,0) 0, #000 28%, #000 60%, rgba(0,0,0,0) 96%);
   -webkit-mask-composite:source-in;
           mask-image:
-    linear-gradient(180deg, #000 0, #000 56%, rgba(0,0,0,0) 100%),
-    linear-gradient(90deg, rgba(0,0,0,0) 0, #000 30%, #000 90%, rgba(0,0,0,0) 100%);
+    linear-gradient(180deg, #000 0, #000 46%, rgba(0,0,0,0) 96%),
+    linear-gradient(90deg, rgba(0,0,0,0) 0, #000 28%, #000 60%, rgba(0,0,0,0) 96%);
           mask-composite:intersect; }
 .vhero-scrim{ position:absolute; inset:0; pointer-events:none;
   /* not a box anymore — just a soft radial light behind the headline for depth
