@@ -577,9 +577,12 @@ html, body, [class*="css"], .stApp{
 /* Hide default Streamlit chrome for a cleaner product feel */
 #MainMenu{visibility:hidden;}
 footer{visibility:hidden;}
-header[data-testid="stHeader"]{background:transparent;}
+header[data-testid="stHeader"]{display:none !important;}
+[data-testid="stToolbar"]{display:none !important;}
+[data-testid="stDecoration"]{display:none !important;}
 
-.block-container{padding-top:1.2rem; padding-bottom:4rem; max-width:1180px;}
+/* No top padding: the nav floats over a true full-screen hero */
+.block-container{padding-top:.7rem; padding-bottom:4rem; max-width:1180px;}
 
 /* Headings */
 h1,h2,h3{ color:var(--rai-ink); letter-spacing:-.02em; }
@@ -736,12 +739,14 @@ iframe[title="streamlit_components.v1.html.html"]{
 /* ===================== Premium scroll-storytelling ===================== */
 /* Hero background image (bright pastel brand graphic) — full viewport */
 .vhero{ position:relative; width:100vw; margin-left:calc(50% - 50vw);
-  height:calc(100vh - 86px); min-height:560px; overflow:hidden; }
+  /* full-screen hero: pulled up so it fills the viewport behind the floating
+     glass nav, giving one clean, seamless gradient surface */
+  margin-top:-96px; height:100vh; min-height:640px; overflow:hidden; z-index:0; }
 .vhero-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;
-  /* fade the top & (generously) the bottom so the hero blends smoothly into
-     the sections before and after it (no hard seams) */
-  -webkit-mask-image:linear-gradient(180deg, transparent 0, #000 12%, #000 64%, transparent 99%);
-  mask-image:linear-gradient(180deg, transparent 0, #000 12%, #000 64%, transparent 99%); }
+  /* solid to the very top (sits behind the translucent nav) and a soft fade
+     into the next section at the bottom — no hard seams */
+  -webkit-mask-image:linear-gradient(180deg, #000 0, #000 74%, transparent 99%);
+  mask-image:linear-gradient(180deg, #000 0, #000 74%, transparent 99%); }
 .vhero-scrim{ position:absolute; inset:0;
   /* lighter left wash so the gradient background stays visible while the dark
      headline remains readable; bottom fade blends into the next section */
@@ -750,6 +755,8 @@ iframe[title="streamlit_components.v1.html.html"]{
     linear-gradient(180deg, rgba(251,251,255,.35), transparent 24%, transparent 74%, rgba(251,251,255,.95)); }
 .vhero-copy{ position:absolute; top:50%; left:max(24px, calc(50vw - 530px)); transform:translateY(-50%);
   max-width:560px; z-index:2; }
+/* Lift the hero's primary CTA up so it sits inside the hero, not in empty space */
+[data-testid="stHorizontalBlock"]:has(.cta-lift){ margin-top:-19vh; position:relative; z-index:3; }
 .story{ max-width:1060px; margin:0 auto; padding:120px 0 24px; }
 .story.first{ padding-top:56px; }
 .kicker{ font-size:.8rem; font-weight:800; letter-spacing:.18em; text-transform:uppercase;
@@ -1195,10 +1202,15 @@ def render_scroll_reveal() -> None:
     )
 
 
-def _main_cta(label: str, key: str) -> None:
-    """The single, centered primary call-to-action -> opens the workspace."""
+def _main_cta(label: str, key: str, lift: bool = False) -> None:
+    """The single, centered primary call-to-action -> opens the workspace.
+
+    ``lift`` pulls the button up so the hero's CTA sits inside the hero
+    instead of floating in empty space below it."""
     c1, c2, c3 = st.columns([1, 1.2, 1])
     with c2:
+        if lift:
+            st.markdown("<span class='cta-lift'></span>", unsafe_allow_html=True)
         if st.button(label, type="primary", use_container_width=True, key=key):
             st.session_state.page = "workspace"
             st.rerun()
@@ -1228,7 +1240,7 @@ def render_home() -> None:
         "</div></div>",
         unsafe_allow_html=True,
     )
-    _main_cta("🚀  Demo starten", "cta_top")
+    _main_cta("🚀  Demo starten", "cta_top", lift=True)
 
     # 2) Problem — text first, the full-bleed Spline ribbon sits below it
     st.markdown(
