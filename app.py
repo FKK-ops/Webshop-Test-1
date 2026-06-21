@@ -903,11 +903,12 @@ def _logo_data_uri() -> Optional[str]:
 
 
 def _brand_mark(size: int = 32) -> str:
-    """Logo image if available, otherwise the ✦ fallback glyph."""
-    logo = _logo_data_uri()
-    if logo:
+    """Logo image: a repo file (assets/logo.png) takes priority, then the
+    generated brand logo URL, otherwise the ✦ fallback glyph."""
+    src = _logo_data_uri() or globals().get("LOGO_URL")
+    if src:
         return (
-            f'<img src="{logo}" alt="Recruiting AI" '
+            f'<img src="{src}" alt="Recruiting AI" '
             f'style="width:{size}px;height:{size}px;border-radius:9px;object-fit:contain;">'
         )
     return (
@@ -1094,6 +1095,9 @@ SPLINE_PROBLEM = "https://prod.spline.design/4PF4J4YenOXJHe4A/scene.splinecode"
 
 # Hero background: refined premium brand graphic (matches the page gradient)
 IMG_HERO = _HF + "hf_20260620_120052_d9d42f35-b642-41d2-ab9d-5a0eece17eeb.png"
+# Brand logo (Higgsfield-generated RM monogram). Overridden by a repo file
+# (assets/logo.png) if present.
+LOGO_URL = _HF + "hf_20260621_113356_37574f61-266d-4c83-a8e0-bdd07a191331.png"
 
 
 def render_spline_embed(url: str, height: int = 560) -> None:
