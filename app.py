@@ -566,12 +566,15 @@ html, body, [class*="css"], .stApp{
   font-family:'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 
-/* App background: soft premium gradient */
+/* App background: one continuous premium gradient that the hero melts into
+   (kept fixed so it never seams as you scroll) */
 .stApp{
   background:
-    radial-gradient(1200px 600px at 12% -8%, rgba(124,92,255,.16), transparent 60%),
-    radial-gradient(1000px 600px at 100% 0%, rgba(34,211,238,.14), transparent 55%),
-    linear-gradient(180deg,#fbfbff 0%, #f5f6fc 100%);
+    radial-gradient(1300px 780px at 80% 4%, rgba(124,92,255,.20), transparent 58%),
+    radial-gradient(1150px 700px at 104% -2%, rgba(59,130,246,.16), transparent 56%),
+    radial-gradient(1000px 700px at -6% 2%, rgba(124,92,255,.10), transparent 60%),
+    linear-gradient(180deg,#f7f6ff 0%, #f4f4fc 52%, #fbfbff 100%);
+  background-attachment:fixed;
 }
 
 /* Hide default Streamlit chrome for a cleaner product feel */
@@ -685,12 +688,13 @@ html, body{ overflow-x:hidden; max-width:100%; }
 /* Glass navigation bar (only the nav row carries the .navbar-mark) — appears
    after the intro. Subtle, slow clockwise LED border in the brand colors. */
 [data-testid="stHorizontalBlock"]:has(.navbar-mark){
-  position:sticky; top:10px; z-index:999;
-  background:rgba(255,255,255,.52);
-  backdrop-filter:blur(20px) saturate(1.4); -webkit-backdrop-filter:blur(20px) saturate(1.4);
-  border:1px solid rgba(255,255,255,.65); border-radius:22px;
-  box-shadow:0 18px 50px rgba(31,38,93,.12);
-  padding:8px 20px !important; align-items:center;
+  position:sticky; top:14px; z-index:1000;
+  background:rgba(255,255,255,.40);
+  backdrop-filter:blur(24px) saturate(1.7); -webkit-backdrop-filter:blur(24px) saturate(1.7);
+  border:1px solid rgba(255,255,255,.55); border-radius:18px;
+  /* soft floating shadow + inner top highlight for real glass depth */
+  box-shadow:0 10px 34px rgba(31,38,93,.10), inset 0 1px 0 rgba(255,255,255,.65);
+  padding:7px 18px !important; align-items:center;
 }
 [data-testid="stHorizontalBlock"]:has(.navbar-mark)::before{
   content:""; position:absolute; inset:0; border-radius:inherit; padding:1.5px;
@@ -699,7 +703,7 @@ html, body{ overflow-x:hidden; max-width:100%; }
     #7c5cff 285deg, #3b82f6 320deg, #22d3ee 350deg, rgba(34,211,238,0) 360deg);
   -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite:xor; mask-composite:exclude;
-  opacity:.5; pointer-events:none; animation:ledspin 9s linear infinite; }
+  opacity:.22; pointer-events:none; animation:ledspin 14s linear infinite; }
 .navbar-mark{ display:none; }
 
 /* Top navigation dropdown */
@@ -739,20 +743,24 @@ iframe[title="streamlit_components.v1.html.html"]{
 /* ===================== Premium scroll-storytelling ===================== */
 /* Hero background image (bright pastel brand graphic) — full viewport */
 .vhero{ position:relative; width:100vw; margin-left:calc(50% - 50vw);
-  /* full-screen hero: pulled up so it fills the viewport behind the floating
-     glass nav, giving one clean, seamless gradient surface */
+  /* full-screen hero, pulled up behind the floating nav. No box: the image is
+     feathered on every edge so it dissolves into the page gradient. */
   margin-top:-96px; height:100vh; min-height:640px; overflow:hidden; z-index:0; }
 .vhero-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;
-  /* solid to the very top (sits behind the translucent nav) and a soft fade
-     into the next section at the bottom — no hard seams */
-  -webkit-mask-image:linear-gradient(180deg, #000 0, #000 74%, transparent 99%);
-  mask-image:linear-gradient(180deg, #000 0, #000 74%, transparent 99%); }
-.vhero-scrim{ position:absolute; inset:0;
-  /* lighter left wash so the gradient background stays visible while the dark
-     headline remains readable; bottom fade blends into the next section */
-  background:
-    linear-gradient(90deg, rgba(251,251,255,.62) 0%, rgba(251,251,255,.28) 38%, rgba(251,251,255,0) 66%),
-    linear-gradient(180deg, rgba(251,251,255,.35), transparent 24%, transparent 74%, rgba(251,251,255,.95)); }
+  /* Two intersecting feather masks: a long bottom fade and a soft left/right
+     edge fade so there are no hard borders — the wave melts into the page bg. */
+  -webkit-mask:
+    linear-gradient(180deg, #000 0, #000 56%, rgba(0,0,0,0) 100%),
+    linear-gradient(90deg, rgba(0,0,0,0) 0, #000 30%, #000 90%, rgba(0,0,0,0) 100%);
+  -webkit-mask-composite:source-in;
+          mask-image:
+    linear-gradient(180deg, #000 0, #000 56%, rgba(0,0,0,0) 100%),
+    linear-gradient(90deg, rgba(0,0,0,0) 0, #000 30%, #000 90%, rgba(0,0,0,0) 100%);
+          mask-composite:intersect; }
+.vhero-scrim{ position:absolute; inset:0; pointer-events:none;
+  /* not a box anymore — just a soft radial light behind the headline for depth
+     and legibility, fully transparent everywhere else */
+  background:radial-gradient(58% 52% at 24% 44%, rgba(255,255,255,.34), rgba(255,255,255,0) 72%); }
 .vhero-copy{ position:absolute; top:50%; left:max(24px, calc(50vw - 530px)); transform:translateY(-50%);
   max-width:560px; z-index:2; }
 /* Lift the hero's primary CTA up so it sits inside the hero, not in empty space */
