@@ -709,6 +709,14 @@ html, body{ overflow-x:clip; max-width:100%; }
   opacity:.22; pointer-events:none; animation:ledspin 14s linear infinite; }
 .navbar-mark{ display:none; }
 
+/* Raycast/Linear-style inline nav links, centered in the bar */
+.navlinks{ display:flex; align-items:center; justify-content:center; gap:4px;
+  padding-top:7px; flex-wrap:nowrap; }
+.navlinks a{ color:#3b4060; text-decoration:none; font-weight:600; font-size:.93rem;
+  padding:7px 14px; border-radius:11px; white-space:nowrap; letter-spacing:-.01em;
+  transition:color .2s ease, background .2s ease; }
+.navlinks a:hover{ color:#7c5cff; background:rgba(124,92,255,.09); }
+
 /* Top navigation dropdown */
 [data-testid="column"]{ overflow:visible !important; }
 .navdrop{ position:relative; display:inline-flex; align-items:center; padding-top:6px; }
@@ -750,16 +758,17 @@ iframe[title="streamlit_components.v1.html.html"]{
      feathered on every edge so it dissolves into the page gradient. */
   margin-top:-96px; height:100vh; min-height:640px; overflow:hidden; z-index:0; }
 .vhero-bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;
-  /* Two intersecting feather masks: a long bottom fade and a soft left/right
-     edge fade so there are no hard borders — the wave melts into the page bg.
-     The right and bottom edges feather over a wide band (no visible box). */
+  opacity:.92;
+  /* Strong intersecting feather masks so NO edge is ever visible: the bottom
+     and right both fade out over a very wide band, dissolving the wave fully
+     into the page gradient (top stays solid behind the nav). */
   -webkit-mask:
-    linear-gradient(180deg, #000 0, #000 46%, rgba(0,0,0,0) 96%),
-    linear-gradient(90deg, rgba(0,0,0,0) 0, #000 28%, #000 60%, rgba(0,0,0,0) 96%);
+    linear-gradient(180deg, #000 0, #000 34%, rgba(0,0,0,0) 84%),
+    linear-gradient(90deg, rgba(0,0,0,0) 0, #000 24%, #000 48%, rgba(0,0,0,0) 86%);
   -webkit-mask-composite:source-in;
           mask-image:
-    linear-gradient(180deg, #000 0, #000 46%, rgba(0,0,0,0) 96%),
-    linear-gradient(90deg, rgba(0,0,0,0) 0, #000 28%, #000 60%, rgba(0,0,0,0) 96%);
+    linear-gradient(180deg, #000 0, #000 34%, rgba(0,0,0,0) 84%),
+    linear-gradient(90deg, rgba(0,0,0,0) 0, #000 24%, #000 48%, rgba(0,0,0,0) 86%);
           mask-composite:intersect; }
 .vhero-scrim{ position:absolute; inset:0; pointer-events:none;
   /* not a box anymore — just a soft radial light behind the headline for depth
@@ -942,7 +951,7 @@ def _brand_mark(size: int = 32) -> str:
 def render_nav() -> None:
     """Clean top navigation: brand on the left, a single primary CTA on the
     right (one main action, no button clutter)."""
-    brand, spacer, cta = st.columns([3, 2, 1.5])
+    brand, spacer, cta = st.columns([2.4, 3.2, 1.7])
     with brand:
         st.markdown(
             """
@@ -961,14 +970,11 @@ def render_nav() -> None:
         if st.session_state.page == "home":
             st.markdown(
                 """
-                <div class="navdrop">
-                  <span class="navbtn">Menü <span class="car">▾</span></span>
-                  <div class="navmenu">
-                    <a href="#problem">Das Problem</a>
-                    <a href="#loesung">Die Lösung</a>
-                    <a href="#schritte">Schritte</a>
-                    <a href="#preise">Preise</a>
-                  </div>
+                <div class="navlinks">
+                  <a href="#problem">Das Problem</a>
+                  <a href="#loesung">Die Lösung</a>
+                  <a href="#schritte">Schritte</a>
+                  <a href="#preise">Preise</a>
                 </div>
                 """,
                 unsafe_allow_html=True,
