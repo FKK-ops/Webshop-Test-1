@@ -743,9 +743,11 @@ iframe[title="streamlit_components.v1.html.html"]{
   -webkit-mask-image:linear-gradient(180deg, transparent 0, #000 12%, #000 64%, transparent 99%);
   mask-image:linear-gradient(180deg, transparent 0, #000 12%, #000 64%, transparent 99%); }
 .vhero-scrim{ position:absolute; inset:0;
+  /* lighter left wash so the gradient background stays visible while the dark
+     headline remains readable; bottom fade blends into the next section */
   background:
-    linear-gradient(90deg, rgba(251,251,255,.94) 0%, rgba(251,251,255,.6) 36%, rgba(251,251,255,0) 64%),
-    linear-gradient(180deg, rgba(251,251,255,.55), transparent 26%, transparent 72%, rgba(251,251,255,.95)); }
+    linear-gradient(90deg, rgba(251,251,255,.62) 0%, rgba(251,251,255,.28) 38%, rgba(251,251,255,0) 66%),
+    linear-gradient(180deg, rgba(251,251,255,.35), transparent 24%, transparent 74%, rgba(251,251,255,.95)); }
 .vhero-copy{ position:absolute; top:50%; left:max(24px, calc(50vw - 530px)); transform:translateY(-50%);
   max-width:560px; z-index:2; }
 .story{ max-width:1060px; margin:0 auto; padding:120px 0 24px; }
@@ -1093,8 +1095,8 @@ IMG_STEP_DECIDE = _HF + "hf_20260619_105350_b7e7816d-3170-4cfb-9f07-be85ce02fce0
 # Spline scene used as the visual in the "Das Problem" section
 SPLINE_PROBLEM = "https://prod.spline.design/4PF4J4YenOXJHe4A/scene.splinecode"
 
-# Hero background: refined premium brand graphic (matches the page gradient)
-IMG_HERO = _HF + "hf_20260620_120052_d9d42f35-b642-41d2-ab9d-5a0eece17eeb.png"
+# Hero background: silk-wave brand graphic on a full-bleed purple->blue gradient
+IMG_HERO = _HF + "hf_20260621_115229_842ad9a6-e33f-449f-9f24-0875dee50874.png"
 # Brand logo (Higgsfield-generated RM monogram). Overridden by a repo file
 # (assets/logo.png) if present.
 LOGO_URL = _HF + "hf_20260621_113356_37574f61-266d-4c83-a8e0-bdd07a191331.png"
